@@ -1,0 +1,19 @@
+spring:
+  servlet:
+    multipart:
+      # 配置上传下载文件的最大值
+      max-file-size: 500MB
+      max-request-size: 500MB
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driverClassName: com.p6spy.engine.spy.P6SpyDriver
+    url: jdbc:p6spy:mysql://47.104.235.67:9906/dataroom?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&nullCatalogMeansCurrent=true
+    username: root
+    password: thingspanel
+gc:
+  starter:
+    file:
+      # 一个存储文件的绝对路径，需要有写入权限
+      basePath: /root/data
+      # 文件资源访问前缀，一般修改ip即可
+      urlPrefix: http://47.104.235.67:${server.port}${server.servlet.context-path}/static
