@@ -9,7 +9,7 @@ spring:
     driverClassName: com.p6spy.engine.spy.P6SpyDriver
     url: jdbc:p6spy:mysql://47.104.235.67:9906/dataroom?allowMultiQueries=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&rewriteBatchedStatements=true&nullCatalogMeansCurrent=true
     username: root
-    password: thingspanel
+    password: root
 gc:
   starter:
     file:
