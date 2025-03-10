@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldStrategy;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.gccloud.common.utils.EmptyAsNullDeserializer;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -18,6 +19,9 @@ public class BizComponentDTO {
     @JsonDeserialize(using = EmptyAsNullDeserializer.class)
     @ApiModelProperty(notes = "主键")
     private String id;
+
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
 
     @ApiModelProperty(notes = "业务组件中文名称")
     private String name;

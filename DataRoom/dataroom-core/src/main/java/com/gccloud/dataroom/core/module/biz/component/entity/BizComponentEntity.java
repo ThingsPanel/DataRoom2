@@ -24,6 +24,9 @@ public class BizComponentEntity extends SuperEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
+
     @ApiModelProperty(notes = "业务组件中文名称")
     private String name;
 

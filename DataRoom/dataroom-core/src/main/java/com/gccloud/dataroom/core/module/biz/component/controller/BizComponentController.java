@@ -9,6 +9,7 @@ import com.gccloud.dataroom.core.module.biz.component.service.IBizComponentServi
 import com.gccloud.common.vo.PageVO;
 import com.gccloud.common.vo.R;
 import com.gccloud.dataroom.core.permission.Permission;
+import com.gccloud.dataroom.core.utils.TenantContext;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
@@ -50,6 +51,13 @@ public class BizComponentController {
     @ApiOperation(value = "新增", notes = "新增", produces = MediaType.APPLICATION_JSON_VALUE)
     public R<String> add(@ApiParam(name = "新增", value = "传入新增的业务条件", required = true) @RequestBody BizComponentDTO dto) {
         BizComponentEntity entity = BeanConvertUtils.convert(dto, BizComponentEntity.class);
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前操作的租户ID: {}", tenantId);
+        // 设置租户ID
+        entity.setTenantId(tenantId);
+        // 打印完整的实体内容
+        log.info("保存前的实体内容: {}", entity);
         String code = bizComponentService.add(entity);
         return R.success(code);
     }
