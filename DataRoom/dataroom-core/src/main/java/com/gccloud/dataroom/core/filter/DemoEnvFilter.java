@@ -66,20 +66,6 @@ public class DemoEnvFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         try {
-            // 获取并打印 x-api-key
-            String apiKey = request.getHeader("x-api-key");
-            log.info("当前请求的 x-api-key: {}", apiKey);
-            // 如果x-api-key为空，则默认sk_ebde6efe6f240172f689d458df466f22542901f200e16cb3c0ede44c6e677d3f
-            if (StringUtils.isBlank(apiKey)) {
-                apiKey = "sk_ebde6efe6f240172f689d458df466f22542901f200e16cb3c0ede44c6e677d3f";
-            }
-            // 调用获取用户信息的方法
-            String tenantId = getUserInfo(apiKey);
-            log.info("获取到的 tenant_id: {}", tenantId);
-            
-            // 将租户ID存储到上下文中
-            TenantContext.setTenantId(tenantId);
-
             String method = request.getMethod();
             if (StringUtils.equalsAnyIgnoreCase(RequestMethod.GET.toString(), method)
                     || StringUtils.equalsAnyIgnoreCase(RequestMethod.OPTIONS.toString(), method)) {
@@ -117,40 +103,4 @@ public class DemoEnvFilter implements Filter {
         }
     }
 
-    /**
-     * 获取第三方用户信息
-     * @param apiKey API密钥
-     * @return tenant_id 租户ID，如果获取失败则返回null
-     */
-    private String getUserInfo(String apiKey) {
-        if (StringUtils.isBlank(apiKey)) {
-            log.warn("x-api-key 为空，跳过获取用户信息");
-            return null;
-        }
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("x-api-key", apiKey);
-            HttpEntity<?> entity = new HttpEntity<>(headers);
-            
-            ResponseEntity<String> response = restTemplate.exchange(
-                "http://demo.thingspanel.cn/api/v1/board/user/info",
-                HttpMethod.GET,
-                entity,
-                String.class
-            );
-            
-            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                JsonObject jsonObject = new Gson().fromJson(response.getBody(), JsonObject.class);
-                if (jsonObject.has("data") && jsonObject.get("data").isJsonObject()) {
-                    JsonObject data = jsonObject.getAsJsonObject("data");
-                    String tenantId = data.has("tenant_id") ? data.get("tenant_id").getAsString() : null;
-                    log.info("获取到的 tenant_id: {}", tenantId);
-                    return tenantId;
-                }
-            }
-        } catch (Exception e) {
-            log.error("获取用户信息失败", e);
-        }
-        return null;
-    }
 }
