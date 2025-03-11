@@ -76,7 +76,10 @@ export default {
   },
   mounted () {},
   methods: {
-
+    // 当输入框值变化时触发更新
+    updateConfig() {
+      this.$emit('update:config', JSON.parse(JSON.stringify(this.config)))
+    }
   }
 }
 </script>

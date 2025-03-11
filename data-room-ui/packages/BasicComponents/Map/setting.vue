@@ -430,6 +430,22 @@
           </div>
         </el-form-item>
       </div>
+      <SettingTitle>地图交互</SettingTitle>
+      <div class="lc-field-body">
+        <el-form-item label="启用缩放">
+          <el-switch
+            v-model="config.customize.roam"
+          />
+        </el-form-item>
+        <el-form-item label="控制器位置">
+          <el-select v-model="config.customize.visualMapPosition">
+            <el-option label="左下" value="leftBottom" />
+            <el-option label="左上" value="leftTop" />
+            <el-option label="右下" value="rightBottom" />
+            <el-option label="右上" value="rightTop" />
+          </el-select>
+        </el-form-item>
+      </div>
     </el-form>
   </div>
 </template>
@@ -502,7 +518,27 @@ export default {
       }
     }
   },
-  watch: {},
+  watch: {
+    'config.customize.visualMapPosition': {
+      handler(val) {
+        switch(val) {
+          case 'leftBottom':
+            this.updateVisualMapPosition(30, 30, 'left', 'bottom');
+            break;
+          case 'leftTop':
+            this.updateVisualMapPosition(30, 30, 'left', 'top');
+            break;
+          case 'rightBottom':
+            this.updateVisualMapPosition(30, 30, 'right', 'bottom');
+            break;
+          case 'rightTop':
+            this.updateVisualMapPosition(30, 30, 'right', 'top');
+            break;
+        }
+      },
+      immediate: true
+    }
+  },
   mounted () {
     this.getMapTree()
     this.colors = this.config.customize.rangeColor
@@ -538,6 +574,16 @@ export default {
     updateColorScheme (colors) {
       this.colors = [...colors]
       this.config.customize.rangeColor = [...colors]
+    },
+    updateVisualMapPosition(x, y, horizontal, vertical) {
+      if (this.charts) {
+        this.charts.setOption({
+          visualMap: {
+            [horizontal]: x,
+            [vertical]: y
+          }
+        });
+      }
     }
   }
 }

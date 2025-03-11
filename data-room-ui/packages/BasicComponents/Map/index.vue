@@ -2,8 +2,12 @@
   <div
     class="bs-design-wrap bs-bar"
     style="width: 100%; height: 100%"
+    @mousedown.stop
+    @mousemove.stop
+    @mouseup.stop
+    @wheel.stop
   >
-    <el-button v-if="currentDeep > 0" class="button" type='text' @click="backToPreviousLevel(config)"> 返回上一级</el-button>
+    <el-button v-if="currentDeep > 0" class="button" type='text' @click.stop="backToPreviousLevel(config)"> 返回上一级</el-button>
     <div
       :id="`chart${config.code}`"
       style="width: 100%; height: 100%"
@@ -142,105 +146,119 @@ export default {
       let hasMapId = !!config.customize.mapId
       // 根据mapId获取地图数据
       let mapInfoUrl = `${window.BS_CONFIG?.httpConfigs?.baseURL}/bigScreen/map/info/${config.customize.mapId}`
-      // 如果设置了地图id，就用地图id获取地图数据，否则用默认的世界地图
+      // 如果设置了地图id，就用地图id获取地图数据，否则用默认的中国地图
       if (!hasMapId) {
-        mapInfoUrl = `${window.BS_CONFIG?.httpConfigs?.baseURL}/bigScreen/map/default/chinaMap.country/中华人民共和国`
+        // 修改这里,使用本地的中国地图数据
+        try {
+          const chinaMapJson = require('./json/china.json')
+          echarts.registerMap(config.customize.scope, chinaMapJson)
+          this.charts.setOption(this.option)
+          // 注册点击事件
+          this.registerClickEvent(config)
+          return
+        } catch(e) {
+          console.error('加载本地地图数据失败:', e)
+        }
       }
-      const mapResp = await this.$dataRoomAxios.get(decodeURI(mapInfoUrl), {}, true)
-      const map = hasMapId ? JSON.parse(mapResp.data.geoJson) : mapResp
-      if (hasMapId && mapResp.data.uploadedGeoJson !== 1) {
-        // 没有上传过geoJson
+
+      try {
+        const mapResp = await this.$dataRoomAxios.get(decodeURI(mapInfoUrl), {}, true)
+        const map = hasMapId ? JSON.parse(mapResp.data.geoJson) : mapResp
+        if (hasMapId && mapResp.data.uploadedGeoJson !== 1) {
+          // 没有上传过geoJson
+          this.$message({
+            message: '请先上传地图数据',
+            type: 'warning'
+          })
+          return
+        }
+        this.mapList.push(mapResp.data)
+        echarts.registerMap(config.customize.scope, map)
+        this.charts.setOption(this.option)
+        // 注册点击事件
+        this.registerClickEvent(config)
+      } catch(e) {
+        console.error('获取地图数据失败:', e)
         this.$message({
-          message: '请先上传地图数据',
-          type: 'warning'
+          message: '获取地图数据失败',
+          type: 'error'
         })
-        return
       }
-      this.mapList.push(mapResp.data)
-      echarts.registerMap(config.customize.scope, map)
-      this.charts.setOption(this.option)
-      // 注册点击事件
-      this.registerClickEvent(config)
     },
     /**
      * 处理配置项option
      * @param {*} config
      */
     handleOption(config) {
-      let center1 = config.customize.center1 ? config.customize.center1 + '%' : '50%'
-      let center2 = config.customize.center2 ? config.customize.center2 + '%' : '50%'
-      let scatterSeries = {
+      const { center1 = '50%', center2 = '50%' } = config.customize
+      // 散点配置
+      const scatterSeries = {
+        name: config.customize.tooltipTitle || '',
         type: 'scatter',
-        // 坐标系类型
         coordinateSystem: 'geo',
-        // 标记符号形状 'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none'
-        symbol: config.customize.scatterSymbol ? config.customize.scatterSymbol : 'pin',
-        // 是否允许图例和散点图之间的联动效果
-        legendHoverLink: true,
-        // 散点图标记符号的大小，[宽度,高度]
-        symbolSize: config.customize.scatterSize ? [config.customize.scatterSize, config.customize.scatterSize] : [40, 40],
-        // 触发特效的方式
-        showEffectOn: 'render',
-        rippleEffect: {
-          brushType: 'stroke'
-        },
-        hoverAnimation: true,
-        zlevel: 11,
-        // 这里渲染标志里的内容以及样式
+        symbol: config.customize.scatterSymbol || 'pin',
+        symbolSize: config.customize.scatterSize || 40,
         label: {
-          show: config.customize.hasOwnProperty('showScatterValue') ? config.customize.showScatterValue : true,
-          formatter(value) {
-            return value.data.value[2]
-          },
-          color: config.customize.scatterColor
-        },
-        // 标志的样式
-        itemStyle: {
           normal: {
-            color: config.customize.scatterBackgroundColor,
-            shadowBlur: 2,
-            shadowColor: 'D8BC37'
+            show: config.customize.showScatterValue || false,
+            textStyle: {
+              color: config.customize.scatterColor || '#fff',
+              fontSize: 9
+            }
           }
         },
-        data: config.option?.data
+        itemStyle: {
+          normal: {
+            color: config.customize.scatterBackgroundColor || '#1B91FF'
+          }
+        },
+        data: config.option.data || []
       }
-      let mapSeries = {
+
+      // 地图区域配置
+      const mapSeries = {
+        name: config.customize.tooltipTitle || '',
         type: 'map',
-        map: config.customize.scope,
         geoIndex: 0,
-        roam: false,
-        zoom: 1.5,
-        center: [105, 36],
-        showLegendSymbol: false, // 存在legend时显示
-        data: config.option?.data,
+        data: config.option.data || [],
+        // 添加格式化函数的安全处理
         tooltip: {
-          formatter(params) {
-            return `<p style="text-align:center;line-height: 30px;height:30px;font-size: 14px;border-bottom: 1px solid #7A8698;">${
-              params.name
-            }</p>
-                <div style="line-height:22px;margin-top:5px">${config.customize.tooltipTitle ? config.customize.tooltipTitle : 'GDP'}<span style="margin-left:12px;color:#fff;float:right">${
-              params.data?.value[2] || '--'
-            }</span></div>`
+          formatter: function(params) {
+            if (!params || !params.data) {
+              return ''
+            }
+            const value = params.data.value
+            // 确保value存在且是数组
+            if (!Array.isArray(value)) {
+              return params.name
+            }
+            return `<div style="padding: 10px">
+              <div style="margin-bottom: 5px">${params.name}</div>
+              <span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:${params.color};"></span>
+              <span>${value[2] || 0}</span>
+            </div>`
           },
           show: true
         }
       }
+
       let series = config.customize.scatter ? [ scatterSeries ] : [ mapSeries ]
       this.option = {
-        // 背景颜色
         backgroundColor: config.customize.backgroundColor,
         graphic: [],
         geo: {
           map: config.customize.scope,
           zlevel: 9,
           show: true,
-          // 地图中心点位置
-          layoutCenter: [center1, center2],
-          roam: true,
-          layoutSize: "100%",
-          zoom: config.customize.zoom || 1,
+          layoutCenter: ['50%', '50%'],
+          layoutSize: '95%',
+          roam: config.customize.roam ?? true,
+          scaleLimit: {
+            min: 0.8,
+            max: 2
+          },
+          zoom: config.customize.zoom || 1.2,
           label: {
-            // 通常状态下的样式
             normal: {
               show: config.customize.mapName,
               textStyle: {
@@ -249,7 +267,6 @@ export default {
                 fontWeight: config.customize.mapNameWeight || 500
               }
             },
-            // 鼠标放上去的样式
             emphasis: {
               textStyle: {
                 color: config.customize.mapNameColor || '#fff',
@@ -258,7 +275,6 @@ export default {
               }
             }
           },
-          // 地图区域的样式设置
           itemStyle: {
             normal: {
               borderColor: config.customize.mapLineColor,
@@ -269,14 +285,12 @@ export default {
               shadowOffsetY: 2,
               shadowBlur: 10
             },
-            // 鼠标放上去高亮的样式
             emphasis: {
               areaColor: config.customize.emphasisColor ? config.customize.emphasisColor :'#389BB7',
               borderWidth: 0
             }
           }
         },
-        // 提示浮窗样式
         tooltip: {
           show: false,
           trigger: 'item',
@@ -295,7 +309,6 @@ export default {
           },
           showDelay: 100
         },
-        // 视觉映射
         visualMap: {
           show: !config.customize.scatter,
           calculable: config.customize.visual,
@@ -304,7 +317,20 @@ export default {
           seriesIndex: config.customize.scatter ? -1 : 0,
           inRange: {
             color: config.customize.rangeColor
-          }
+          },
+          textStyle: {
+            color: '#fff'
+          },
+          left: 30,
+          bottom: 30,
+          itemWidth: 15,
+          itemHeight: 100,
+          padding: [5, 5],
+          backgroundColor: 'rgba(0,0,0,0.5)',
+          borderColor: '#ccc',
+          borderWidth: 0,
+          orient: 'vertical',
+          z: 100
         },
         series: series
       }
@@ -322,39 +348,60 @@ export default {
         } else {
           this.linkage({clickAreaName: params.name})
         }
-        if (params.name == '') return
-        if (!config.customize.down) {
+        
+        // 如果不允许下钻或没有地图名称，直接返回
+        if (!config.customize.down || !params.name) {
           return
         }
+
         // 到达允许下钻的层数，则不再下钻
-        if (this.currentDeep >= config.customize.downLevel) return
-        const downMapUrl = `${window.BS_CONFIG?.httpConfigs?.baseURL}/bigScreen/map/data/${this.mapList[this.currentDeep].id}/${params.name}`
-        const downMap = await this.$dataRoomAxios.get(decodeURI(downMapUrl), {}, false)
-        // 地图不可用
-        if (downMap.available !== 1) {
-          this.$message({
-            message: '未找到该地图配置',
-            type: 'warning'
-          })
+        if (this.currentDeep >= config.customize.downLevel) {
           return
         }
-        let geoJsonObj
+
+        // 确保mapList存在且有当前层级的数据
+        if (!this.mapList || !this.mapList[this.currentDeep]) {
+          console.warn('地图数据不完整')
+          return
+        }
+
         try {
-          geoJsonObj = JSON.parse(downMap.geoJson)
+          const downMapUrl = `${window.BS_CONFIG?.httpConfigs?.baseURL}/bigScreen/map/data/${this.mapList[this.currentDeep].id}/${params.name}`
+          const downMap = await this.$dataRoomAxios.get(decodeURI(downMapUrl), {}, false)
+          
+          // 地图不可用
+          if (!downMap || downMap.available !== 1) {
+            this.$message({
+              message: '未找到该地图配置',
+              type: 'warning'
+            })
+            return
+          }
+
+          let geoJsonObj
+          try {
+            geoJsonObj = JSON.parse(downMap.geoJson)
+          } catch (error) {
+            this.$message({
+              message: params.name + '地图数据格式错误',
+              type: 'warning'
+            })
+            return
+          }
+
+          this.currentDeep++
+          this.mapList.push(downMap)
+          this.option.geo.map = params.name
+          echarts.registerMap(params.name, geoJsonObj)
+          this.charts.setOption(this.option, true)
         } catch (error) {
+          console.error('下钻操作失败:', error)
           this.$message({
-            message: params.name + '地图数据格式错误',
-            type: 'warning'
+            message: '下钻操作失败',
+            type: 'error'
           })
-          return
         }
-        this.currentDeep++
-        this.mapList.push(downMap)
-        // this.changeData({...config, customize: {...config.customize, scope: params.name}})
-        this.option.geo.map = params.name
-        echarts.registerMap(params.name, geoJsonObj);
-        this.charts.setOption(this.option, true);
-      });
+      })
     },
 
 

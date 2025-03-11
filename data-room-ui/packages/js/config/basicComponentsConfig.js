@@ -12,35 +12,55 @@ import getComponentConfig from 'data-room-ui/js/utils/getComponentConfig'
 // 批量引入配置文件
 import { setModules, dataModules } from 'data-room-ui/js/utils/configImport'
 const typeList = [
+  // 1. 基础文本类
   'texts',
-  'numbers',
-  'linkChart',
-  'horizontalLine', // 横线
-  'verticalLine', // 竖线
-  'picture',
-  'timeCountDown',
-  'currentTime',
-  'customHtml',
-  'iframeChart',
-  'digitalFlop',
-  'tables',
-  'screenScrollRanking',
-  'screenScrollBoard',
-  'video',
-  'input',
-  // 'button',
+  'numbers', 
   'marquee',
-  'chartTab',
-  // 'themeSwitcher',
-  'themeSelect',
+  'currentTime',
+  'timeCountDown',
+  'linkChart',
+  
+  // 2. 输入控件类
+  'input',
   'select',
   'timePicker',
   'dateTimePicker',
+  
+  // 3. 装饰边框类
+  'horizontalLine',
+  'verticalLine', 
+  'rectangle',
+  'svgLine',
+  
+  // 4. 媒体展示类
+  'picture',
+  'video',
+  'iframeChart',
+  'customHtml',
+  
+  // 5. 数据展示类
+  'tables',
+  'screenScrollBoard',
+  'screenScrollRanking',
+  'digitalFlop',
+  
+  // 6. 指标卡片类
   'indicatorCard',
   'indicatorCard2',
   'indexCard',
-  'indexCard2'
-
+  'indexCard2',
+  
+  // 7. 图表类
+  'candlestick',
+  'sankey',
+  
+  // 8. 地图类
+  'map',
+  'flyMap',
+  
+  // 9. 其他
+  'chartTab',
+  'themeSelect'
 ]
 let basicConfigList = []
 basicConfigList = typeList.map((type) => {
