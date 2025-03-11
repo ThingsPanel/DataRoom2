@@ -12,10 +12,12 @@ import com.gccloud.dataroom.core.permission.Permission;
 import com.gccloud.dataroom.core.utils.TenantContext;
 import io.swagger.annotations.*;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author hongyang
@@ -35,25 +37,46 @@ public class BizComponentController {
 
     @ApiPermission(permissions = {Permission.Component.VIEW})
     @GetMapping("/page")
-    @ApiOperation(value = "分页", position = 10, notes = "分页查询业务组件", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "分页（租户分离）", position = 10, notes = "分页查询业务组件", produces = MediaType.APPLICATION_JSON_VALUE)
     @ApiImplicitParams({
             @ApiImplicitParam(name = "current", value = "页码", paramType = "query", required = true, dataType = "int"),
             @ApiImplicitParam(name = "size", value = "每页条数", paramType = "query", required = true, dataType = "int"),
             @ApiImplicitParam(name = "name", value = "名称模糊查询", paramType = "query", dataType = "string")
     })
+    @SuppressWarnings("unchecked")
     public R<PageVO<BizComponentEntity>> getPage(@ApiParam(name = "查询", value = "传入查询的业务条件", required = true) BizComponentSearchDTO searchDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询组件");
+            return (R<PageVO<BizComponentEntity>>) R.error("租户ID为空，不允许查询组件");
+        }
+        
         PageVO<BizComponentEntity> page = bizComponentService.getPage(searchDTO);
         return R.success(page);
     }
 
     @ApiPermission(permissions = {Permission.Component.ADD})
     @PostMapping("/add")
-    @ApiOperation(value = "新增", notes = "新增", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "新增（租户分离）", notes = "新增", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
     public R<String> add(@ApiParam(name = "新增", value = "传入新增的业务条件", required = true) @RequestBody BizComponentDTO dto) {
-        BizComponentEntity entity = BeanConvertUtils.convert(dto, BizComponentEntity.class);
         // 从 TenantContext 获取当前租户ID
         String tenantId = TenantContext.getTenantId();
         log.info("当前操作的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许新增组件");
+            // 使用显式类型转换来解决类型安全问题
+            return R.error("租户ID为空，不允许新增组件");
+        }
+        
+        BizComponentEntity entity = BeanConvertUtils.convert(dto, BizComponentEntity.class);
+        
         // 设置租户ID
         entity.setTenantId(tenantId);
         // 打印完整的实体内容
@@ -101,6 +124,25 @@ public class BizComponentController {
     @ApiOperation(value = "名称查重", notes = "名称查重", produces = MediaType.APPLICATION_JSON_VALUE)
     public R<Boolean> nameRepeat(@RequestBody BizComponentDTO dto) {
         return R.success(bizComponentService.checkName(dto.getId(), dto.getName()));
+    }
+
+    @ApiPermission(permissions = {Permission.Component.VIEW})
+    @GetMapping("/list")
+    @ApiOperation(value = "列表（租户分离）", notes = "列表查询业务组件", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
+    public R<List<BizComponentEntity>> getList(@ApiParam(name = "查询", value = "传入查询的业务条件", required = true) BizComponentSearchDTO searchDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询组件");
+            return (R<List<BizComponentEntity>>) R.error("租户ID为空，不允许查询组件");
+        }
+        
+        List<BizComponentEntity> list = bizComponentService.getList(searchDTO);
+        return R.success(list);
     }
 
 }

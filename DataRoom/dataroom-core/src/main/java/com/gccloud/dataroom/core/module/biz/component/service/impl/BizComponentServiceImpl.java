@@ -13,6 +13,8 @@ import com.gccloud.dataroom.core.utils.CodeGenerateUtils;
 import com.gccloud.common.exception.GlobalException;
 import com.gccloud.common.vo.PageVO;
 import com.gccloud.dataroom.core.utils.PathUtils;
+import com.gccloud.dataroom.core.utils.TenantContext;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -44,6 +46,14 @@ public class BizComponentServiceImpl extends ServiceImpl<DataRoomBizComponentDao
         LambdaQueryWrapper<BizComponentEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(StringUtils.isNotBlank(searchDTO.getName()), BizComponentEntity::getName, searchDTO.getName());
         queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getType()), BizComponentEntity::getType, searchDTO.getType());
+        
+        // 添加租户隔离条件
+        String tenantId = TenantContext.getTenantId();
+        if (StringUtils.isNotBlank(tenantId)) {
+            log.info("分页查询添加租户隔离条件: tenantId={}", tenantId);
+            queryWrapper.eq(BizComponentEntity::getTenantId, tenantId);
+        }
+        
         queryWrapper.orderByAsc(BizComponentEntity::getOrderNum);
         queryWrapper.orderByDesc(BizComponentEntity::getCreateDate);
         PageVO<BizComponentEntity> page = this.page(searchDTO, queryWrapper);
@@ -66,6 +76,14 @@ public class BizComponentServiceImpl extends ServiceImpl<DataRoomBizComponentDao
         LambdaQueryWrapper<BizComponentEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.like(StringUtils.isNotBlank(searchDTO.getName()), BizComponentEntity::getName, searchDTO.getName());
         queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getType()), BizComponentEntity::getType, searchDTO.getType());
+        
+        // 添加租户隔离条件
+        String tenantId = TenantContext.getTenantId();
+        if (StringUtils.isNotBlank(tenantId)) {
+            log.info("列表查询添加租户隔离条件: tenantId={}", tenantId);
+            queryWrapper.eq(BizComponentEntity::getTenantId, tenantId);
+        }
+        
         List<BizComponentEntity> list = this.list(queryWrapper);
         String urlPrefix = bigScreenConfig.getFile().getUrlPrefix();
         if (!urlPrefix.endsWith("/")) {
