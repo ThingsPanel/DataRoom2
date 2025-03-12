@@ -13,7 +13,7 @@ jobs:
     - name: Setup Node.js and npm
       uses: actions/setup-node@v3
       with:
-        node-version: '18.x'
+        node-version: '14.x'
         
     - name: Build
       working-directory: ./data-room-ui
