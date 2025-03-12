@@ -123,8 +123,21 @@ export default {
       ]
     }
   },
+  watch: {
+    '$route': {
+      handler(newRoute) {
+        // 如果URL中没有ticket参数，则清除sessionStorage中的ticket
+        if (!newRoute.query.ticket) {
+          sessionStorage.removeItem('ticket');
+        } else {
+          sessionStorage.setItem('ticket', newRoute.query.ticket);
+        }
+      },
+      immediate: true // 确保首次加载时也会执行
+    }
+  },
   created () {
-    document.title = this.title
+    document.title = this.title;
   },
   mounted () {
     this.giteeHref = 'https://gitee.com/gcpaas/DataRoom'
@@ -135,11 +148,17 @@ export default {
       if (this.$route.query.edit) {
         this.$router.push({
           path: tab.path,
-          query: { edit: 1 }
+          query: { 
+            edit: 1,
+            // 在切换tab时保持ticket参数
+            ...(this.$route.query.ticket ? { ticket: this.$route.query.ticket } : {})
+          }
         })
       } else {
         this.$router.push({
-          path: tab.path
+          path: tab.path,
+          // 在切换tab时保持ticket参数
+          query: this.$route.query.ticket ? { ticket: this.$route.query.ticket } : {}
         })
       }
     }

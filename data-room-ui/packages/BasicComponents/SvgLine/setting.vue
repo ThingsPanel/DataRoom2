@@ -62,29 +62,79 @@
                 @change="updateConfig"
               />
             </el-form-item>
-            <el-form-item label="虚线">
-              <el-switch 
-                v-model="config.customize.dashed" 
-                @change="updateConfig"
-              />
-            </el-form-item>
-            <el-form-item 
-              v-if="config.customize.dashed"
-              label="虚线长度"
-            >
-              <el-input-number
-                v-model="config.customize.dashLength"
-                :min="1"
-                :max="20"
-                @change="updateConfig"
-              />
-            </el-form-item>
             <el-form-item label="曲线">
               <el-switch 
                 v-model="config.customize.curved" 
                 @change="updateConfig"
               />
             </el-form-item>
+          </div>
+          <SettingTitle>动画效果</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="启用动画">
+              <el-switch
+                v-model="config.customize.animation.enable"
+                @change="updateConfig"
+              />
+            </el-form-item>
+            
+            <template v-if="config.customize.animation.enable">
+              <el-form-item label="动画类型">
+                <el-select 
+                  v-model="config.customize.animation.type"
+                  @change="updateConfig"
+                >
+                  <el-option label="水流动画" value="flow" />
+                  <el-option label="粒子流动" value="particle" />
+                </el-select>
+              </el-form-item>
+
+              <el-form-item label="动画速度">
+                <el-slider
+                  v-model="config.customize.animation.speed"
+                  :min="1"
+                  :max="10"
+                  @change="updateConfig"
+                />
+              </el-form-item>
+
+              <!-- 水流动画配置 -->
+              <template v-if="config.customize.animation.type === 'flow'">
+                <el-form-item label="水流颜色">
+                  <el-color-picker
+                    v-model="config.customize.animation.flowColor"
+                    show-alpha
+                    @change="updateConfig"
+                  />
+                </el-form-item>
+                <el-form-item label="水流长度">
+                  <el-slider
+                    v-model="config.customize.animation.flowLength"
+                    :min="10"
+                    :max="100"
+                    @change="updateConfig"
+                  />
+                </el-form-item>
+              </template>
+
+              <!-- 粒子动画配置 -->
+              <template v-if="config.customize.animation.type === 'particle'">
+                <el-form-item label="粒子颜色">
+                  <el-color-picker
+                    v-model="config.customize.animation.particleColor"
+                    @change="updateConfig"
+                  />
+                </el-form-item>
+                <el-form-item label="粒子大小">
+                  <el-slider
+                    v-model="config.customize.animation.particleSize"
+                    :min="1"
+                    :max="10"
+                    @change="updateConfig"
+                  />
+                </el-form-item>
+              </template>
+            </template>
           </div>
           <SettingTitle>编辑模式</SettingTitle>
           <div class="lc-field-body">

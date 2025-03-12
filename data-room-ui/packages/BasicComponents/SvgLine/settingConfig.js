@@ -27,7 +27,17 @@ const customConfig = {
     dashLength: 5,
     curved: false,
     points: [], // 存储相对位置的点
-    autoResize: true // 添加自动调整大小的配置
+    autoResize: true, // 添加自动调整大小的配置
+    // 添加动画相关配置
+    animation: {
+      enable: false,
+      type: 'flow', // flow(水流), dash(虚线移动), particle(粒子)
+      speed: 5,
+      flowColor: 'rgba(24, 144, 255, 0.6)',
+      flowLength: 30,
+      particleSize: 3,
+      particleColor: '#fff'
+    }
   }
 }
 
