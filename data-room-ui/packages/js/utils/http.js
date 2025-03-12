@@ -2,7 +2,8 @@ import axios from 'axios'
 import qs from 'qs'
 // import _ from 'lodash'
 import merge from 'lodash/merge'
-import { Message } from 'element-ui'
+import { Message, MessageBox } from 'element-ui'
+import { globalConfig } from 'data-room-ui/js/config' // 引入全局配置
 /**
  * 统一进行异常输出
  * 如果异常只是弹框显示即可，可使用该实例
@@ -61,7 +62,6 @@ http.interceptors.request.use(config => {
  */
 httpCustom.interceptors.request.use(config => {
   // 从session中获取ticket
-  console.log(config,0)
   const ticket = sessionStorage.getItem('ticket')
   // 如果ticket存在，则添加到请求头
   if (ticket) {
@@ -79,14 +79,25 @@ httpCustom.interceptors.request.use(config => {
  * 响应拦截
  */
 http.interceptors.response.use(response => {
-  console.log(response, 98)
+
   // 验证请求头是否包含x-api-key
-  console.log('响应拦截器中的请求配置:', response.config)
-  console.log('响应拦截器中的请求头:', response.config.headers)
-  if (response.config.headers['x-api-key']) {
-    console.log('验证成功: x-api-key已正确添加到请求头', response.config.headers['x-api-key'])
-  } else {
-    console.warn('验证失败: 请求头中没有找到x-api-key')
+  console.log(response.data.msg === "租户ID为空，不允许查询分类", 98)
+
+  if (response.data.msg.includes("租户ID为空")) {
+    MessageBox.confirm(
+      '检测到您的租户ID为空，请前往 ThingsPanel 登录。',
+      '提示',
+      {
+        confirmButtonText: '前往登录',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      // 用户点击确认按钮，跳转到 ThingsPanel 登录页
+      window.location.href = globalConfig.urls.thingsPanelLogin;
+    }).catch(() => {
+      // 用户点击取消按钮，不做任何操作
+    });
   }
 
   const res = response.data
