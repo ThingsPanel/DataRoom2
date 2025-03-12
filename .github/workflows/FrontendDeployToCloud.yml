@@ -13,12 +13,12 @@ jobs:
     - name: Setup Node.js and npm
       uses: actions/setup-node@v3
       with:
-        node-version: '18.x'
+        node-version: '14.x'
         
     - name: Build
       working-directory: ./data-room-ui
       run: |
-        npm install -g npm@10.x
+        npm install -g npm@6.x
         npm install --registry=http://registry.npmmirror.com
         npm run build
         ls -lrt
