@@ -94,6 +94,7 @@ import plotList, { getCustomPlots } from '../G2Plots/plotList'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
 import { getFileUrl } from 'data-room-ui/js/utils/file'
 import { customDeserialize } from 'data-room-ui/js/utils/jsonSerialize.js'
+import { EventBus } from 'data-room-ui/js/utils/eventBus'
 
 export default {
   name: 'BigScreenRender',
@@ -117,7 +118,8 @@ export default {
       // 临时冻结拖拽
       freeze: false,
       plotList,
-      rawChart: []
+      rawChart: [],
+      draggableDisabled: false
     }
   },
   computed: {
@@ -161,6 +163,13 @@ export default {
   mounted () {
     this.styleSet()
     this.plotList = [...this.plotList, ...getCustomPlots()]
+    
+    // 监听禁用拖拽事件
+    EventBus.$on('disable-parent-drag', this.setDraggableDisabled)
+  },
+  beforeDestroy() {
+    // 移除事件监听
+    EventBus.$off('disable-parent-drag', this.setDraggableDisabled)
   },
   methods: {
     ...mapMutations('bigScreen', [
@@ -466,6 +475,18 @@ export default {
      */
     getCoverPicture (url) {
       return getFileUrl(url)
+    },
+    // 设置拖拽禁用状态
+    setDraggableDisabled(disabled) {
+      // 根据您的拖拽实现方式，可能需要调整这部分代码
+      this.draggableDisabled = disabled;
+      
+      // 如果使用 vue-draggable-resizable，可以这样设置
+      this.$refs.draggableItems.forEach(item => {
+        if (item.active) {
+          item.enabled = !disabled;
+        }
+      });
     }
   }
 }

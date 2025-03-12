@@ -5,72 +5,22 @@
       pointerEvents: isEditing ? 'auto' : 'none',
       width: '100%',
       height: '100%',
-      position: 'relative'
+      position: 'relative',
+      overflow: 'visible'
     }"
   >
-    <svg
-      ref="svgElement"
-      width="100%"
-      height="100%"
-      @click.stop="handleSvgClick"
-      @mousedown.stop
-      style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%)"
-    >
-      <!-- 主线条 -->
-      <path
-        :d="pathD"
-        :stroke="lineColor"
-        :stroke-width="lineWidth"
-        :stroke-dasharray="dashArray"
-        fill="none"
-        :style="{ opacity: opacity }"
-      />
-
-      <!-- 控制点 -->
-      <template v-if="isEditing">
-        <circle
-          v-for="(point, index) in points"
-          :key="index"
-          :cx="point.x"
-          :cy="point.y"
-          :r="6"
-          fill="#1890ff"
-          stroke="#fff"
-          stroke-width="2"
-          style="cursor: move"
-          @mousedown.stop="startDragPoint($event, index)"
-          @click.stop
-        />
-        <!-- 删除按钮 -->
-        <g
-          v-for="(point, index) in points"
-          :key="`delete-${index}`"
-          @click.stop="deletePoint(index)"
-          style="cursor: pointer"
-          v-show="points.length > 2"
-        >
-          <circle
-            :cx="point.x"
-            :cy="point.y - 15"
-            r="8"
-            fill="#ff4d4f"
-          />
-          <text
-            :x="point.x"
-            :y="point.y - 15"
-            fill="#fff"
-            text-anchor="middle"
-            alignment-baseline="middle"
-            style="font-size: 12px; font-weight: bold"
-          >×</text>
-        </g>
-      </template>
-    </svg>
+    <div
+      ref="svgContainer"
+      style="width: 100%; height: 100%; overflow: visible;"
+    ></div>
   </div>
 </template>
 
 <script>
 import { EventBus } from 'data-room-ui/js/utils/eventBus'
+import { SVG } from '@svgdotjs/svg.js'
+// 移除拖拽插件导入
+// import '@svgdotjs/svg.draggable.js'
 
 export default {
   name: 'SvgLine',
@@ -82,12 +32,17 @@ export default {
   },
   data() {
     return {
-      points: [],
       isEditing: false,
+      svgDraw: null,
+      path: null,
+      points: [],
+      circles: [],
+      deleteButtons: [],
       isDragging: false,
-      currentPointIndex: -1,
-      adjustTimer: null,
-      updateTimer: null
+      isAdjustingSize: false,
+      // 添加拖拽相关状态
+      draggedPointIndex: -1,
+      dragStartPos: { x: 0, y: 0 }
     }
   },
   computed: {
@@ -104,483 +59,761 @@ export default {
       if (!this.config.customize?.dashed) return 'none'
       const dashLength = this.config.customize?.dashLength || 5
       return `${dashLength},${dashLength}`
-    },
-    pathD() {
-      if (!this.points || this.points.length < 2) return ''
-
-      let d = `M ${this.points[0].x} ${this.points[0].y}`
-
-      if (this.config.customize?.curved) {
-        // 贝塞尔曲线
-        for (let i = 1; i < this.points.length; i++) {
-          const prev = this.points[i - 1]
-          const curr = this.points[i]
-          const cp1x = prev.x + (curr.x - prev.x) / 3
-          const cp1y = prev.y
-          const cp2x = prev.x + (curr.x - prev.x) * 2 / 3
-          const cp2y = curr.y
-          d += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`
-        }
-      } else {
-        // 直线
-        for (let i = 1; i < this.points.length; i++) {
-          d += ` L ${this.points[i].x} ${this.points[i].y}`
-        }
-      }
-
-      return d
-    },
-    // 获取画布最大值
-    canvasLimits() {
-      let renderComponent = this.$parent
-      while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
-        renderComponent = renderComponent.$parent
-      }
-
-      if (renderComponent) {
-        const pageConfig = renderComponent.pageInfo.pageConfig
-        return {
-          maxWidth: pageConfig.w,
-          maxHeight: pageConfig.h
-        }
-      }
-
-      return {
-        maxWidth: Infinity,
-        maxHeight: Infinity
-      }
-    },
-    // 获取实际可用的最大宽高（考虑当前位置）
-    actualLimits() {
-      return {
-        maxWidth: this.canvasLimits.maxWidth - this.config.x,
-        maxHeight: this.canvasLimits.maxHeight - this.config.y
-      }
     }
   },
   watch: {
-    points: {
-      handler() {
-        if (this.isEditing) {
-          this.debounceAdjustSize()
-        }
-      },
-      deep: true
-    },
     config: {
       handler(newVal, oldVal) {
-        // 当config变化时，检查是否需要重新初始化点
+        // 当config变化时，检查是否需要重新初始化
         if (newVal._fromSvgDrag) {
-          // 如果是来自SVG拖动的更新，不需要重新初始化点
+          // 如果是来自SVG拖动的更新，不需要重新初始化
           return;
         }
         
+        // 检查容器位置是否变化
+        if (newVal.x !== oldVal.x || newVal.y !== oldVal.y) {
+          // 容器位置变化，但点的相对位置不变，所以不需要重新初始化
+          return;
+        }
+        
+        // 检查是否是由于拖动引起的宽高变化
         if (newVal.w !== oldVal.w || newVal.h !== oldVal.h) {
-          // 如果宽高发生变化，但不是由拖动点引起的，则重新初始化点
-          if (!this.isDragging && !this.adjustTimer) {
-            this.initPointsFromConfig()
+          // 如果宽高发生变化，但不是由拖动点引起的，则重新初始化
+          if (!this.isDragging && !this.isAdjustingSize) {
+            this.initFromConfig();
+          }
+        } else if (JSON.stringify(newVal.customize?.points) !== JSON.stringify(oldVal.customize?.points)) {
+          // 如果点的配置发生变化，且不是由拖动引起的，则重新初始化
+          if (!this.isDragging && !this.isAdjustingSize) {
+            this.initFromConfig();
           }
         }
       },
       deep: true
+    },
+    lineColor() {
+      this.updatePathStyle();
+    },
+    lineWidth() {
+      this.updatePathStyle();
+    },
+    opacity() {
+      this.updatePathStyle();
+    },
+    dashArray() {
+      this.updatePathStyle();
+    },
+    isEditing(val) {
+      this.updateControlPoints();
     }
   },
   mounted() {
-    this.initPointsFromConfig()
-    EventBus.$on('svgline-toggle-edit', this.handleToggleEdit)
+    this.initSVG();
+    EventBus.$on('svgline-toggle-edit', this.handleToggleEdit);
+    
+    // 添加事件监听，通知父组件禁用拖拽
+    this.$refs.svgContainer.addEventListener('mousedown', this.notifyParentDisableDrag);
   },
   beforeDestroy() {
-    EventBus.$off('svgline-toggle-edit', this.handleToggleEdit)
-    if (this.adjustTimer) {
-      clearTimeout(this.adjustTimer)
+    EventBus.$off('svgline-toggle-edit', this.handleToggleEdit);
+    if (this.svgDraw) {
+      this.svgDraw.remove();
     }
+    
+    // 移除事件监听
+    this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
   },
   methods: {
-    initPointsFromConfig() {
+    initSVG() {
+      // 初始化SVG绘图区域
+      this.svgDraw = SVG().addTo(this.$refs.svgContainer).size('100%', '100%');
+      
+      // 创建路径元素
+      this.path = this.svgDraw.path('').fill('none');
+      this.updatePathStyle();
+      
+      // 初始化点
+      this.initFromConfig();
+      
+      // 添加点击事件
+      this.svgDraw.click(this.handleSvgClick);
+    },
+    
+    initFromConfig() {
+      // 清除现有点
+      this.points = [];
+      this.clearControlPoints();
+      
       try {
-        const configPoints = this.config.customize?.points
+        const configPoints = this.config.customize?.points;
         if (configPoints && Array.isArray(configPoints) && configPoints.length >= 2) {
+          // 使用相对位置计算绝对位置
           this.points = configPoints.map(p => ({
             x: p.x * this.config.w,
             y: p.y * this.config.h
-          }))
-          this.checkPointsInBounds()
+          }));
         } else {
-          this.initDefaultPoints()
+          // 如果没有配置点或点数不足，则初始化默认点
+          this.points = [
+            { x: this.config.w * 0.2, y: this.config.h * 0.5 },
+            { x: this.config.w * 0.8, y: this.config.h * 0.5 }
+          ];
+          this.savePoints();
         }
+        
+        // 更新路径
+        this.updatePath();
+        
+        // 更新控制点
+        this.updateControlPoints();
       } catch (error) {
-        console.error('初始化点失败:', error)
-        this.initDefaultPoints()
-      }
-    },
-    initDefaultPoints() {
+        console.error('初始化点失败:', error);
+        // 使用默认点
       this.points = [
         { x: this.config.w * 0.2, y: this.config.h * 0.5 },
         { x: this.config.w * 0.8, y: this.config.h * 0.5 }
-      ]
-      this.checkPointsInBounds()
-      this.savePoints()
+        ];
+        this.savePoints();
+        this.updatePath();
+        this.updateControlPoints();
+      }
     },
+    
+    updatePathStyle() {
+      if (!this.path) return;
+      
+      this.path
+        .stroke({ color: this.lineColor, width: this.lineWidth, opacity: this.opacity })
+        .attr('stroke-dasharray', this.dashArray);
+    },
+    
+    updatePath() {
+      if (!this.path || this.points.length < 2) return;
+      
+      let pathData = '';
+      
+      if (this.config.customize?.curved) {
+        // 贝塞尔曲线
+        pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+        
+        for (let i = 1; i < this.points.length; i++) {
+          const prev = this.points[i - 1];
+          const curr = this.points[i];
+          const cp1x = prev.x + (curr.x - prev.x) / 3;
+          const cp1y = prev.y;
+          const cp2x = prev.x + (curr.x - prev.x) * 2 / 3;
+          const cp2y = curr.y;
+          pathData += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+        }
+      } else {
+        // 直线
+        pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+        
+        for (let i = 1; i < this.points.length; i++) {
+          pathData += ` L ${this.points[i].x} ${this.points[i].y}`;
+        }
+      }
+      
+      this.path.plot(pathData);
+    },
+    
+    clearControlPoints() {
+      // 清除控制点
+      this.circles.forEach(circle => circle.remove());
+      this.circles = [];
+      
+      // 清除删除按钮
+      this.deleteButtons.forEach(btn => btn.remove());
+      this.deleteButtons = [];
+    },
+    
+    updateControlPoints() {
+      // 清除现有控制点
+      this.clearControlPoints();
+      
+      if (!this.isEditing) return;
+      
+      // 创建新的控制点
+      this.points.forEach((point, index) => {
+        // 创建控制点
+        const circle = this.svgDraw.circle(10)
+          .center(point.x, point.y)
+          .fill('#1890ff')
+          .stroke({ color: '#fff', width: 2 })
+          .css('cursor', 'move');
+        
+        // 添加鼠标事件
+        circle.on('mousedown', (e) => {
+          // 阻止事件冒泡，防止触发父组件的拖拽
+          e.stopPropagation();
+          
+          // 通知父组件禁用拖拽
+          EventBus.$emit('disable-parent-drag', true);
+          
+          this.isDragging = true;
+          this.draggedPointIndex = index;
+          this.dragStartPos = {
+            x: e.clientX,
+            y: e.clientY
+          };
+          
+          // 添加全局鼠标事件
+          document.addEventListener('mousemove', this.handleMouseMove);
+          document.addEventListener('mouseup', this.handleMouseUp);
+        });
+        
+        this.circles.push(circle);
+        
+        // 创建删除按钮（如果点数大于2）
+        if (this.points.length > 2) {
+          const deleteGroup = this.svgDraw.group();
+          
+          deleteGroup.circle(16)
+            .center(point.x, point.y - 15)
+            .fill('#ff4d4f');
+          
+          deleteGroup.text('×')
+            .center(point.x, point.y - 15)
+            .font({ size: 12, weight: 'bold' })
+            .fill('#fff')
+            .css('pointer-events', 'none');
+          
+          deleteGroup.css('cursor', 'pointer')
+            .click((e) => {
+              // 阻止事件冒泡
+              e.stopPropagation();
+              this.deletePoint(index);
+            });
+          
+          this.deleteButtons.push(deleteGroup);
+        }
+      });
+    },
+    
+    // 添加鼠标移动处理函数
+    handleMouseMove(e) {
+      if (!this.isDragging || this.draggedPointIndex === -1) return;
+      
+      // 计算移动距离
+      const dx = e.clientX - this.dragStartPos.x;
+      const dy = e.clientY - this.dragStartPos.y;
+      
+      // 更新拖拽起点
+      this.dragStartPos = {
+        x: e.clientX,
+        y: e.clientY
+      };
+      
+      // 更新点位置
+      const point = this.points[this.draggedPointIndex];
+      
+      // 计算新位置
+      let newX = point.x + dx;
+      let newY = point.y + dy;
+      
+      // 查找父组件中的 Render 组件
+      let renderComponent = this.$parent;
+      while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
+        renderComponent = renderComponent.$parent;
+      }
+      
+      if (renderComponent) {
+        // 获取画布大小限制 - 使用精确值
+        const pageConfig = renderComponent.pageConfig || {};
+        const canvasWidth = pageConfig.w || 1920;
+        const canvasHeight = pageConfig.h || 1080;
+        
+        // 检查容器位置
+        const containerX = this.config.x;
+        const containerY = this.config.y;
+        
+        // 计算点在画布中的绝对位置
+        const absoluteX = containerX + newX;
+        const absoluteY = containerY + newY;
+        
+        // 控制点的半径和删除按钮的位置
+        const POINT_RADIUS = 10; // 增加控制点半径，考虑实际大小
+        const DELETE_BUTTON_HEIGHT = 15; // 删除按钮在点上方15px
+        const LEFT_PADDING = 20; // 左侧额外的padding，修复左侧误差
+        
+        // 检查点是否超出画布边界 - 考虑控制点的大小和删除按钮
+        if (absoluteX - POINT_RADIUS - LEFT_PADDING < 0) {
+          // 如果超出左边界，调整点位置到边界
+          newX = -containerX + POINT_RADIUS + LEFT_PADDING;
+        } else if (absoluteX + POINT_RADIUS > canvasWidth) {
+          // 如果超出右边界，调整点位置到边界
+          newX = canvasWidth - containerX - POINT_RADIUS;
+        }
+        
+        // 考虑删除按钮的高度
+        if (absoluteY - POINT_RADIUS - DELETE_BUTTON_HEIGHT < 0) {
+          // 如果删除按钮超出上边界，调整点位置
+          newY = -containerY + POINT_RADIUS + DELETE_BUTTON_HEIGHT;
+        } else if (absoluteY + POINT_RADIUS > canvasHeight) {
+          // 如果超出下边界，调整点位置到边界
+          newY = canvasHeight - containerY - POINT_RADIUS;
+        }
+      }
+      
+      // 更新点位置
+      this.points[this.draggedPointIndex] = { x: newX, y: newY };
+      
+      // 更新路径
+      this.updatePath();
+      
+      // 更新控制点位置
+      if (this.circles[this.draggedPointIndex]) {
+        this.circles[this.draggedPointIndex].center(newX, newY);
+      }
+      
+      // 更新删除按钮位置
+      if (this.deleteButtons[this.draggedPointIndex]) {
+        this.deleteButtons[this.draggedPointIndex].center(newX, newY - 15);
+      }
+    },
+    
+    // 添加鼠标抬起处理函数
+    handleMouseUp() {
+      if (!this.isDragging) return;
+      
+      this.isDragging = false;
+      this.draggedPointIndex = -1;
+      
+      // 移除全局鼠标事件
+      document.removeEventListener('mousemove', this.handleMouseMove);
+      document.removeEventListener('mouseup', this.handleMouseUp);
+      
+      // 恢复父组件的拖拽
+      EventBus.$emit('disable-parent-drag', false);
+      
+      // 保存点位置
+      this.savePoints();
+      
+      // 检查是否需要调整容器大小
+      this.checkAndAdjustSize();
+    },
+    
     handleToggleEdit(value) {
-      this.isEditing = value
+      this.isEditing = value;
     },
-    handleSvgClick(e) {
-      if (!this.isEditing || this.isDragging) return
-      const { x, y } = this.getRelativeCoordinates(e)
+    
+    handleSvgClick(event) {
+      if (!this.isEditing || this.isDragging) return;
+      
+      // 阻止事件冒泡，防止触发父组件的点击事件
+      event.stopPropagation();
+      
+      // 获取点击位置
+      const point = this.svgDraw.point(event.clientX, event.clientY);
       
       // 检查是否点击在线段上
-      const clickedSegmentIndex = this.findClickedLineSegment(x, y)
+      const clickedSegmentIndex = this.findClickedLineSegment(point.x, point.y);
       
       if (clickedSegmentIndex !== -1) {
         // 如果点击在线段上，在对应位置插入新点
-        const p1 = this.points[clickedSegmentIndex]
-        const p2 = this.points[clickedSegmentIndex + 1]
+        const p1 = this.points[clickedSegmentIndex];
+        const p2 = this.points[clickedSegmentIndex + 1];
         
         // 计算新点的位置（在线段上的投影点）
-        const newPoint = this.getProjectionPoint(x, y, p1, p2)
+        const newPoint = this.getProjectionPoint(point.x, point.y, p1, p2);
         
         // 在找到的线段后面插入新点
-        this.points.splice(clickedSegmentIndex + 1, 0, newPoint)
+        this.points.splice(clickedSegmentIndex + 1, 0, newPoint);
       } else {
-        // 如果不是点击在线段上，则添加到末尾
-        this.points.push({ x, y })
+        // 如果没有点击在线段上，则在末尾添加新点
+        this.points.push({ x: point.x, y: point.y });
       }
       
-      this.checkPointsInBounds()
-      this.savePoints()
-    },
-    startDragPoint(e, index) {
-      e.preventDefault()
-      e.stopPropagation()
-      this.isDragging = true
-      this.currentPointIndex = index
-      document.addEventListener('mousemove', this.handleGlobalMouseMove)
-      document.addEventListener('mouseup', this.handleGlobalMouseUp)
-    },
-    handleGlobalMouseMove(e) {
-      if (!this.isDragging || this.currentPointIndex === -1) return
-      e.preventDefault()
-      e.stopPropagation()
-      const { x, y } = this.getRelativeCoordinates(e)
-      this.$set(this.points, this.currentPointIndex, { x, y })
-      this.checkPointsInBounds()
-    },
-    handleGlobalMouseUp() {
-      this.isDragging = false
-      this.currentPointIndex = -1
-      document.removeEventListener('mousemove', this.handleGlobalMouseMove)
-      document.removeEventListener('mouseup', this.handleGlobalMouseUp)
-      this.checkPointsInBounds()
-      this.savePoints()
-    },
-    checkPointsInBounds() {
-      const EDGE_PADDING = 10; // 边缘留出10px的操作空间
+      // 更新路径
+      this.updatePath();
       
-      if (!this.config.customize?.autoResize) {
-        // 如果不是自动调整大小，则强制限制点在容器内，但保留边距
-        this.points = this.points.map(point => ({
-          x: Math.max(EDGE_PADDING, Math.min(this.config.w - EDGE_PADDING, point.x)),
-          y: Math.max(EDGE_PADDING, Math.min(this.config.h - EDGE_PADDING, point.y))
-        }))
-        return;
+      // 更新控制点
+      this.updateControlPoints();
+      
+      // 保存点位置
+      this.savePoints();
+      
+      // 检查是否需要调整容器大小
+      this.checkAndAdjustSize();
+    },
+    
+    deletePoint(index) {
+      if (this.points.length <= 2) return;
+      
+      // 删除点
+      this.points.splice(index, 1);
+      
+      // 更新路径
+      this.updatePath();
+      
+      // 更新控制点
+      this.updateControlPoints();
+      
+      // 保存点位置
+      this.savePoints();
+    },
+    
+    savePoints() {
+      if (!this.points || this.points.length < 2) return;
+      
+      try {
+        // 计算相对位置
+        const relativePoints = this.points.map(p => ({
+          x: p.x / this.config.w,
+          y: p.y / this.config.h
+        }));
+        
+        // 创建一个干净的配置对象
+        const cleanConfig = {
+          ...JSON.parse(JSON.stringify(this.config)),
+          customize: {
+            ...JSON.parse(JSON.stringify(this.config.customize || {})),
+            points: relativePoints
+          }
+        };
+        
+        // 移除可能导致问题的字段
+        delete cleanConfig._fromSvgDrag;
+        
+        // 触发更新事件
+        this.$emit('update:config', cleanConfig);
+      } catch (error) {
+        console.error('保存点位置失败:', error);
       }
-
-      const xValues = this.points.map(p => p.x)
-      const yValues = this.points.map(p => p.y)
-      const minX = Math.min(...xValues)
-      const maxX = Math.max(...xValues)
-      const minY = Math.min(...yValues)
-      const maxY = Math.max(...yValues)
-
+    },
+    
+    checkAndAdjustSize() {
+      const EDGE_PADDING = 10;
+      
+      // 如果不是自动调整大小，则不进行调整
+      if (!this.config.customize?.autoResize) return;
+      
+      // 标记正在调整大小
+      this.isAdjustingSize = true;
+      
+      // 获取所有点的X和Y值
+      const xValues = this.points.map(p => p.x);
+      const yValues = this.points.map(p => p.y);
+      
+      // 计算当前点的边界
+      const minX = Math.min(...xValues);
+      const maxX = Math.max(...xValues);
+      const minY = Math.min(...yValues);
+      const maxY = Math.max(...yValues);
+      
       let hasChanges = false;
-      const updatedConfig = JSON.parse(JSON.stringify(this.config))
-
-      // 1. 处理容器位置和大小的调整
-      if (minX < EDGE_PADDING && updatedConfig.x > 0) {
-        updatedConfig.x = updatedConfig.x + (minX - EDGE_PADDING)
-        updatedConfig.w = updatedConfig.w + Math.abs(minX - EDGE_PADDING)
-        hasChanges = true
-      }
-
-      if (minY < EDGE_PADDING && updatedConfig.y > 0) {
-        updatedConfig.y = updatedConfig.y + (minY - EDGE_PADDING)
-        updatedConfig.h = updatedConfig.h + Math.abs(minY - EDGE_PADDING)
-        hasChanges = true
-      }
-
-      // 检查是否超出画布最大值（考虑边距和当前位置）
-      if (maxX > updatedConfig.w - EDGE_PADDING && updatedConfig.w < this.actualLimits.maxWidth) {
-        updatedConfig.w = Math.min(maxX + EDGE_PADDING, this.actualLimits.maxWidth)
-        hasChanges = true
-      }
-
-      if (maxY > updatedConfig.h - EDGE_PADDING && updatedConfig.h < this.actualLimits.maxHeight) {
-        updatedConfig.h = Math.min(maxY + EDGE_PADDING, this.actualLimits.maxHeight)
-        hasChanges = true
-      }
-
-      // 2. 限制点的位置
-      // 检查是否需要限制点的位置
-      const needsXConstraint = 
-        updatedConfig.x === 0 || // 左边界
-        updatedConfig.w >= this.actualLimits.maxWidth || // 达到最大宽度
-        maxX >= updatedConfig.w; // 点超出容器右边界
-
-      const needsYConstraint = 
-        updatedConfig.y === 0 || // 上边界
-        updatedConfig.h >= this.actualLimits.maxHeight || // 达到最大高度
-        maxY >= updatedConfig.h; // 点超出容器下边界
-
-      if (needsXConstraint) {
+      const updatedConfig = JSON.parse(JSON.stringify(this.config));
+      
+      // 处理左侧边界 - 如果有点超出左边界，向左扩展容器
+      if (minX < EDGE_PADDING) {
+        const deltaX = EDGE_PADDING - minX;
+        updatedConfig.x = Math.max(0, updatedConfig.x - deltaX);
+        updatedConfig.w += deltaX;
+        
+        // 调整所有点的X坐标，保持相对位置
         this.points = this.points.map(p => ({
-          x: Math.max(EDGE_PADDING, Math.min(updatedConfig.w - EDGE_PADDING, p.x)),
+          x: p.x + deltaX,
           y: p.y
-        }))
+        }));
+        
+        hasChanges = true;
       }
-
-      if (needsYConstraint) {
+      
+      // 处理上侧边界 - 如果有点超出上边界，向上扩展容器
+      if (minY < EDGE_PADDING) {
+        const deltaY = EDGE_PADDING - minY;
+        updatedConfig.y = Math.max(0, updatedConfig.y - deltaY);
+        updatedConfig.h += deltaY;
+        
+        // 调整所有点的Y坐标，保持相对位置
         this.points = this.points.map(p => ({
           x: p.x,
-          y: Math.max(EDGE_PADDING, Math.min(updatedConfig.h - EDGE_PADDING, p.y))
-        }))
+          y: p.y + deltaY
+        }));
+        
+        hasChanges = true;
       }
-
+      
+      // 处理右侧边界 - 如果有点超出右边界，向右扩展容器
+      if (maxX > updatedConfig.w - EDGE_PADDING) {
+        updatedConfig.w = maxX + EDGE_PADDING;
+        hasChanges = true;
+      }
+      
+      // 处理下侧边界 - 如果有点超出下边界，向下扩展容器
+      if (maxY > updatedConfig.h - EDGE_PADDING) {
+        updatedConfig.h = maxY + EDGE_PADDING;
+        hasChanges = true;
+      }
+      
+      // 如果有变化，更新配置
       if (hasChanges) {
-        // 使用防抖来延迟更新
-        if (this.updateTimer) {
-          clearTimeout(this.updateTimer)
+        // 创建一个干净的配置对象
+        const cleanConfig = JSON.parse(JSON.stringify(updatedConfig));
+        delete cleanConfig._fromSvgDrag;
+        
+        // 触发更新事件
+        this.$emit('update:config', cleanConfig);
+        
+        // 通知 Render 组件更新图表配置
+        let renderComponent = this.$parent;
+        while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
+          renderComponent = renderComponent.$parent;
         }
         
-        this.updateTimer = setTimeout(() => {
-          // 1. 更新本地状态
-          Object.assign(this.config, updatedConfig)
+        if (renderComponent) {
+          // 调用所有必要的更新方法
+          renderComponent.changeChartConfig({
+            ...cleanConfig,
+            _fromSvgDrag: true
+          });
           
-          // 2. 保存点的相对位置
-          this.savePointsWithoutEmit()
+          // 更新活动项配置
+          renderComponent.changeActiveItemConfig({
+            ...cleanConfig,
+            _fromSvgDrag: true
+          });
           
-          // 3. 触发更新事件
-          this.$emit('update:config', updatedConfig)
-
-          // 4. 通知 Render 组件更新图表配置
-          let renderComponent = this.$parent
-          while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
-            renderComponent = renderComponent.$parent
-          }
-
-          if (renderComponent) {
-            // 调用所有必要的更新方法
-            renderComponent.changeChartConfig({
-              ...updatedConfig,
-              _fromSvgDrag: true
-            })
-            
-            // 更新活动项配置
-            renderComponent.changeActiveItemConfig({
-              ...updatedConfig,
-              _fromSvgDrag: true
-            })
-            
-            // 更新活动项的宽高
-            renderComponent.changeActiveItemWH({
-              code: updatedConfig.code,
-              w: updatedConfig.w,
-              h: updatedConfig.h,
-              x: updatedConfig.x,
-              y: updatedConfig.y
-            })
-            
-            // 保存时间线
-            renderComponent.saveTimeLine(`调整${updatedConfig.title || '组件'}大小`)
-          }
-        }, 32) // 增加到两帧的时间，以获得更好的性能
-      }
-    },
-    deletePoint(index) {
-      if (this.points.length <= 2) return
-      this.points.splice(index, 1)
-      this.savePoints()
-    },
-    getRelativeCoordinates(event) {
-      const svgElement = this.$refs.svgElement
-      if (!svgElement) return { x: 0, y: 0 }
-
-      const svgRect = svgElement.getBoundingClientRect()
-      let x = event.clientX - svgRect.left
-      let y = event.clientY - svgRect.top
-
-      const scaleX = this.config.w / svgRect.width
-      const scaleY = this.config.h / svgRect.height
-
-      x = x * scaleX
-      y = y * scaleY
-
-      return { x, y }
-    },
-    savePoints() {
-      if (!this.points || this.points.length < 2) return
-      const relativePoints = this.points.map(p => ({
-        x: p.x / this.config.w,
-        y: p.y / this.config.h
-      }))
-      this.$emit('update:config', {
-        ...this.config,
-        customize: {
-          ...this.config.customize,
-          points: relativePoints
+          // 更新活动项的宽高
+          renderComponent.changeActiveItemWH({
+            code: cleanConfig.code,
+            w: cleanConfig.w,
+            h: cleanConfig.h,
+            x: cleanConfig.x,
+            y: cleanConfig.y
+          });
+          
+          // 保存时间线
+          renderComponent.saveTimeLine(`调整${cleanConfig.title || '组件'}大小`);
         }
-      })
-    },
-    savePointsWithoutEmit() {
-      if (!this.points || this.points.length < 2) return
-      const relativePoints = this.points.map(p => ({
-        x: p.x / this.config.w,
-        y: p.y / this.config.h
-      }))
-      // 只更新config对象，不触发事件
-      if (!this.config.customize) {
-        this.$set(this.config, 'customize', {})
+        
+        // 更新路径和控制点
+        this.updatePath();
+        this.updateControlPoints();
       }
-      this.$set(this.config.customize, 'points', relativePoints)
+      
+      // 标记调整大小完成
+      setTimeout(() => {
+        this.isAdjustingSize = false;
+      }, 100);
     },
-    debounceAdjustSize() {
-      if (this.adjustTimer) {
-        clearTimeout(this.adjustTimer)
-      }
-      // 移除对 adjustContainerSize 的调用，直接保存点位置
-      this.adjustTimer = setTimeout(() => {
-        this.savePoints()
-      }, 100)
-    },
-    // 移除 adjustContainerSize 方法
     
-    // 添加 changeStyle 方法以解决错误
-    changeStyle(style) {
-      if (!style || !this.config) return
-    
-      // 确保customize对象存在
-      if (!this.config.customize) {
-        this.$set(this.config, 'customize', {})
-      }
-    
-      // 更新组件的customize属性
-      Object.keys(style).forEach(key => {
-        this.$set(this.config.customize, key, style[key])
-      })
-    
-      // 如果有points数据，重新初始化点
-      if (style.customize && style.customize.points) {
-        this.initPointsFromConfig()
-      }
-    },
-    handleConfigChange() {
-      this.$emit('update:config', JSON.parse(JSON.stringify(this.config)))
-    },
-    // 查找点击位置最近的线段
     findClickedLineSegment(x, y, threshold = 8) {
-      // 如果是曲线模式，增加检测阈值
-      const effectiveThreshold = this.config.customize?.curved ? threshold * 1.5 : threshold
-
       for (let i = 0; i < this.points.length - 1; i++) {
-        const p1 = this.points[i]
-        const p2 = this.points[i + 1]
+        const p1 = this.points[i];
+        const p2 = this.points[i + 1];
         
         // 计算点到线段的距离
-        const distance = this.getDistanceToLineSegment(x, y, p1, p2)
+        const distance = this.getDistanceToLineSegment(x, y, p1, p2);
         
         // 如果距离小于阈值，认为点击在这条线段上
-        if (distance < effectiveThreshold) {
-          return i
-        }
-
-        // 如果是曲线模式，增加对贝塞尔曲线控制点的检测
-        if (this.config.customize?.curved) {
-          const cp1x = p1.x + (p2.x - p1.x) / 3
-          const cp1y = p1.y
-          const cp2x = p1.x + (p2.x - p1.x) * 2 / 3
-          const cp2y = p2.y
-
-          // 检查点到贝塞尔曲线的近似距离
-          const bezierPoints = this.getBezierPoints(p1, { x: cp1x, y: cp1y }, { x: cp2x, y: cp2y }, p2)
-          for (let j = 0; j < bezierPoints.length - 1; j++) {
-            const bp1 = bezierPoints[j]
-            const bp2 = bezierPoints[j + 1]
-            const bezierDistance = this.getDistanceToLineSegment(x, y, bp1, bp2)
-            if (bezierDistance < effectiveThreshold) {
-              return i
-            }
-          }
+        if (distance < threshold) {
+          return i;
         }
       }
-      return -1
-    },
-    // 计算点到线段的距离
-    getDistanceToLineSegment(x, y, p1, p2) {
-      const A = x - p1.x
-      const B = y - p1.y
-      const C = p2.x - p1.x
-      const D = p2.y - p1.y
-
-      const dot = A * C + B * D
-      const lenSq = C * C + D * D
-      let param = -1
-
-      if (lenSq !== 0) {
-        param = dot / lenSq
-      }
-
-      let xx, yy
-
-      if (param < 0) {
-        xx = p1.x
-        yy = p1.y
-      } else if (param > 1) {
-        xx = p2.x
-        yy = p2.y
-      } else {
-        xx = p1.x + param * C
-        yy = p1.y + param * D
-      }
-
-      const dx = x - xx
-      const dy = y - yy
-      return Math.sqrt(dx * dx + dy * dy)
-    },
-    // 获取点在线段上的投影点
-    getProjectionPoint(x, y, p1, p2) {
-      const A = x - p1.x
-      const B = y - p1.y
-      const C = p2.x - p1.x
-      const D = p2.y - p1.y
       
-      const dot = A * C + B * D
-      const lenSq = C * C + D * D
-      let param = 0.5 // 默认在线段中点
-
+      return -1;
+    },
+    
+    getDistanceToLineSegment(x, y, p1, p2) {
+      const A = x - p1.x;
+      const B = y - p1.y;
+      const C = p2.x - p1.x;
+      const D = p2.y - p1.y;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = -1;
+      
       if (lenSq !== 0) {
-        param = Math.max(0, Math.min(1, dot / lenSq))
+        param = dot / lenSq;
       }
-
+      
+      let xx, yy;
+      
+      if (param < 0) {
+        xx = p1.x;
+        yy = p1.y;
+      } else if (param > 1) {
+        xx = p2.x;
+        yy = p2.y;
+      } else {
+        xx = p1.x + param * C;
+        yy = p1.y + param * D;
+      }
+      
+      const dx = x - xx;
+      const dy = y - yy;
+      
+      return Math.sqrt(dx * dx + dy * dy);
+    },
+    
+    getProjectionPoint(x, y, p1, p2) {
+      const A = x - p1.x;
+      const B = y - p1.y;
+      const C = p2.x - p1.x;
+      const D = p2.y - p1.y;
+      
+      const dot = A * C + B * D;
+      const lenSq = C * C + D * D;
+      let param = 0.5; // 默认在线段中点
+      
+      if (lenSq !== 0) {
+        param = Math.max(0, Math.min(1, dot / lenSq));
+      }
+      
       return {
         x: p1.x + param * C,
         y: p1.y + param * D
+      };
+    },
+    
+    // 通知父组件禁用拖拽
+    notifyParentDisableDrag(e) {
+      if (this.isEditing) {
+        // 阻止事件冒泡，防止触发父组件的拖拽
+        e.stopPropagation();
+        
+        // 发送事件通知父组件禁用拖拽
+        EventBus.$emit('disable-parent-drag', true);
+        
+        // 在鼠标抬起时恢复父组件的拖拽
+        const enableParentDrag = () => {
+          EventBus.$emit('disable-parent-drag', false);
+          document.removeEventListener('mouseup', enableParentDrag);
+        };
+        
+        document.addEventListener('mouseup', enableParentDrag);
       }
     },
-    // 获取贝塞尔曲线上的采样点
-    getBezierPoints(p1, cp1, cp2, p2, steps = 10) {
-      const points = []
-      for (let i = 0; i <= steps; i++) {
-        const t = i / steps
-        const x = Math.pow(1 - t, 3) * p1.x +
-                  3 * Math.pow(1 - t, 2) * t * cp1.x +
-                  3 * (1 - t) * Math.pow(t, 2) * cp2.x +
-                  Math.pow(t, 3) * p2.x
-        const y = Math.pow(1 - t, 3) * p1.y +
-                  3 * Math.pow(1 - t, 2) * t * cp1.y +
-                  3 * (1 - t) * Math.pow(t, 2) * cp2.y +
-                  Math.pow(t, 3) * p2.y
-        points.push({ x, y })
+    
+    // 当点被拖动到边界时触发容器调整
+    triggerContainerResize(direction, distance) {
+      // 查找父组件中的 Render 组件
+      let renderComponent = this.$parent;
+      while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
+        renderComponent = renderComponent.$parent;
       }
-      return points
+      
+      if (!renderComponent) return;
+      
+      // 找到当前组件对应的 vdr 实例
+      const vdrInstances = renderComponent.$refs.draggableItems;
+      if (!vdrInstances || !vdrInstances.length) return;
+      
+      // 找到当前组件的 vdr 实例
+      const currentVdr = vdrInstances.find(item => item.id === this.config.code);
+      if (!currentVdr) return;
+      
+      // 根据方向模拟不同的拖动
+      switch (direction) {
+        case 'left':
+          // 只有当向左拖动时才调整左边界
+          if (distance.x < 0) {
+            this.simulateVdrResize(currentVdr, 'ml', distance);
+          }
+          break;
+        case 'right':
+          // 只有当向右拖动时才调整右边界
+          if (distance.x > 0) {
+            this.simulateVdrResize(currentVdr, 'mr', distance);
+          }
+          break;
+        case 'top':
+          // 只有当向上拖动时才调整上边界
+          if (distance.y < 0) {
+            this.simulateVdrResize(currentVdr, 'tm', distance);
+          }
+          break;
+        case 'bottom':
+          // 只有当向下拖动时才调整下边界
+          if (distance.y > 0) {
+            this.simulateVdrResize(currentVdr, 'bm', distance);
+          }
+          break;
+        // 对角线方向也需要类似处理
+        case 'topLeft':
+          if (distance.x < 0 || distance.y < 0) {
+            this.simulateVdrResize(currentVdr, 'tl', {
+              x: distance.x < 0 ? distance.x : 0,
+              y: distance.y < 0 ? distance.y : 0
+            });
+          }
+          break;
+        case 'topRight':
+          if (distance.x > 0 || distance.y < 0) {
+            this.simulateVdrResize(currentVdr, 'tr', {
+              x: distance.x > 0 ? distance.x : 0,
+              y: distance.y < 0 ? distance.y : 0
+            });
+          }
+          break;
+        case 'bottomLeft':
+          if (distance.x < 0 || distance.y > 0) {
+            this.simulateVdrResize(currentVdr, 'bl', {
+              x: distance.x < 0 ? distance.x : 0,
+              y: distance.y > 0 ? distance.y : 0
+            });
+          }
+          break;
+        case 'bottomRight':
+          if (distance.x > 0 || distance.y > 0) {
+            this.simulateVdrResize(currentVdr, 'br', {
+              x: distance.x > 0 ? distance.x : 0,
+              y: distance.y > 0 ? distance.y : 0
+            });
+          }
+          break;
+      }
+    },
+    
+    // 模拟 vdr 组件的拖动调整大小
+    simulateVdrResize(vdrInstance, handle, distance) {
+      // 标记正在调整大小，防止触发重新初始化
+      this.isAdjustingSize = true;
+      
+      // 获取 vdr 实例的方法
+      const resizeHandleDown = vdrInstance.handleResizeDown;
+      const resizeHandleMove = vdrInstance.handleResizeMove;
+      const resizeHandleUp = vdrInstance.handleUp;
+      
+      if (!resizeHandleDown || !resizeHandleMove || !resizeHandleUp) {
+        this.isAdjustingSize = false;
+        return;
+      }
+      
+      // 创建模拟的鼠标事件
+      const mouseDownEvent = new MouseEvent('mousedown', {
+        clientX: 0,
+        clientY: 0,
+        bubbles: true
+      });
+      
+      // 模拟鼠标按下事件
+      resizeHandleDown(mouseDownEvent, handle);
+      
+      // 模拟鼠标移动事件
+      const mouseMoveEvent = new MouseEvent('mousemove', {
+        clientX: distance.x,
+        clientY: distance.y,
+        bubbles: true
+      });
+      
+      // 模拟鼠标移动
+      resizeHandleMove(mouseMoveEvent);
+      
+      // 模拟鼠标抬起事件
+      const mouseUpEvent = new MouseEvent('mouseup', {
+        bubbles: true
+      });
+      
+      // 模拟鼠标抬起
+      resizeHandleUp(mouseUpEvent);
+      
+      // 重置标记
+      setTimeout(() => {
+        this.isAdjustingSize = false;
+      }, 100);
     }
   }
 }
