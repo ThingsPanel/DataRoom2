@@ -37,6 +37,24 @@ function EipException (message, code) {
  * 请求拦截
  */
 http.interceptors.request.use(config => {
+  // 从session中获取ticket
+  const ticket = sessionStorage.getItem('ticket')
+  // 如果ticket存在，则添加到请求头
+  if (ticket) {
+    if (!config.headers) {
+      config.headers = {}
+    }
+    config.headers['x-api-key'] = ticket
+    console.log('已添加x-api-key到请求头:', config.url)
+  }
+  
+  // 打印完整的请求信息
+  console.log('请求URL:', config.url)
+  console.log('请求方法:', config.method)
+  console.log('请求头详情:', JSON.stringify(config.headers, null, 2))
+  console.log('请求参数:', config.params || '无')
+  console.log('请求体:', config.data || '无')
+  
   return {
     ...config,
     ...merge(httpConfig, window.BS_CONFIG?.httpConfigs)
@@ -49,6 +67,22 @@ http.interceptors.request.use(config => {
  * 自定义请求拦截
  */
 httpCustom.interceptors.request.use(config => {
+  // 从session中获取ticket
+  const ticket = sessionStorage.getItem('ticket')
+  // 如果ticket存在，则添加到请求头
+  if (ticket) {
+    if (!config.headers) {
+      config.headers = {}
+    }
+    config.headers['x-api-key'] = ticket
+    console.log('已添加x-api-key到自定义请求头:', config.url)
+  }
+  
+  // 打印完整的请求信息
+  console.log('自定义请求URL:', config.url)
+  console.log('自定义请求方法:', config.method)
+  console.log('自定义请求头详情:', JSON.stringify(config.headers, null, 2))
+  
   return config
 }, error => {
   return Promise.reject(error)
@@ -178,6 +212,15 @@ export function download (url, headers = {}, params = {}, body = {}) {
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {
     params._t = new Date().getTime()
   }
+  
+  // 从session中获取ticket
+  const ticket = sessionStorage.getItem('ticket')
+  // 如果ticket存在，则添加到请求头
+  if (ticket) {
+    headers['x-api-key'] = ticket
+    console.log('已添加x-api-key到下载请求头:', url)
+  }
+  
   return new Promise((resolve, reject) => {
     axios({
       method: 'post',

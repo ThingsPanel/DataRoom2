@@ -157,13 +157,16 @@ export default {
         { x: 0.8, y: 0.5 }
       ])
     }
-
+  },
+  mounted() {
+    // 添加事件监听，通知父组件禁用拖拽
+    if (this.$refs.svgContainer) {
+      this.$refs.svgContainer.addEventListener('mousedown', this.notifyParentDisableDrag);
+    }
+    
+    // 在这里初始化 SVG
     this.initSVG();
     EventBus.$on('svgline-toggle-edit', this.handleToggleEdit);
-
-    // 添加事件监听，通知父组件禁用拖拽
-    this.$refs.svgContainer.addEventListener('mousedown', this.notifyParentDisableDrag);
-
     this.animationElements = [];
     this.updateAnimation();
   },
@@ -174,7 +177,9 @@ export default {
     }
 
     // 移除事件监听
-    this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
+    if (this.$refs.svgContainer) {
+      this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
+    }
 
     this.clearAnimation();
   },

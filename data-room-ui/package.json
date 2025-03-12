@@ -6,7 +6,7 @@
   "license": "Apache-2.0",
   "main": "packages/index.js",
   "keywords": [
-    "dataRoom",
+    "ThingsPanel",
     "bigScreen",
     "lowCode",
     "自定义大屏",

@@ -6,7 +6,7 @@
           class="logo"
           :src="logo"
         >
-        <span>{{ title }}</span><span style="font-size: 18px;margin-left: 8px">2.x</span>
+        <span>{{ title }}</span><span style="font-size: 18px;margin-left: 8px">2.0.13</span>
       </div>
 
       <div class="big-screen-nav-container">
@@ -15,7 +15,7 @@
           @change="changeTab"
         />
       </div>
-      <a
+      <!-- <a
         v-if="giteeSvg && giteeHref"
         class="fork-me-on-gitee"
         :href="giteeHref"
@@ -25,7 +25,7 @@
           :src="giteeSvg"
           alt="Fork me on Gitee"
         >
-      </a>
+      </a> -->
     </header>
     <div class="big-screen-router-view-wrap">
       <keep-alive>
@@ -53,7 +53,7 @@ export default {
   computed: {
     title () {
       if (this.$route.query.edit) return '大屏设计器'
-      return window?.BS_CONFIG?.starter?.title ?? 'DataRoom大屏设计器'
+      return window?.BS_CONFIG?.starter?.title ?? 'ThingsPanel可视化编辑器'
     },
     logo () {
       return window?.BS_CONFIG?.starter?.logo ?? require('./images/logo.png')
@@ -126,14 +126,12 @@ export default {
   watch: {
     '$route': {
       handler(newRoute) {
-        // 如果URL中没有ticket参数，则清除sessionStorage中的ticket
-        if (!newRoute.query.ticket) {
-          sessionStorage.removeItem('ticket');
-        } else {
+        // 仅在有 ticket 时更新，没有时不处理
+        if (newRoute.query.ticket) {
           sessionStorage.setItem('ticket', newRoute.query.ticket);
         }
       },
-      immediate: true // 确保首次加载时也会执行
+      immediate: true
     }
   },
   created () {
