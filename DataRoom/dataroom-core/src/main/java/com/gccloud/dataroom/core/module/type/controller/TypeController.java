@@ -4,6 +4,7 @@ import com.gccloud.dataroom.core.module.type.dto.TypeDTO;
 import com.gccloud.dataroom.core.module.type.entity.TypeEntity;
 import com.gccloud.dataroom.core.module.type.service.ITypeService;
 import com.gccloud.dataroom.core.module.type.vo.TypeVO;
+import com.gccloud.dataroom.core.utils.TenantContext;
 import com.gccloud.common.utils.BeanConvertUtils;
 import com.gccloud.common.validator.ValidatorUtils;
 import com.gccloud.common.validator.group.Insert;
@@ -12,6 +13,7 @@ import com.gccloud.common.vo.R;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,18 +37,44 @@ public class TypeController {
 
 
     @GetMapping("/list/{type}")
-    @ApiOperation(value = "分类列表", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "分类列表(租户隔离)", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
     public R<List<TypeVO>> list(@PathVariable("type") String type) {
-        List<TypeEntity> entityList = typeService.listByType(type);
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询分类");
+            return (R<List<TypeVO>>) R.error("租户ID为空，不允许查询分类");
+        }
+        
+        List<TypeEntity> entityList = typeService.listByType(type, tenantId);
         List<TypeVO> typeVOList = BeanConvertUtils.convert(entityList, TypeVO.class);
         return R.success(typeVOList);
     }
 
 
     @PostMapping("/add")
-    @ApiOperation(value = "新增分类", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "新增分类(租户隔离)", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
     public R<String> add(@RequestBody TypeDTO typeDTO) {
         ValidatorUtils.validateEntity(typeDTO, Insert.class);
+        
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前操作的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许新增分类");
+            return (R<String>) R.error("租户ID为空，不允许新增分类");
+        }
+        
+        // 设置租户ID
+        typeDTO.setTenantId(tenantId);
+        
         String id = typeService.add(typeDTO);
         return R.success(id);
     }

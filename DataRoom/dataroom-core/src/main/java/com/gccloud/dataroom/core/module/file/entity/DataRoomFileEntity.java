@@ -52,4 +52,10 @@ public class DataRoomFileEntity extends SuperEntity implements Serializable {
     @ApiModelProperty(notes = "桶名, 用于存储在云存储中的桶名")
     private String bucket;
 
+    /**
+     * 租户ID
+     */
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
+
 }

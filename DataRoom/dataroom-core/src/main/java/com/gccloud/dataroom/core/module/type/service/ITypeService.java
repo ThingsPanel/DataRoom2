@@ -34,11 +34,12 @@ public interface ITypeService extends ISuperService<TypeEntity> {
     void deleteById(String id);
 
     /**
-     * 根据分类类型查询分类列表
-     * @param type
-     * @return
+     * 根据类型获取分类列表
+     * @param type 类型
+     * @param tenantId 租户ID
+     * @return 分类列表
      */
-    List<TypeEntity> listByType(String type);
+    List<TypeEntity> listByType(String type, String tenantId);
 
     /**
      * code查重
