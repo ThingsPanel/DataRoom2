@@ -43,7 +43,7 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
-  }
+  },
   "lint-staged": {
     "src/**/*.{js,jsx,vue}": [
       "eslint --fix",
