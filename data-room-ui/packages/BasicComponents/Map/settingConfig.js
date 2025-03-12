@@ -31,92 +31,68 @@ export const settingConfig = {
       label: '展示字段', // 维度/查询字段
       enable: false,
       multiple: false // 是否多选
+    },
+    dataAllocation: {
+      enable: true,
+      dataBinding: true
     }
   }
 }
+
 const customConfig = {
   type: 'map',
   root: {
     version: '2023071001',
-    contribution: false,
-    // 绕x轴旋转角度
     rotateX: 0,
-    // 绕y轴旋转角度
     rotateY: 0,
-    // 绕z轴旋转角度
     rotateZ: 0,
-    // 透视距离
     perspective: 0,
     skewX: 0,
     skewY: 0
   },
   customize: {
-    mapId: '667',
-    // 缩放尺寸
-    zoom: 1,
-    center1: 50,
-    center2: 50,
-    // 是否显示文字
-    mapName: true,
-    // 文字颜色
-    mapNameColor: '#fff',
-    // 文字大小
-    mapNameSize: 8,
-    // 文字权重
-    mapNameWeight: 500,
-    // 地图背景色
-    backgroundColor: 'rgb(0,0,0,0)',
-    // 是否打点
-    scatter: true,
-    // 悬浮框背景色
-    tooltipBackgroundColor: '#0C121C',
-    // 悬浮框边框色
-    borderColor: 'rgba(0, 0, 0, 0.16)',
-    // 悬浮框数值标题
-    tooltipTitle: 'GDP',
-    // 点颜色
-    scatterBackgroundColor: 'rgba(255,0,0,.7)',
-    // 显示点文字
-    showScatterValue: true,
-    // 点文字颜色
-    scatterColor: '#fff',
-    // 点形状
-    scatterSymbol: 'circle',
-    // 点大小
-    scatterSize: 40,
-    // 分割线颜色
-    mapLineColor: 'rgba(53, 86, 165, 1)',
-    fontGraphicColor: '#fff',
-    fontSize: '30',
-    // 是否开启下钻
-    down: true,
-    // 允许下钻的层级
-    downLevel: 1,
-    // 地图级别
-    level: '2',
-    // 范围
-    scope: '中国',
-    // 地图区域颜色
-    areaColor: 'rgba(31, 50, 121, 1)',
-    // 地图区域悬浮颜色
-    emphasisColor: '#389BB7',
-    // 是否开启筛选
-    visual: false,
-    // 筛选范围
-    range: [0, 6000],
-    // 从上到下的颜色
-    rangeColor: ['#007aff', '#A5CC82'],
-    // 地图数据
-    dataMap: '中华人民共和国.json',
-    // 展示字段
-    value: '',
-    // 横坐标
-    xaxis: '',
-    // 纵坐标
-    yaxis: '',
-    // 名称
-    name: ''
+    // 地图基础配置
+    scope: 'china', // 默认显示中国地图
+    mapId: '', // 地图ID，为空时使用默认中国地图
+    down: true, // 是否允许下钻
+    downLevel: 2, // 下钻层级
+    
+    // 地图样式配置
+    backgroundColor: 'transparent', // 背景色
+    mapName: true, // 是否显示地名
+    mapNameColor: '#FFFFFF', // 地名颜色
+    mapNameSize: 12, // 地名字体大小
+    mapNameWeight: 500, // 地名字体粗细
+    mapLineColor: '#1B91FF', // 地图边界线颜色
+    areaColor: '#061D3E', // 区域颜色
+    emphasisColor: '#389BB7', // 高亮颜色
+    center1: 50, // 地图中心点X
+    center2: 50, // 地图中心点Y
+    zoom: 1, // 缩放比例
 
+    // 散点配置
+    scatter: false, // 是否显示散点
+    scatterSymbol: 'pin', // 散点形状
+    scatterSize: 40, // 散点大小
+    scatterColor: '#FFFFFF', // 散点文字颜色
+    scatterBackgroundColor: '#1B91FF', // 散点背景色
+    showScatterValue: true, // 是否显示散点值
+
+    // 数据映射配置
+    visual: true, // 是否启用视觉映射
+    range: [0, 1000], // 数据范围
+    rangeColor: ['#061D3E', '#1B91FF'], // 数据映射颜色范围
+
+    // 提示框配置
+    tooltipBackgroundColor: 'rgba(0,0,0,0.7)', // 提示框背景色
+    tooltipTitle: 'GDP', // 提示框标题
+    borderColor: '#333333', // 边框颜色
+
+    // 数据配置
+    name: 'name', // 名称字段
+    xaxis: 'lng', // 经度字段
+    yaxis: 'lat', // 纬度字段
+    value: 'value' // 值字段
   }
 }
 

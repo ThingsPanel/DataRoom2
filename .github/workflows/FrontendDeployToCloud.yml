@@ -19,7 +19,7 @@ jobs:
       working-directory: ./data-room-ui
       run: |
         npm install -g npm@6.x
-        npm install
+        npm install --registry=http://registry.npmmirror.com
         npm run build
         ls -lrt
         cd bigScreen && tar -czf ../../deploy.tar.gz ./*

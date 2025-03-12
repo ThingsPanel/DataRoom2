@@ -454,12 +454,12 @@ export default {
             flex-wrap: wrap;
             cursor: pointer;
             box-sizing: border-box;
-            justify-content: center;
+            justify-content: space-between;
             padding: 8px;
             cursor: move;
 
             .item {
-              width: 100%;
+              width: 48%;
               background: var(--bs-background-2);
               margin-bottom: 8px;
 
@@ -471,29 +471,22 @@ export default {
                 text-align: left;
               }
 
-              .sampleImg {
-                margin: 0 auto;
-                width: 102px;
-                height: 73px;
-                display: block;
-              }
-
               .img_dispaly {
                 padding: 8px 0;
                 margin: 0 auto;
                 text-align: center;
-                width: 120px;
-
+                width: 100%;
+                
                 .icon-svg {
-                  width: 60px !important;
-                  height: 60px !important;
+                  width: 40px !important;
+                  height: 40px !important;
                   vertical-align: -0.15em;
                   fill: currentColor;
                   overflow: hidden;
                 }
 
                 img {
-                  height: 60px;
+                  height: 40px;
                   max-width: 100%;
                 }
               }
@@ -501,13 +494,13 @@ export default {
 
             .menu-component {
               .page-opt-list-component {
-                width: 102px;
-                height: 75px;
+                width: 100%;
+                height: 60px;
                 margin: 0 auto;
               }
 
               .img_dispaly {
-                height: 80px;
+                height: 60px;
               }
             }
           }

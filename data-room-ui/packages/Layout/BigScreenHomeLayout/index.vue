@@ -6,7 +6,7 @@
           class="logo"
           :src="logo"
         >
-        <span>{{ title }}</span><span style="font-size: 18px;margin-left: 8px">2.x</span>
+        <span>{{ title }}</span><span style="font-size: 18px;margin-left: 8px">2.0.13</span>
       </div>
 
       <div class="big-screen-nav-container">
@@ -15,7 +15,7 @@
           @change="changeTab"
         />
       </div>
-      <a
+      <!-- <a
         v-if="giteeSvg && giteeHref"
         class="fork-me-on-gitee"
         :href="giteeHref"
@@ -25,7 +25,7 @@
           :src="giteeSvg"
           alt="Fork me on Gitee"
         >
-      </a>
+      </a> -->
     </header>
     <div class="big-screen-router-view-wrap">
       <keep-alive>
@@ -53,7 +53,7 @@ export default {
   computed: {
     title () {
       if (this.$route.query.edit) return '大屏设计器'
-      return window?.BS_CONFIG?.starter?.title ?? 'DataRoom大屏设计器'
+      return window?.BS_CONFIG?.starter?.title ?? 'ThingsPanel可视化编辑器'
     },
     logo () {
       return window?.BS_CONFIG?.starter?.logo ?? require('./images/logo.png')
@@ -123,8 +123,19 @@ export default {
       ]
     }
   },
+  watch: {
+    '$route': {
+      handler(newRoute) {
+        // 仅在有 ticket 时更新，没有时不处理
+        if (newRoute.query.ticket) {
+          sessionStorage.setItem('ticket', newRoute.query.ticket);
+        }
+      },
+      immediate: true
+    }
+  },
   created () {
-    document.title = this.title
+    document.title = this.title;
   },
   mounted () {
     this.giteeHref = 'https://gitee.com/gcpaas/DataRoom'
@@ -135,11 +146,17 @@ export default {
       if (this.$route.query.edit) {
         this.$router.push({
           path: tab.path,
-          query: { edit: 1 }
+          query: { 
+            edit: 1,
+            // 在切换tab时保持ticket参数
+            ...(this.$route.query.ticket ? { ticket: this.$route.query.ticket } : {})
+          }
         })
       } else {
         this.$router.push({
-          path: tab.path
+          path: tab.path,
+          // 在切换tab时保持ticket参数
+          query: this.$route.query.ticket ? { ticket: this.$route.query.ticket } : {}
         })
       }
     }
