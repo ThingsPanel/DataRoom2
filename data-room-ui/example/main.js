@@ -79,6 +79,7 @@ promise.polyfill()
 // 自定义指令
 Vue.use(ElementUI, { size: 'mini' })
 Vue.config.productionTip = false
+
 Vue.prototype.$dataRoomAxios = $dataRoomAxios
 // 兼容ie下双向绑定事件
 Vue.prototype.inputChange = function (e) {

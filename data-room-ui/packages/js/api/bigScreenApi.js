@@ -1,5 +1,10 @@
 import Vue from 'vue'
+
 // 大屏详情
+
+
+
+
 export function getScreenInfo (code) {
   return Vue.prototype.$dataRoomAxios.get(`/bigScreen/design/info/code/${code}`)
 }

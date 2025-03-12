@@ -7,6 +7,8 @@ import { Message } from 'element-ui'
  * 统一进行异常输出
  * 如果异常只是弹框显示即可，可使用该实例
  */
+
+
 const httpConfig = {
   timeout: 1000 * 30,
   withCredentials: true,
@@ -32,7 +34,6 @@ function EipException (message, code) {
   this.msg = message
   this.code = code
 }
-
 /**
  * 请求拦截
  */
@@ -45,20 +46,12 @@ http.interceptors.request.use(config => {
       config.headers = {}
     }
     config.headers['x-api-key'] = ticket
-    console.log('已添加x-api-key到请求头:', config.url)
+    console.log('已添加x-api-key到请求头:', ticket)
   }
-  
-  // 打印完整的请求信息
-  console.log('请求URL:', config.url)
-  console.log('请求方法:', config.method)
-  console.log('请求头详情:', JSON.stringify(config.headers, null, 2))
-  console.log('请求参数:', config.params || '无')
-  console.log('请求体:', config.data || '无')
-  
-  return {
-    ...config,
-    ...merge(httpConfig, window.BS_CONFIG?.httpConfigs)
-  }
+  // 修复配置合并问题，确保不会覆盖原始配置
+  const mergedConfig = merge({}, config, merge(httpConfig, window.BS_CONFIG?.httpConfigs))
+  console.log('请求拦截器配置后:', mergedConfig.headers)
+  return mergedConfig
 }, error => {
   return Promise.reject(error)
 })
@@ -68,6 +61,7 @@ http.interceptors.request.use(config => {
  */
 httpCustom.interceptors.request.use(config => {
   // 从session中获取ticket
+  console.log(config,0)
   const ticket = sessionStorage.getItem('ticket')
   // 如果ticket存在，则添加到请求头
   if (ticket) {
@@ -75,14 +69,7 @@ httpCustom.interceptors.request.use(config => {
       config.headers = {}
     }
     config.headers['x-api-key'] = ticket
-    console.log('已添加x-api-key到自定义请求头:', config.url)
   }
-  
-  // 打印完整的请求信息
-  console.log('自定义请求URL:', config.url)
-  console.log('自定义请求方法:', config.method)
-  console.log('自定义请求头详情:', JSON.stringify(config.headers, null, 2))
-  
   return config
 }, error => {
   return Promise.reject(error)
@@ -92,6 +79,16 @@ httpCustom.interceptors.request.use(config => {
  * 响应拦截
  */
 http.interceptors.response.use(response => {
+  console.log(response, 98)
+  // 验证请求头是否包含x-api-key
+  console.log('响应拦截器中的请求配置:', response.config)
+  console.log('响应拦截器中的请求头:', response.config.headers)
+  if (response.config.headers['x-api-key']) {
+    console.log('验证成功: x-api-key已正确添加到请求头', response.config.headers['x-api-key'])
+  } else {
+    console.warn('验证失败: 请求头中没有找到x-api-key')
+  }
+
   const res = response.data
   // 异常拦截
   // eslint-disable-next-line no-empty
@@ -127,6 +124,14 @@ http.interceptors.response.use(response => {
  * 响应拦截
  */
 httpCustom.interceptors.response.use(response => {
+  // 验证请求头是否包含x-api-key
+  console.log('httpCustom响应拦截器中的请求头:', response.config.headers)
+  if (response.config.headers['x-api-key']) {
+    console.log('httpCustom验证成功: x-api-key已正确添加到请求头', response.config.headers['x-api-key'])
+  } else {
+    console.warn('httpCustom验证失败: 请求头中没有找到x-api-key')
+  }
+
   const res = response.data
   return res
 }, error => {
@@ -212,7 +217,7 @@ export function download (url, headers = {}, params = {}, body = {}) {
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {
     params._t = new Date().getTime()
   }
-  
+
   // 从session中获取ticket
   const ticket = sessionStorage.getItem('ticket')
   // 如果ticket存在，则添加到请求头
@@ -220,7 +225,7 @@ export function download (url, headers = {}, params = {}, body = {}) {
     headers['x-api-key'] = ticket
     console.log('已添加x-api-key到下载请求头:', url)
   }
-  
+
   return new Promise((resolve, reject) => {
     axios({
       method: 'post',
@@ -231,6 +236,7 @@ export function download (url, headers = {}, params = {}, body = {}) {
       withCredentials: false,
       responseType: 'arraybuffer'
     }).then(res => {
+      console.log(res)
       // IE10,11采用自带下载文件流方法
       if ((!!window.ActiveXObject || 'ActiveXObject' in window) && window.navigator && window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(new Blob([res.data]), res.headers.filename)
