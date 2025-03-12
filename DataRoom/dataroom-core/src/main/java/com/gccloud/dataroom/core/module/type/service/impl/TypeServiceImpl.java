@@ -64,17 +64,19 @@ public class TypeServiceImpl extends ServiceImpl<DataRoomTypeDao, TypeEntity> im
     }
 
     @Override
-    public List<TypeEntity> listByType(String type) {
-        if (StringUtils.isBlank(type)) {
-            return Lists.newArrayList();
-        }
+    public List<TypeEntity> listByType(String type, String tenantId) {
         LambdaQueryWrapper<TypeEntity> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(TypeEntity::getType, type);
+        
+        // 添加租户隔离条件
+        if (StringUtils.isNotBlank(tenantId)) {
+            log.info("分类列表查询添加租户隔离条件: tenantId={}", tenantId);
+            queryWrapper.eq(TypeEntity::getTenantId, tenantId);
+        }
+        
         queryWrapper.orderByAsc(TypeEntity::getOrderNum);
-        queryWrapper.orderByDesc(TypeEntity::getCreateDate);
         return this.list(queryWrapper);
     }
-
 
     @Override
     public boolean checkCodeRepeat(String id, String type, String code) {

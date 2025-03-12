@@ -41,4 +41,10 @@ public class TypeEntity extends SuperEntity implements Serializable {
     @ApiModelProperty(notes = "排序")
     private Integer orderNum;
 
+    /**
+     * 租户ID
+     */
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
+
 }

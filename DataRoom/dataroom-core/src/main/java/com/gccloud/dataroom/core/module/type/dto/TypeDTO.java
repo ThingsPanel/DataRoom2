@@ -39,4 +39,9 @@ public class TypeDTO {
     @ApiModelProperty(notes = "排序")
     private Integer orderNum;
 
+    /**
+     * 租户ID
+     */
+    private String tenantId;
+
 }

@@ -24,5 +24,10 @@ public class FileSearchDTO extends SearchDTO {
      */
     private List<String> extensionList;
 
+    /**
+     * 租户ID
+     */
+    private String tenantId;
+
 
 }
