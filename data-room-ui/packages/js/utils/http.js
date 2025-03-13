@@ -83,7 +83,7 @@ http.interceptors.response.use(response => {
   // 验证请求头是否包含x-api-key
   console.log(response.data.msg === "租户ID为空，不允许查询分类", 98)
 
-  if (response.data.msg.includes("租户ID为空")) {
+  if (response?.data?.msg?.includes("租户ID为空")) {
     MessageBox.confirm(
       '检测到您的租户ID为空，请前往 ThingsPanel 登录。',
       '提示',

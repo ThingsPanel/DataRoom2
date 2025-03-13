@@ -30,6 +30,7 @@
         :ref="config.code"
         :key="config.key"
         :config="config"
+        :selected="isSelected"
         @styleHandler="styleHandler"
       />
     </div>
@@ -78,6 +79,10 @@ export default {
     }
   },
   computed: {
+    // 添加计算属性判断当前组件是否被选中
+    isSelected() {
+      return this.$store.state.bigScreen.activeCodes.includes(this.config.code);
+    }
   },
   mounted () {
     // 调用初始化方法
