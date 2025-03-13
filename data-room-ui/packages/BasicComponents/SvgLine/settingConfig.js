@@ -27,7 +27,7 @@ const customConfig = {
     dashLength: 5,
     curved: false,
     points: [], // 存储相对位置的点
-    autoResize: true, // 添加自动调整大小的配置
+    autoResize: true, // 始终保持为 true
     // 添加动画相关配置
     animation: {
       enable: false,

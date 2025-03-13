@@ -68,7 +68,7 @@
                 @change="updateConfig"
               />
             </el-form-item>
-            <el-form-item v-if="config.customize.dashed" label="虚线长度" class="dash-length-item">
+            <el-form-item v-if="config.customize.dashed" label="虚线长度">
               <el-input-number
                 v-model="config.customize.dashLength"
                 :min="1"
@@ -79,12 +79,6 @@
             <el-form-item label="曲线">
               <el-switch 
                 v-model="config.customize.curved" 
-                @change="updateConfig"
-              />
-            </el-form-item>
-            <el-form-item label="自动调整大小">
-              <el-switch 
-                v-model="config.customize.autoResize"
                 @change="updateConfig"
               />
             </el-form-item>
@@ -99,20 +93,16 @@
             </el-form-item>
             
             <template v-if="config.customize.animation.enable">
-            
-              <el-form-item label="动画类型">
+              <el-form-item label="动画类型" class="animation-type-item">
                 <el-select 
-            
                   v-model="config.customize.animation.type"
                   @change="updateConfig"
+                  class="full-width-select"
                 >
                   <el-option label="水流动画" value="flow" />
                   <el-option label="粒子流动" value="particle" />
-                  <div style="height: 12px;">
-                  
-                  </div>
+                  <div style="height: 12px;"/>
                 </el-select>
-           
               </el-form-item>
 
               <el-form-item label="动画速度">
@@ -127,7 +117,7 @@
               <!-- 水流动画配置 -->
               <template v-if="config.customize.animation.type === 'flow'">
                 <el-form-item label="水流颜色">
-                  <el-color-picker
+                  <ColorPicker
                     v-model="config.customize.animation.flowColor"
                     show-alpha
                     @change="updateColorAndRefresh"
@@ -136,17 +126,17 @@
                 <el-form-item label="水流长度">
                   <el-slider
                     v-model="config.customize.animation.flowLength"
-                    :min="10"
-                    :max="100"
+                    :min="5"
+                    :max="50"
                     @change="updateConfig"
                   />
                 </el-form-item>
               </template>
-
+              
               <!-- 粒子动画配置 -->
               <template v-if="config.customize.animation.type === 'particle'">
                 <el-form-item label="粒子颜色">
-                  <el-color-picker
+                  <ColorPicker
                     v-model="config.customize.animation.particleColor"
                     @change="updateColorAndRefresh"
                   />
@@ -196,15 +186,13 @@ export default {
     }
   },
   created() {
-    // 确保自动调整大小选项存在
+    // 确保自动调整大小选项存在，并且始终为 true
     if (!this.config.customize) {
       this.$set(this.config, 'customize', {})
     }
     
-    if (this.config.customize.autoResize === undefined) {
-      this.$set(this.config.customize, 'autoResize', true)
-      this.updateConfig()
-    }
+    // 始终将自动调整大小设置为 true
+    this.$set(this.config.customize, 'autoResize', true)
     
     // 确保其他必要的属性存在
     if (!this.config.customize.lineColor) {
@@ -246,6 +234,14 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.bs-setting-wrap {
+  font-size: 14px;
+  
+  .setting-body {
+    padding-bottom: 20px;
+  }
+}
+
 .lc-field-body {
   padding: 12px 16px;
   
@@ -255,21 +251,45 @@ export default {
     &:last-child {
       margin-bottom: 0;
     }
+    
+    &.animation-type-item {
+      margin-bottom: 22px;
+    }
   }
   
-  .dash-length-item {
-    margin-top: -10px;
-    margin-left: 20px;
+  // 确保下拉选择框有足够的底部边距
+  .full-width-select {
+    width: 100%;
+    margin-bottom: 6px;
+  }
+  
+  // 改进滑块样式
+  .el-slider {
+    margin-top: 8px;
+  }
+  
+  // 改进颜色选择器样式
+  .el-color-picker {
+    vertical-align: middle;
+  }
+  
+  // 改进开关样式
+  .el-switch {
+    vertical-align: middle;
+  }
+  
+  // 改进输入数字样式
+  .el-input-number {
+    width: 100%;
   }
 }
 
-.setting-body {
-  padding-bottom: 20px;
+// 在嵌套模板内部强制应用间距
+.animation-type-item + .el-form-item {
+  margin-top: 0;
 }
 
-// 修复下拉选择框底部边距
-.el-select {
-  margin-bottom: 10px;
+template + .el-form-item {
+  margin-top: 0;
 }
-
 </style> 

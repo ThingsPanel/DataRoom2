@@ -140,6 +140,10 @@ export default {
     },
     'animation.particleColor'() {
       this.refreshAnimation();
+    },
+    'config.customize.curved'() {
+      this.updatePath();
+      this.refreshAnimation();
     }
   },
   created() {
@@ -166,12 +170,15 @@ export default {
     
     // 监听刷新动画事件
     EventBus.$on('svgline-refresh-animation', this.refreshAnimation);
+    
+    // 添加更新路径的事件监听
+    EventBus.$on('svgline-update-path', this.handleUpdatePath);
   },
   mounted() {
     if (this.$refs.svgContainer) {
-      this.$refs.svgContainer.addEventListener('mousedown', this.notifyParentDisableDrag);
+    this.$refs.svgContainer.addEventListener('mousedown', this.notifyParentDisableDrag);
     }
-    
+
     this.initSVG();
     this.animationElements = [];
     this.updateAnimation();
@@ -182,11 +189,12 @@ export default {
     }
 
     if (this.$refs.svgContainer) {
-      this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
+    this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
     }
 
     // 移除事件监听
     EventBus.$off('svgline-refresh-animation', this.refreshAnimation);
+    EventBus.$off('svgline-update-path', this.handleUpdatePath);
 
     this.clearAnimation();
   },
@@ -262,9 +270,9 @@ export default {
         this.updateControlPoints();
       } catch (error) {
         console.error('初始化点失败:', error);
-        this.points = [
-          { x: this.config.w * 0.2, y: this.config.h * 0.5 },
-          { x: this.config.w * 0.8, y: this.config.h * 0.5 }
+      this.points = [
+        { x: this.config.w * 0.2, y: this.config.h * 0.5 },
+        { x: this.config.w * 0.8, y: this.config.h * 0.5 }
         ];
         this.savePoints();
         this.updatePath();
@@ -421,13 +429,14 @@ export default {
         const containerX = this.config.x;
         const containerY = this.config.y;
 
+        // 计算绝对坐标（相对于画布）
         const absoluteX = containerX + newX;
         const absoluteY = containerY + newY;
 
-        // 常量定义 - 增加边缘安全距离
-        const POINT_RADIUS = 14; // 增大点的半径
-        const DELETE_BUTTON_HEIGHT = 20; // 增大删除按钮高度
-        const LEFT_PADDING = 25; // 增加左侧安全距离
+        // 常量定义
+        const POINT_RADIUS = 14; // 控制点半径
+        const DELETE_BUTTON_HEIGHT = 20; // 删除按钮高度
+        const LEFT_PADDING = 25; // 左侧安全距离
 
         // 限制点不超出画布边界
         if (absoluteX - POINT_RADIUS - LEFT_PADDING < 0) {
@@ -457,7 +466,6 @@ export default {
       }
       
       // 实时调整容器大小
-      // 使用节流函数控制调整频率，避免性能问题
       this.throttledCheckAndAdjustSize();
     },
 
@@ -490,8 +498,12 @@ export default {
         }
       }
 
-      this.savePoints();
+      // 在拖动结束时立即调整容器大小，不使用节流版本
+      this.realTimeAdjustSize();
       
+      // 保存点的位置
+      this.savePoints();
+
       // 在拖拽结束后，调整容器大小（包括缩小）
       this.adjustContainerSize();
       
@@ -504,7 +516,7 @@ export default {
     handleSvgClick(event) {
       // 如果是右键点击，不添加新点
       if (event.button === 2) return;
-      
+
       // 如果刚结束拖动，不添加新点
       if (!this.isEditing || this.isDragging || this.justFinishedDragging) return;
 
@@ -529,18 +541,21 @@ export default {
       this.updateControlPoints();
       this.savePoints();
       this.checkAndAdjustSize();
+      
+      // 添加点后刷新动画
+      this.refreshAnimation();
     },
 
     deletePoint(index) {
       if (this.points.length <= 2) return;
 
       this.points.splice(index, 1);
-
       this.updatePath();
-
       this.updateControlPoints();
-
       this.savePoints();
+      
+      // 删除点后刷新动画
+      this.refreshAnimation();
     },
 
     savePoints() {
@@ -810,7 +825,7 @@ export default {
       }
       this.animationElements = [];
 
-      // 如果当前不是虚线动画，恢复原始样式
+      // 恢复原始样式
       if (this.path) {
         this.path.attr({
           'stroke-dasharray': this.dashArray,
@@ -820,6 +835,7 @@ export default {
     },
 
     createFlowAnimation() {
+      // 使用更小的点来减少渲染负担
       const flowDot = this.svgDraw.circle(this.animation.flowLength)
         .fill(this.animation.flowColor)
         .center(0, 0)
@@ -827,50 +843,95 @@ export default {
 
       const pathLength = this.path.length();
 
-      flowDot.animate({
-        duration: (11 - this.animation.speed) * 1000,
-        ease: '<>'
-      }).during((pos) => {
-        const point = this.path.pointAt(pos * pathLength);
+      // 优化动画速度计算
+      const speedFactor = this.animation.speed * 0.5; // 增加速度因子
+      const baseDuration = Math.max(2000, 10000 / speedFactor); // 降低基础持续时间
+      const duration = Math.min(baseDuration, pathLength * 20 / speedFactor); // 限制最大持续时间
+      
+      // 使用 requestAnimationFrame 优化动画性能
+      let start = null;
+      let animationFrameId = null;
+      
+      const animate = (timestamp) => {
+        if (!start) start = timestamp;
+        // 增加速度因子，使动画更快
+        const elapsed = (timestamp - start) * speedFactor;
+        const progress = (elapsed % duration) / duration;
+        
+        // 计算当前位置
+        const point = this.path.pointAt(progress * pathLength);
+        if (point) {
         flowDot.center(point.x, point.y);
-      }).loop(true, false);
-
-      this.animationElements.push(flowDot);
+        }
+        
+        animationFrameId = requestAnimationFrame(animate);
+      };
+      
+      animationFrameId = requestAnimationFrame(animate);
+      
+      // 添加到动画元素数组，并提供清理方法
+      this.animationElements.push({
+        remove: () => {
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+          }
+          flowDot.remove();
+        }
+      });
     },
 
     createParticleAnimation() {
-      const particleCount = Math.ceil(this.path.length() / 50);
-      const duration = (11 - this.animation.speed) * 1000;
+      const pathLength = this.path.length();
+      if (pathLength === 0) return;
 
+      // 根据路径长度计算粒子数量，避免过多粒子
+      const particleCount = Math.min(Math.ceil(pathLength / 50), 10);
+      const particles = [];
+      
+      // 创建粒子
       for (let i = 0; i < particleCount; i++) {
-        const particle = this.svgDraw.circle(this.animation.particleSize * 2)
+        const particle = this.svgDraw.circle(this.animation.particleSize)
           .fill(this.animation.particleColor)
-          .center(0, 0)
-          .opacity(0);
-
-        const delay = (duration / particleCount) * i;
-        const pathLength = this.path.length();
-
-        particle.animate({
-          duration: duration,
-          delay: delay,
-          ease: '<>',
-          loop: true
-        }).during((pos) => {
-          const point = this.path.pointAt(pos * pathLength);
-          particle.center(point.x, point.y).opacity(1);
-        }).loop(true, false);
-
+          .opacity(0.8);
+        
+        particles.push(particle);
         this.animationElements.push(particle);
       }
+      
+      // 使用 requestAnimationFrame 优化动画
+      let animationFrameId = null;
+      // 减小速度因子，使粒子动画更慢
+      const speedFactor = this.animation.speed * 0.05; // 从0.2降低到0.05
+      
+      const animate = () => {
+        particles.forEach((particle, index) => {
+          // 计算每个粒子的位置，均匀分布在路径上
+          // 降低速度因子，使动画更慢
+          const offset = (index / particleCount + Date.now() * speedFactor / 1000) % 1;
+          const point = this.path.pointAt(offset * pathLength);
+          
+          if (point) {
+            particle.center(point.x, point.y);
+          }
+        });
+        
+        animationFrameId = requestAnimationFrame(animate);
+      };
+      
+      animationFrameId = requestAnimationFrame(animate);
+      
+      // 添加清理方法
+      this.animationElements.push({
+        remove: () => {
+          if (animationFrameId) {
+            cancelAnimationFrame(animationFrameId);
+          }
+        }
+      });
     },
 
     // 实时调整大小的函数（只处理放大）
     realTimeAdjustSize() {
-      const EDGE_PADDING = 20; // 增加边缘填充
-      
-      if (!this.config.customize?.autoResize) return;
-      
       // 标记正在调整大小，避免触发watch
       this.isAdjustingSize = true;
       
@@ -887,8 +948,8 @@ export default {
       const updatedConfig = JSON.parse(JSON.stringify(this.config));
       
       // 检查是否需要向左或向上扩展
-      if (minX < EDGE_PADDING) {
-        const deltaX = EDGE_PADDING - minX;
+      if (minX < 20) {
+        const deltaX = 20 - minX;
         updatedConfig.x = Math.max(0, updatedConfig.x - deltaX);
         updatedConfig.w += deltaX;
         
@@ -901,8 +962,8 @@ export default {
         hasChanges = true;
       }
       
-      if (minY < EDGE_PADDING) {
-        const deltaY = EDGE_PADDING - minY;
+      if (minY < 20) {
+        const deltaY = 20 - minY;
         updatedConfig.y = Math.max(0, updatedConfig.y - deltaY);
         updatedConfig.h += deltaY;
         
@@ -916,13 +977,13 @@ export default {
       }
       
       // 检查是否需要向右或向下扩展
-      if (maxX > updatedConfig.w - EDGE_PADDING) {
-        updatedConfig.w = maxX + EDGE_PADDING;
+      if (maxX > updatedConfig.w - 20) {
+        updatedConfig.w = maxX + 20;
         hasChanges = true;
       }
       
-      if (maxY > updatedConfig.h - EDGE_PADDING) {
-        updatedConfig.h = maxY + EDGE_PADDING;
+      if (maxY > updatedConfig.h - 20) {
+        updatedConfig.h = maxY + 20;
         hasChanges = true;
       }
       
@@ -965,8 +1026,6 @@ export default {
 
     // 新增函数：调整容器大小（包括缩小）
     adjustContainerSize() {
-      if (!this.config.customize?.autoResize) return;
-      
       // 标记正在调整大小，避免触发watch
       this.isAdjustingSize = true;
       
@@ -1085,6 +1144,12 @@ export default {
       if (this.animation.enable) {
         this.updateAnimation();
       }
+    },
+
+    // 添加处理更新路径的方法
+    handleUpdatePath() {
+      this.updatePath();
+      this.refreshAnimation();
     },
   }
 }
