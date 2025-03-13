@@ -47,7 +47,7 @@ public class TypeController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许查询分类");
-            return (R<List<TypeVO>>) R.error("租户ID为空，不允许查询分类");
+            return (R<List<TypeVO>>) R.error(403,"租户ID为空，不允许查询分类");
         }
         
         List<TypeEntity> entityList = typeService.listByType(type, tenantId);
@@ -69,7 +69,7 @@ public class TypeController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许新增分类");
-            return (R<String>) R.error("租户ID为空，不允许新增分类");
+            return (R<String>) R.error(403,"租户ID为空，不允许新增分类");
         }
         
         // 设置租户ID

@@ -18,7 +18,13 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
  * @date 2023/3/13 10:55
  */
 @EnableSwagger2
-@SpringBootApplication(scanBasePackages = {DataRoomConst.ScanPackage.COMPONENT, DatasetConstant.ScanPackage.COMPONENT, CommonConst.ScanPackage.COMPONENT})
+@SpringBootApplication(scanBasePackages = {
+    "com.gccloud.dataroom",
+    "com.gccloud.dataset",
+    DataRoomConst.ScanPackage.COMPONENT,
+    DatasetConstant.ScanPackage.COMPONENT,
+    CommonConst.ScanPackage.COMPONENT
+})
 @MapperScan(value = {DataRoomConst.ScanPackage.DAO, DatasetConstant.ScanPackage.DAO})
 public class DataRoomApplication {
 

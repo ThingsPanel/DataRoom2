@@ -52,7 +52,7 @@ public class BizComponentController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许查询组件");
-            return (R<PageVO<BizComponentEntity>>) R.error("租户ID为空，不允许查询组件");
+            return (R<PageVO<BizComponentEntity>>) R.error(403,"租户ID为空，不允许查询组件");
         }
         
         PageVO<BizComponentEntity> page = bizComponentService.getPage(searchDTO);
@@ -72,7 +72,7 @@ public class BizComponentController {
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许新增组件");
             // 使用显式类型转换来解决类型安全问题
-            return R.error("租户ID为空，不允许新增组件");
+            return R.error(403,"租户ID为空，不允许新增组件");
         }
         
         BizComponentEntity entity = BeanConvertUtils.convert(dto, BizComponentEntity.class);
@@ -138,7 +138,7 @@ public class BizComponentController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许查询组件");
-            return (R<List<BizComponentEntity>>) R.error("租户ID为空，不允许查询组件");
+            return (R<List<BizComponentEntity>>) R.error(403,"租户ID为空，不允许查询组件");
         }
         
         List<BizComponentEntity> list = bizComponentService.getList(searchDTO);

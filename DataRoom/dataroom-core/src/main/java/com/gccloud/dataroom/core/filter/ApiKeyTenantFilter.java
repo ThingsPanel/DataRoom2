@@ -35,9 +35,8 @@ public class ApiKeyTenantFilter implements Filter {
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         try {
-            // 获取并打印 x-api-key
             String apiKey = request.getHeader("x-api-key");
-            log.info("当前请求的 x-api-key: {}", apiKey);
+            log.info("ApiKeyTenantFilter - 当前请求的 x-api-key: {}", apiKey);
             
             // 如果x-api-key为空，则使用默认值
             if (StringUtils.isBlank(apiKey)) {
@@ -46,16 +45,19 @@ public class ApiKeyTenantFilter implements Filter {
             
             // 调用获取用户信息的方法
             String tenantId = getUserInfo(apiKey);
-            log.info("获取到的 tenant_id: {}", tenantId);
+            log.info("ApiKeyTenantFilter - 设置的租户ID: {}", tenantId);
             
-            // 将租户ID存储到上下文中
-            TenantContext.setTenantId(tenantId);
+            // 设置 DataRoom 模块的 TenantContext
+            com.gccloud.dataroom.core.utils.TenantContext.setTenantId(tenantId);
             
-            // 继续过滤器链
+            // 设置 Dataset 模块的 TenantContext
+            com.gccloud.dataset.utils.TenantContext.setTenantId(tenantId);
+            
             filterChain.doFilter(servletRequest, servletResponse);
         } finally {
-            // 清除租户上下文
-            TenantContext.clear();
+            // 清除两个模块的 TenantContext
+            com.gccloud.dataroom.core.utils.TenantContext.clear();
+            com.gccloud.dataset.utils.TenantContext.clear();
         }
     }
 
