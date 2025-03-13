@@ -6,11 +6,13 @@
 
 <template>
   <div class="content">
-    <!-- 旋转控制器 -->
+    <!-- 旋转控制器，只保留一个按钮，支持双击重置 -->
     <div 
       v-if="isSelected" 
       class="rotate-handler"
       @mousedown.stop="startRotate"
+      @dblclick.stop="resetRotate"
+      title="拖动旋转，双击重置"
     >
       <i class="el-icon-refresh-right"></i>
     </div>
@@ -106,7 +108,8 @@ export default {
   },
   methods: {
     ...mapMutations('bigScreen', [
-      'changeChartConfig'
+      'changeChartConfig',
+      'changeActiveItemConfig'
     ]),
     resolveComponentType,
     // 切换主题时针对远程组件触发样式修改的方法
@@ -138,25 +141,48 @@ export default {
     handleRotate (e) {
       if (!this.isRotating) return
 
-      // 获取元素中心点
       const rect = this.$el.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
       const centerY = rect.top + rect.height / 2
 
-      // 计算当前角度
       const angle = Math.atan2(
         e.clientY - centerY,
         e.clientX - centerX
       ) * 180 / Math.PI
 
-      // 计算角度差
       let deltaAngle = angle - this.startAngle
-      
-      // 更新组件配置
-      const newRotateZ = (this.currentRotateZ + deltaAngle) % 360
+      let newRotateZ = (this.currentRotateZ + deltaAngle) % 360
+
+      // 优化吸附逻辑
+      if (e.shiftKey) {
+        // 计算最接近的15度的倍数
+        const snap = 15
+        const snappedAngle = Math.round(newRotateZ / snap) * snap
+        
+        // 如果在吸附范围内，使用吸附值
+        const threshold = 8 // 吸附阈值为8度
+        if (Math.abs(newRotateZ - snappedAngle) < threshold) {
+          newRotateZ = snappedAngle
+        }
+      }
+
+      // 规范化角度到 -180 到 180 度
+      if (newRotateZ > 180) {
+        newRotateZ -= 360
+      } else if (newRotateZ < -180) {
+        newRotateZ += 360
+      }
+
       this.changeChartConfig({
         ...this.config,
         rotateZ: newRotateZ
+      })
+
+      // 同步更新 RotateSetting 中的值
+      this.$nextTick(() => {
+        if (this.$parent.$refs.SettingPanel) {
+          this.$parent.$refs.SettingPanel.updateRotateZ(newRotateZ)
+        }
       })
     },
     stopRotate () {
@@ -178,6 +204,21 @@ export default {
         console.warn('Style calculation error:', error)
         return {}
       }
+    },
+    // 添加重置方法
+    resetRotate() {
+      const updatedConfig = {
+        ...this.config,
+        rotateZ: 0
+      }
+      
+      // 更新图表配置
+      this.changeChartConfig(updatedConfig)
+      
+      // 如果当前组件是激活状态，同步更新右侧面板配置
+      if (this.isSelected) {
+        this.changeActiveItemConfig(updatedConfig)
+      }
     }
   }
 }
@@ -191,13 +232,12 @@ export default {
   display: flex;
   align-items: flex-end;
 
-  // 添加旋转按钮样式
   .rotate-handler {
     position: absolute;
-    top: -24px;
+    top: -32px; // 增加距离
     left: 50%;
     transform: translateX(-50%);
-    width: 24px;
+    width: 24px;  // 增大按钮尺寸
     height: 24px;
     background-color: var(--bs-el-color-primary);
     border-radius: 50%;
@@ -206,24 +246,27 @@ export default {
     justify-content: center;
     cursor: pointer;
     z-index: 999;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); // 添加阴影
     
     i {
       color: #fff;
-      font-size: 16px;
+      font-size: 14px;
     }
 
     &:hover {
       background-color: var(--bs-el-color-primary-light-3);
+      transform: translateX(-50%) scale(1.1);
     }
 
     &::after {
       content: '';
       position: absolute;
-      bottom: -6px;
+      bottom: -8px; // 增加连接线长度
       left: 50%;
       transform: translateX(-50%);
       width: 2px;
-      height: 6px;
+      height: 8px;
       background-color: var(--bs-el-color-primary);
     }
   }

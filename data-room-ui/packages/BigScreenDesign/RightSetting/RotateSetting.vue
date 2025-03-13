@@ -104,7 +104,32 @@ export default {
   },
   mounted () {},
   methods: {
-
+    updateRotateZ(value) {
+      let newValue = value % 360
+      if (newValue > 180) {
+        newValue -= 360
+      } else if (newValue < -180) {
+        newValue += 360
+      }
+      this.$set(this.config, 'rotateZ', newValue)
+    }
+  },
+  watch: {
+    'config.rotateZ': {
+      handler(val) {
+        if (val !== undefined) {
+          let newValue = val % 360
+          if (newValue > 180) {
+            newValue -= 360
+          } else if (newValue < -180) {
+            newValue += 360
+          }
+          if (newValue !== val) {
+            this.$set(this.config, 'rotateZ', newValue)
+          }
+        }
+      }
+    }
   }
 }
 </script>
