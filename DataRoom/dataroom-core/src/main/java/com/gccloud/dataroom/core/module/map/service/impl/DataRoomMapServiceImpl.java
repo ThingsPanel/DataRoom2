@@ -51,6 +51,7 @@ public class DataRoomMapServiceImpl extends ServiceImpl<DataRoomMapDao, DataRoom
         LambdaQueryWrapper<DataRoomMapEntity> wrapper = QueryWrapperUtils.wrapperLike(new LambdaQueryWrapper<>(), searchDTO.getSearchKey(), DataRoomMapEntity::getName, DataRoomMapEntity::getMapCode);
         wrapper.eq(searchDTO.getLevel() != null, DataRoomMapEntity::getLevel, searchDTO.getLevel());
         wrapper.eq(StringUtils.isNotBlank(searchDTO.getParentId()), DataRoomMapEntity::getParentId, searchDTO.getParentId());
+        wrapper.eq(StringUtils.isNotBlank(searchDTO.getTenantId()), DataRoomMapEntity::getTenantId, searchDTO.getTenantId());
         wrapper.eq(searchDTO.getUploadedGeoJson() != null, DataRoomMapEntity::getUploadedGeoJson, searchDTO.getUploadedGeoJson());
         wrapper.orderByDesc(DataRoomMapEntity::getCreateDate);
         List<DataRoomMapEntity> entityList = this.list(wrapper);

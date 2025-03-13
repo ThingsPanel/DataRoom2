@@ -12,6 +12,9 @@ import com.gccloud.dataroom.core.module.map.vo.DataRoomMapDataVO;
 import com.gccloud.dataroom.core.module.map.vo.DataRoomMapVO;
 import com.gccloud.dataroom.core.module.map.vo.MapChildVO;
 import com.gccloud.dataroom.core.permission.Permission;
+import com.gccloud.dataroom.core.utils.TenantContext;
+import org.apache.commons.lang3.StringUtils;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiSort;
@@ -46,16 +49,44 @@ public class DataRoomMapController {
 
     @ApiPermission(permissions = {Permission.Map.VIEW})
     @GetMapping("/list")
-    @ApiOperation(value = "列表", position = 10, notes = "地图数据列表查询", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
+    @ApiOperation(value = "列表(租户分离)", position = 10, notes = "地图数据列表查询", produces = MediaType.APPLICATION_JSON_VALUE)
     public R<List<DataRoomMapVO>> list(MapSearchDTO searchDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询地图数据");
+            return R.error(403, "租户ID为空，不允许查询地图数据");
+        }
+        
+        // 设置租户ID
+        searchDTO.setTenantId(tenantId);
+        
         List<DataRoomMapVO> list = dataRoomMapService.getList(searchDTO);
         return R.success(list);
     }
 
     @ApiPermission(permissions = {Permission.Map.ADD})
     @PostMapping("/add")
-    @ApiOperation(value = "添加", position = 20, notes = "添加地图数据", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SuppressWarnings("unchecked")
+    @ApiOperation(value = "添加(租户分离)", position = 20, notes = "添加地图数据", produces = MediaType.APPLICATION_JSON_VALUE)
     public R<String> add(@RequestBody DataRoomMapDTO mapDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前新增地图的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许新增地图数据");
+            return R.error(403, "租户ID为空，不允许新增地图数据");
+        }
+        
+        // 设置租户ID
+        mapDTO.setTenantId(tenantId);
+        
         String id = dataRoomMapService.add(mapDTO);
         return R.success(id);
     }

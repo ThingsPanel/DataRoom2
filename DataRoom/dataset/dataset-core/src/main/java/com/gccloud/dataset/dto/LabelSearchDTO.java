@@ -18,4 +18,7 @@ public class LabelSearchDTO extends SearchDTO {
     @ApiModelProperty(value = "标签类型")
     private String labelType;
 
+    @ApiModelProperty(value = "租户id")
+    private String tenantId;
+
 }

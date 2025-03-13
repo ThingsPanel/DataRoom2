@@ -42,6 +42,7 @@ public class LabelServiceImpl extends ServiceImpl<LabelDao, LabelEntity> impleme
         LambdaQueryWrapper<LabelEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotBlank(searchDTO.getLabelName()), LabelEntity::getLabelName, searchDTO.getLabelName());
         wrapper.eq(StringUtils.isNotBlank(searchDTO.getLabelType()), LabelEntity::getLabelType, searchDTO.getLabelType());
+        wrapper.eq(StringUtils.isNotBlank(searchDTO.getTenantId()), LabelEntity::getTenantId, searchDTO.getTenantId());
         wrapper.select(LabelEntity::getId, LabelEntity::getLabelName, LabelEntity::getLabelType, LabelEntity::getLabelDesc);
         wrapper.orderByDesc(LabelEntity::getCreateDate);
         return this.page(searchDTO, wrapper);
@@ -150,6 +151,7 @@ public class LabelServiceImpl extends ServiceImpl<LabelDao, LabelEntity> impleme
         LambdaQueryWrapper<LabelEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(LabelEntity::getId);
         wrapper.eq(LabelEntity::getLabelName, labelEntity.getLabelName());
+        wrapper.eq(StringUtils.isNotBlank(labelEntity.getTenantId()), LabelEntity::getTenantId, labelEntity.getTenantId());
         wrapper.ne(StringUtils.isNotBlank(labelEntity.getId()), LabelEntity::getId, labelEntity.getId());
         return this.list(wrapper).size() > 0;
     }

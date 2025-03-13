@@ -20,3 +20,8 @@ ALTER TABLE ds_dataset_label ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMME
 # ds_category_tree表增加tenant_id字段
 ALTER TABLE ds_category_tree ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租户ID';
 
+# ds_label表增加tenant_id字段
+ALTER TABLE ds_label ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租户ID';
+
+# big_screen_map表增加tenant_id字段
+ALTER TABLE big_screen_map ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租户ID';

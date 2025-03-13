@@ -25,4 +25,7 @@ public class LabelEntity extends SuperEntity {
     @ApiModelProperty(value = "标签说明")
     private String labelDesc;
 
+    @ApiModelProperty(value = "租户id")
+    private String tenantId;
+
 }

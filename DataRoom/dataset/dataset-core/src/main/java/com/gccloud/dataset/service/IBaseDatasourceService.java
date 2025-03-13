@@ -36,6 +36,7 @@ public interface IBaseDatasourceService extends ISuperService<DatasourceEntity> 
         queryWrapper.like(StringUtils.isNotBlank(searchDTO.getSourceName()), DatasourceEntity::getSourceName, searchDTO.getSourceName());
         queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getSourceType()), DatasourceEntity::getSourceType, searchDTO.getSourceType());
         queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getModuleCode()), DatasourceEntity::getModuleCode, searchDTO.getModuleCode());
+        queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getTenantId()), DatasourceEntity::getTenantId, searchDTO.getTenantId());
         queryWrapper.orderByDesc(DatasourceEntity::getCreateDate);
         PageVO<DatasourceEntity> page = this.page(searchDTO, queryWrapper);
         page.getList().forEach(datasourceConfig -> datasourceConfig.setPassword(null));

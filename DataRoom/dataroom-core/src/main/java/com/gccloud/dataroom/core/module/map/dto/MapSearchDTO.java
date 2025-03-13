@@ -21,5 +21,8 @@ public class MapSearchDTO extends SearchDTO {
     @ApiModelProperty(notes = "是否已上传")
     private Integer uploadedGeoJson;
 
+    @ApiModelProperty(value = "租户id")
+    private String tenantId;
+
 
 }

@@ -35,4 +35,7 @@ public class DataRoomMapDTO {
     @ApiModelProperty(notes = "是否自动解析下一级，是的话根据geoJson自动解析下一级的基础信息（不包含geoJson）")
     private Integer autoParseNextLevel;
 
+    @ApiModelProperty(notes = "租户id")
+    private String tenantId;
+
 }

@@ -39,5 +39,8 @@ public class DataRoomMapEntity extends SuperEntity {
     @ApiModelProperty(notes = "是否已上传geoJson 0-否 1-是")
     private Integer uploadedGeoJson;
 
+    @ApiModelProperty(notes = "租户id")
+    private String tenantId;
+
 
 }

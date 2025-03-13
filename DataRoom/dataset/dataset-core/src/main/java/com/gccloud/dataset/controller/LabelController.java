@@ -9,8 +9,11 @@ import com.gccloud.dataset.dto.LabelSearchDTO;
 import com.gccloud.dataset.entity.LabelEntity;
 import com.gccloud.dataset.service.IDatasetLabelService;
 import com.gccloud.dataset.service.ILabelService;
+import com.gccloud.dataset.utils.TenantContext;
 import com.gccloud.dataset.vo.DatasetLabelVO;
 import com.gccloud.dataset.vo.LabelVO;
+
+import lombok.extern.slf4j.Slf4j;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -26,6 +29,7 @@ import java.util.stream.Collectors;
  * @version 1.0
  * @date 2023/7/5 14:23
  */
+@Slf4j
 @Api(tags = "标签配置")
 @RestController
 @RequestMapping("/label")
@@ -37,15 +41,30 @@ public class LabelController {
     @Resource
     private IDatasetLabelService datasetLabelService;
 
-    @ApiOperation("查询标签")
+    @ApiOperation("查询标签（租户分离）")
     @GetMapping("/list")
+    @SuppressWarnings("unchecked")
     @ApiPermission(permissions = {DatasetConstant.Permission.Dataset.LABEL_VIEW})
     public R<PageVO<LabelEntity>> getPage(@ApiParam(name = "查询", value = "传入查询条件", required = true) LabelSearchDTO searchDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询标签");
+            return R.error(403, "租户ID为空，不允许查询标签");
+        }
+        
+        // 设置租户ID
+        searchDTO.setTenantId(tenantId);
+        
         PageVO<LabelEntity> page = labelService.getPage(searchDTO);
         return R.success(page);
     }
 
-    @ApiOperation("新增或修改标签")
+    @ApiOperation("新增或修改标签（租户分离）")
+    @SuppressWarnings("unchecked")
     @PostMapping("/addOrUpdateLabel")
     @ApiPermission(permissions = {DatasetConstant.Permission.Dataset.LABEL_EDIT})
     public R<Void> addOrUpdateLabel(@RequestBody LabelDTO labelDTO) {
@@ -53,14 +72,40 @@ public class LabelController {
             labelService.update(labelDTO);
             return R.success();
         }
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前新增或修改的租户ID: {}", tenantId);
+        
+        // 设置租户ID
+        labelDTO.setTenantId(tenantId);
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许新增或修改标签");
+            return R.error(403, "租户ID为空，不允许新增或修改标签");
+        }
+        
         labelService.add(labelDTO);
         return R.success();
     }
 
-    @ApiOperation("检查标签是否重复")
+    @ApiOperation("检查标签是否重复（租户分离）")
     @PostMapping("/checkRepeat")
+    @SuppressWarnings("unchecked")
     @ApiPermission(permissions = {DatasetConstant.Permission.Dataset.LABEL_VIEW})
     public R<Boolean> checkRepeat(@RequestBody LabelEntity labelEntity) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前检查标签重复的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许检查标签重复");
+            return R.error(403, "租户ID为空，不允许检查标签重复");
+        }
+        
+        // 设置租户ID
+        labelEntity.setTenantId(tenantId);
+        
         boolean repeat = labelService.checkRepeat(labelEntity);
         return R.success(repeat);
     }
