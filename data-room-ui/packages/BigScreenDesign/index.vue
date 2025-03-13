@@ -21,6 +21,7 @@
         @openResource="initDialog"
         @openComponent="openComponent"
         @toggleLeftSidebar="toggleLeftSidebar"
+        @openLocalResource="openLocalResource"
       />
       <!-- 中间组件展示面板 -->
       <div
@@ -122,7 +123,7 @@
         </template>
       </SettingPanel>
       <!-- 添加资源面板 -->
-      <SourceDialog
+      <source-dialog
         ref="SourceDialog"
         @getImg="setImg"
       />
@@ -134,6 +135,10 @@
       <iframe-dialog
         v-if="iframeDialog"
         ref="iframeDialog"
+      />
+      <local-source-dialog
+        ref="localSourceDialog"
+        @getImg="setImg"
       />
     </div>
     <data-view-dialog
@@ -167,6 +172,7 @@ import { handleResData } from 'data-room-ui/js/store/actions.js'
 import { EventBus } from 'data-room-ui/js/utils/eventBus'
 import NotPermission from 'data-room-ui/NotPermission'
 import DataViewDialog from 'data-room-ui/BigScreenDesign/DataViewDialog'
+import LocalSourceDialog from './LocalSourceDialog/index.vue'
 export default {
   name: 'BigScreenDesign',
   components: {
@@ -180,7 +186,8 @@ export default {
     ComponentDialog,
     iframeDialog,
     NotPermission,
-    DataViewDialog
+    DataViewDialog,
+    LocalSourceDialog
   },
   mixins: [multipleSelectMixin],
   props: {
@@ -226,7 +233,9 @@ export default {
           label: '20%',
           value: 20
         }
-      ]
+      ],
+      localSourceDialogVisible: false,
+      localSourceUrl: ''
     }
   },
   watch: {
@@ -412,8 +421,7 @@ export default {
           title: val.originalName,
           name: val.originalName,
           icon: null,
-          className:
-              'com.gccloud.dataroom.core.module.chart.components.ScreenPictureChart',
+          className: 'com.gccloud.dataroom.core.module.chart.components.ScreenPictureChart',
           w: 300,
           h: 300,
           x: 0,
@@ -422,8 +430,8 @@ export default {
           option: {
             ...cloneDeep(settingConfig)
           },
-          setting: {}, // 右侧面板自定义配置
-          dataHandler: {}, // 数据自定义处理js脚本
+          setting: [],
+          dataHandler: {},
           ...cloneDeep(dataConfig),
           customize: {
             url: val.url,
@@ -554,6 +562,14 @@ export default {
     // 页面信息更改
     updatePage () {
       this.$refs.Rules.initZoom()
+    },
+    // 打开本地资源弹窗
+    openLocalResource () {
+      this.$refs.localSourceDialog.init()
+    },
+    // 处理选中的本地图片
+    handleLocalSourceImg(img) {
+      console.log('选中的本地图片:', img)
     }
   }
 }

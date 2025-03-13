@@ -232,14 +232,22 @@ export default {
       }
       return isLt2M
     },
-    /**
-     * 获取图片访问地址,如果是相对路径则拼接上文件访问前缀地址
-     * @param url
-     * @returns {*}
-     */
     getCoverPicture (url) {
+      // 判断是否为 require 引入的本地图片
+      if (typeof url === 'object' && url.default) {
+        return url.default
+      }
+      // 判断是否为完整的 http(s) 链接
+      if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        return url
+      }
+      // 判断是否为本地静态资源路径
+      if (url && url.startsWith('/static/')) {
+        return url
+      }
+      // 其他情况使用 getFileUrl 处理
       return getFileUrl(url)
-    },
+    }
   }
 }
 </script>

@@ -14,6 +14,7 @@ export const settingConfig = {
     }
   }
 }
+
 const customConfig = {
   type: 'picture',
   root: {
@@ -35,6 +36,7 @@ const customConfig = {
     opacity: 100
   }
 }
+
 export const dataConfig = {
   ...commonConfig(customConfig)
 }

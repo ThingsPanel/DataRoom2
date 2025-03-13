@@ -224,6 +224,13 @@ export default {
         },
         {
           id: 6,
+          name: 'localSource',
+          title: '本地图库',
+          icon: 'icon-tupian',
+          components: []
+        },
+        {
+          id: 8,
           name: 'component',
           title: '组件',
           icon: 'icon-zujian1',
@@ -321,6 +328,11 @@ export default {
         this.$emit('toggleLeftSidebar')
         this.$emit('openResource')
         this.$emit('toggleLeftSidebar')
+      }
+      if (tab.name === 'localSource') {
+        this.fold = true
+        this.$emit('toggleLeftSidebar')
+        this.$emit('openLocalResource')
       }
       if (tab.name === 'component') {
         this.fold = true
