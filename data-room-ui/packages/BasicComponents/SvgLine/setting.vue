@@ -42,7 +42,7 @@
               <ColorPicker
                 v-model="config.customize.lineColor"
                 :predefine-colors="predefineThemeColors"
-                @change="updateConfig"
+                @change="updateColorAndRefresh"
               />
             </el-form-item>
             <el-form-item label="线条宽度">
@@ -62,9 +62,29 @@
                 @change="updateConfig"
               />
             </el-form-item>
+            <el-form-item label="虚线">
+              <el-switch 
+                v-model="config.customize.dashed" 
+                @change="updateConfig"
+              />
+            </el-form-item>
+            <el-form-item v-if="config.customize.dashed" label="虚线长度" class="dash-length-item">
+              <el-input-number
+                v-model="config.customize.dashLength"
+                :min="1"
+                :max="20"
+                @change="updateConfig"
+              />
+            </el-form-item>
             <el-form-item label="曲线">
               <el-switch 
                 v-model="config.customize.curved" 
+                @change="updateConfig"
+              />
+            </el-form-item>
+            <el-form-item label="自动调整大小">
+              <el-switch 
+                v-model="config.customize.autoResize"
                 @change="updateConfig"
               />
             </el-form-item>
@@ -79,14 +99,20 @@
             </el-form-item>
             
             <template v-if="config.customize.animation.enable">
+            
               <el-form-item label="动画类型">
                 <el-select 
+            
                   v-model="config.customize.animation.type"
                   @change="updateConfig"
                 >
                   <el-option label="水流动画" value="flow" />
                   <el-option label="粒子流动" value="particle" />
+                  <div style="height: 12px;">
+                  
+                  </div>
                 </el-select>
+           
               </el-form-item>
 
               <el-form-item label="动画速度">
@@ -97,14 +123,14 @@
                   @change="updateConfig"
                 />
               </el-form-item>
-
+            
               <!-- 水流动画配置 -->
               <template v-if="config.customize.animation.type === 'flow'">
                 <el-form-item label="水流颜色">
                   <el-color-picker
                     v-model="config.customize.animation.flowColor"
                     show-alpha
-                    @change="updateConfig"
+                    @change="updateColorAndRefresh"
                   />
                 </el-form-item>
                 <el-form-item label="水流长度">
@@ -122,7 +148,7 @@
                 <el-form-item label="粒子颜色">
                   <el-color-picker
                     v-model="config.customize.animation.particleColor"
-                    @change="updateConfig"
+                    @change="updateColorAndRefresh"
                   />
                 </el-form-item>
                 <el-form-item label="粒子大小">
@@ -136,21 +162,6 @@
               </template>
             </template>
           </div>
-          <SettingTitle>编辑模式</SettingTitle>
-          <div class="lc-field-body">
-            <el-form-item label="启用编辑">
-              <el-switch 
-                v-model="isEditing"
-                @change="toggleEdit"
-              />
-            </el-form-item>
-            <el-form-item label="自动调整大小">
-              <el-switch 
-                v-model="config.customize.autoResize"
-                @change="updateConfig"
-              />
-            </el-form-item>
-          </div>
         </el-form>
       </div>
     </el-form>
@@ -162,7 +173,7 @@ import SettingTitle from 'data-room-ui/SettingTitle/index.vue'
 import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
 import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
 import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
-import {predefineColors} from "data-room-ui/js/utils/colorList";
+import {predefineColors} from 'data-room-ui/js/utils/colorList'
 import { EventBus } from 'data-room-ui/js/utils/eventBus'
 
 export default {
@@ -181,7 +192,6 @@ export default {
   },
   data() {
     return {
-      isEditing: false,
       predefineThemeColors: predefineColors
     }
   },
@@ -208,19 +218,28 @@ export default {
     if (this.config.customize.opacity === undefined) {
       this.$set(this.config.customize, 'opacity', 1)
     }
+    
+    // 确保虚线相关属性存在
+    if (this.config.customize.dashed === undefined) {
+      this.$set(this.config.customize, 'dashed', false)
+    }
+    
+    if (!this.config.customize.dashLength) {
+      this.$set(this.config.customize, 'dashLength', 5)
+    }
   },
   methods: {
-    toggleEdit() {
-      console.log('Setting toggled edit mode to:', this.isEditing)
-      
-      // 使用事件总线通知组件
-      EventBus.$emit('svgline-toggle-edit', this.isEditing)
-    },
-    
     // 更新配置
     updateConfig() {
       console.log('Updating config from setting')
       this.$emit('update:config', JSON.parse(JSON.stringify(this.config)))
+    },
+    
+    // 更新颜色并刷新动画
+    updateColorAndRefresh() {
+      this.updateConfig()
+      // 通知组件刷新动画
+      EventBus.$emit('svgline-refresh-animation')
     }
   }
 }
@@ -229,5 +248,28 @@ export default {
 <style lang="scss" scoped>
 .lc-field-body {
   padding: 12px 16px;
+  
+  .el-form-item {
+    margin-bottom: 18px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .dash-length-item {
+    margin-top: -10px;
+    margin-left: 20px;
+  }
 }
+
+.setting-body {
+  padding-bottom: 20px;
+}
+
+// 修复下拉选择框底部边距
+.el-select {
+  margin-bottom: 10px;
+}
+
 </style> 

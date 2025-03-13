@@ -110,15 +110,18 @@ export default {
     },
     lineColor() {
       this.updatePathStyle();
+      this.refreshAnimation();
     },
     lineWidth() {
       this.updatePathStyle();
+      this.refreshAnimation();
     },
     opacity() {
       this.updatePathStyle();
     },
     dashArray() {
       this.updatePathStyle();
+      this.refreshAnimation();
     },
     isEditing(val) {
       this.updateControlPoints();
@@ -131,6 +134,12 @@ export default {
     },
     'animation.speed'() {
       this.updateAnimation();
+    },
+    'animation.flowColor'() {
+      this.refreshAnimation();
+    },
+    'animation.particleColor'() {
+      this.refreshAnimation();
     }
   },
   created() {
@@ -154,6 +163,9 @@ export default {
 
     // 创建节流版本的调整大小函数
     this.throttledCheckAndAdjustSize = this.throttle(this.realTimeAdjustSize, 100);
+    
+    // 监听刷新动画事件
+    EventBus.$on('svgline-refresh-animation', this.refreshAnimation);
   },
   mounted() {
     if (this.$refs.svgContainer) {
@@ -173,6 +185,9 @@ export default {
       this.$refs.svgContainer.removeEventListener('mousedown', this.notifyParentDisableDrag);
     }
 
+    // 移除事件监听
+    EventBus.$off('svgline-refresh-animation', this.refreshAnimation);
+
     this.clearAnimation();
   },
   methods: {
@@ -190,12 +205,18 @@ export default {
       this.svgDraw.mousedown((event) => {
         if (!this.selected) return;
         
+        // 如果是右键点击，不记录时间和位置
+        if (event.button === 2) return;
+        
         mouseDownTime = Date.now();
         mouseDownPos = { x: event.clientX, y: event.clientY };
       });
       
       this.svgDraw.mouseup((event) => {
         if (!this.selected) return;
+        
+        // 如果是右键点击，不处理
+        if (event.button === 2) return;
         
         if (this.justFinishedDragging) return;
         
@@ -307,11 +328,13 @@ export default {
       if (!this.selected) return;
 
       this.points.forEach((point, index) => {
-        const circle = this.svgDraw.circle(10)
+        const circle = this.svgDraw.circle(14) // 增大点的尺寸
           .center(point.x, point.y)
           .fill('#1890ff')
           .stroke({ color: '#fff', width: 2 })
-          .css('cursor', 'move');
+          .css('cursor', 'move')
+          // 添加触摸区域
+          .attr('touch-action', 'none');
 
         circle.on('mousedown', (e) => {
           e.stopPropagation();
@@ -401,10 +424,10 @@ export default {
         const absoluteX = containerX + newX;
         const absoluteY = containerY + newY;
 
-        // 常量定义
-        const POINT_RADIUS = 10;
-        const DELETE_BUTTON_HEIGHT = 15;
-        const LEFT_PADDING = 20;
+        // 常量定义 - 增加边缘安全距离
+        const POINT_RADIUS = 14; // 增大点的半径
+        const DELETE_BUTTON_HEIGHT = 20; // 增大删除按钮高度
+        const LEFT_PADDING = 25; // 增加左侧安全距离
 
         // 限制点不超出画布边界
         if (absoluteX - POINT_RADIUS - LEFT_PADDING < 0) {
@@ -479,7 +502,11 @@ export default {
     },
 
     handleSvgClick(event) {
-      if (!this.selected || this.isDragging) return;
+      // 如果是右键点击，不添加新点
+      if (event.button === 2) return;
+      
+      // 如果刚结束拖动，不添加新点
+      if (!this.isEditing || this.isDragging || this.justFinishedDragging) return;
 
       event.stopPropagation();
 
@@ -499,11 +526,8 @@ export default {
       }
 
       this.updatePath();
-
       this.updateControlPoints();
-
       this.savePoints();
-
       this.checkAndAdjustSize();
     },
 
@@ -752,26 +776,19 @@ export default {
     updateAnimation() {
       const previousType = this.animation.type;
       
-      if (previousType === 'dash' && this.animation.type !== 'dash') {
-        this.updatePathStyle();
-      }
-
+      // 清除现有动画
       this.clearAnimation();
 
       if (!this.animation.enable) {
+        // 如果禁用动画，确保恢复原始样式
         this.updatePathStyle();
         return;
       }
 
+      // 根据动画类型创建新动画
       switch (this.animation.type) {
         case 'flow':
           this.createFlowAnimation();
-          break;
-        case 'dash':
-          this.createDashAnimation();
-          break;
-        case 'glow':
-          this.createGlowAnimation();
           break;
         case 'particle':
           this.createParticleAnimation();
@@ -780,12 +797,21 @@ export default {
     },
 
     clearAnimation() {
+      // 先停止并移除所有动画元素
       if (this.animationElements) {
-        this.animationElements.forEach(el => el.remove());
+        this.animationElements.forEach(el => {
+          // 安全地调用 remove 方法
+          if (typeof el.remove === 'function') {
+            el.remove();
+          } else if (el && el.animation && typeof el.animation.stop === 'function') {
+            el.animation.stop();
+          }
+        });
       }
       this.animationElements = [];
 
-      if (this.path && this.animation.type !== 'dash') {
+      // 如果当前不是虚线动画，恢复原始样式
+      if (this.path) {
         this.path.attr({
           'stroke-dasharray': this.dashArray,
           'stroke-dashoffset': 0
@@ -810,37 +836,6 @@ export default {
       }).loop(true, false);
 
       this.animationElements.push(flowDot);
-    },
-
-    createDashAnimation() {
-      const dashLength = this.animation.flowLength;
-      const totalLength = this.path.length();
-      
-      const originalDashArray = this.dashArray;
-      
-      const currentDashArray = originalDashArray !== 'none' ? originalDashArray : `${dashLength},${totalLength}`;
-
-      this.path.attr({
-        'stroke-dasharray': currentDashArray,
-        'stroke-dashoffset': totalLength
-      });
-
-      const animation = this.path.animate({
-        duration: (11 - this.animation.speed) * 1000,
-        ease: '<>'
-      }).attr({
-        'stroke-dashoffset': -totalLength
-      }).loop(true, false);
-
-      this.animationElements.push({
-        remove: () => {
-          animation.stop();
-          this.path.attr({
-            'stroke-dasharray': originalDashArray,
-            'stroke-dashoffset': 0
-          });
-        }
-      });
     },
 
     createParticleAnimation() {
@@ -870,13 +865,9 @@ export default {
       }
     },
 
-    createGlowAnimation() {
-      // Implementation of createGlowAnimation method
-    },
-
     // 实时调整大小的函数（只处理放大）
     realTimeAdjustSize() {
-      const EDGE_PADDING = 10;
+      const EDGE_PADDING = 20; // 增加边缘填充
       
       if (!this.config.customize?.autoResize) return;
       
@@ -979,7 +970,7 @@ export default {
       // 标记正在调整大小，避免触发watch
       this.isAdjustingSize = true;
       
-      const EDGE_PADDING = 20; // 边缘填充，确保点不会太靠近边缘
+      const EDGE_PADDING = 25; // 增加边缘填充，确保点不会太靠近边缘
       
       // 获取点的最大最小坐标
       const xValues = this.points.map(p => p.x);
@@ -1087,6 +1078,13 @@ export default {
           fn.apply(this, args);
         }
       };
+    },
+
+    // 添加刷新动画的方法
+    refreshAnimation() {
+      if (this.animation.enable) {
+        this.updateAnimation();
+      }
     },
   }
 }

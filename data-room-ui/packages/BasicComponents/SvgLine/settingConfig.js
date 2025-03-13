@@ -31,7 +31,7 @@ const customConfig = {
     // 添加动画相关配置
     animation: {
       enable: false,
-      type: 'flow', // flow(水流), dash(虚线移动), particle(粒子)
+      type: 'flow', // flow(水流), particle(粒子)
       speed: 5,
       flowColor: 'rgba(24, 144, 255, 0.6)',
       flowLength: 30,

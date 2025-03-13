@@ -69,6 +69,7 @@ export default {
     // 改变激活的组件
     changeActive (config) {
       this.changeActiveCode(config.code)
+      this.$emit('openRightPanel', config)
     }
   }
 }
