@@ -39,7 +39,7 @@
         zIndex: chart.z || 0,
       }"
       :perspective="parseInt(`${chart.perspective == undefined ? 0 : chart.perspective}`)"
-      :transform="`skew(${chart.skewX == undefined ? 0 : chart.skewX}deg, ${chart.skewY == undefined? 0 : chart.skewY}deg) rotateX(${chart.rotateX == undefined ? 0 : chart.rotateX}deg) rotateY(${chart.rotateY == undefined ? 0 : chart.rotateY}deg)  rotateZ(${chart.rotateZ == undefined ? 0 : chart.rotateZ}deg)`"
+      :transform="getTransform(chart)"
       :grid="[1,1]"
       :handles="handlesList"
       class-name-handle="bs-handle-class"
@@ -487,6 +487,15 @@ export default {
           item.enabled = !disabled;
         }
       });
+    },
+    getTransform(chart) {
+      const skewX = parseFloat(chart.skewX || 0)
+      const skewY = parseFloat(chart.skewY || 0)
+      const rotateX = parseFloat(chart.rotateX || 0)
+      const rotateY = parseFloat(chart.rotateY || 0)
+      const rotateZ = parseFloat(chart.rotateZ || 0)
+
+      return `skew(${skewX}deg, ${skewY}deg) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
     }
   }
 }
