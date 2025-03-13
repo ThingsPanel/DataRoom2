@@ -131,6 +131,7 @@ export default {
 <style lang="scss" scoped>
 .bs-right-panel-wrap {
   //z-index: 1000;
+
   display: flex;
   flex-direction: column;
   background-color: var(--bs-background-1);
@@ -183,6 +184,7 @@ export default {
   }
 
   .bs-page-right {
+    padding: 6px;
     height: calc(100vh - 80px);
     width: 320px;
     box-sizing: border-box;
