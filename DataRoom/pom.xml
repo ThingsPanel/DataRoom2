@@ -33,6 +33,7 @@
     <modules>
         <module>dataroom-core</module>
         <module>dataroom-server</module>
+        <module>dataset</module>
     </modules>
 
     <properties>

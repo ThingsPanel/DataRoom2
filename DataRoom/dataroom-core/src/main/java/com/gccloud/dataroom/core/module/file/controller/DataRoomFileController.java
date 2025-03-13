@@ -57,7 +57,7 @@ public class DataRoomFileController extends SuperController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许查询文件");
-            return (R<PageVO<DataRoomFileVO>>) R.error("租户ID为空，不允许查询文件");
+            return (R<PageVO<DataRoomFileVO>>) R.error(403,"租户ID为空，不允许查询文件");
         }
         
         searchDTO.setTenantId(tenantId);
@@ -78,7 +78,7 @@ public class DataRoomFileController extends SuperController {
         // 检查租户ID是否为空
         if (StringUtils.isBlank(tenantId)) {
             log.error("租户ID为空，不允许上传文件");
-            return (R<DataRoomFileEntity>) R.error("租户ID为空，不允许上传文件");
+            return (R<DataRoomFileEntity>) R.error(403,"租户ID为空，不允许上传文件");
         }
         
         DataRoomFileEntity entity = new DataRoomFileEntity();
