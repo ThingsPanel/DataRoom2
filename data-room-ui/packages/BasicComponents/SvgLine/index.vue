@@ -329,7 +329,20 @@ export default {
     updateControlPoints() {
       this.clearControlPoints();
 
-      if (!this.selected) return;
+      // 在预览模式下不显示控制点
+      // 通过检查是否在BigScreenRun组件中来判断是否为预览模式
+      let isPreviewMode = false;
+      let parent = this.$parent;
+      while (parent) {
+        if (parent.$options.name === 'BigScreenRun') {
+          isPreviewMode = true;
+          break;
+        }
+        parent = parent.$parent;
+      }
+
+      // 如果是预览模式或未选中，则不显示控制点
+      if (isPreviewMode || !this.selected) return;
 
       this.points.forEach((point, index) => {
         const circle = this.svgDraw.circle(14) // 增大点的尺寸
@@ -491,6 +504,20 @@ export default {
     handleSvgClick(event) {
       // 如果是右键点击，不添加新点
       if (event.button === 2) return;
+
+      // 检查是否在预览模式
+      let isPreviewMode = false;
+      let parent = this.$parent;
+      while (parent) {
+        if (parent.$options.name === 'BigScreenRun') {
+          isPreviewMode = true;
+          break;
+        }
+        parent = parent.$parent;
+      }
+
+      // 如果是预览模式，不允许添加点
+      if (isPreviewMode) return;
 
       // 如果刚结束拖动，不添加新点
       if (!this.isEditing || this.isDragging || this.justFinishedDragging) return;
