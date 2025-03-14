@@ -6,9 +6,9 @@
 
 <template>
   <div class="content">
-    <!-- 旋转控制器，只保留一个按钮，支持双击重置 -->
+    <!-- 旋转控制器，只在设计模式下且组件被选中时显示 -->
     <div 
-      v-if="isSelected" 
+      v-if="isSelected && !isPreviewMode" 
       class="rotate-handler"
       @mousedown.stop="startRotate"
       @dblclick.stop="resetRotate"
@@ -35,7 +35,7 @@
         :ref="config.code"
         :key="config.key"
         :config="config"
-        :selected="isSelected"
+        :selected="isSelected && !isPreviewMode"
         @styleHandler="styleHandler"
         @error="handleError"
       />
@@ -92,6 +92,28 @@ export default {
     isSelected() {
       return this.$store.state.bigScreen.activeCodes.includes(this.config.code);
     },
+    // 添加计算属性判断是否为预览模式
+    isPreviewMode() {
+      // 检查当前路由是否为预览路由
+      const currentPath = this.$route.path;
+      const previewPaths = [
+        window?.BS_CONFIG?.routers?.previewUrl || '/big-screen/preview',
+        '/big-screen/preview'
+      ];
+      
+      // 检查是否在BigScreenRun组件中
+      let inBigScreenRun = false;
+      let parent = this.$parent;
+      while (parent) {
+        if (parent.$options.name === 'BigScreenRun') {
+          inBigScreenRun = true;
+          break;
+        }
+        parent = parent.$parent;
+      }
+      
+      return previewPaths.includes(currentPath) || inBigScreenRun;
+    },
     wrapStyle() {
       return this.getWrapStyle()
     }
@@ -117,6 +139,9 @@ export default {
       this.$emit('styleHandler', config)
     },
     startRotate (e) {
+      // 在预览模式下不允许旋转
+      if (this.isPreviewMode) return;
+      
       e.preventDefault()
       this.isRotating = true
       
@@ -139,7 +164,7 @@ export default {
       document.addEventListener('mouseup', this.stopRotate)
     },
     handleRotate (e) {
-      if (!this.isRotating) return
+      if (!this.isRotating || this.isPreviewMode) return
 
       const rect = this.$el.getBoundingClientRect()
       const centerX = rect.left + rect.width / 2
@@ -186,6 +211,8 @@ export default {
       })
     },
     stopRotate () {
+      if (this.isPreviewMode) return;
+      
       this.isRotating = false
       document.removeEventListener('mousemove', this.handleRotate)
       document.removeEventListener('mouseup', this.stopRotate)
@@ -207,6 +234,8 @@ export default {
     },
     // 添加重置方法
     resetRotate() {
+      if (this.isPreviewMode) return;
+      
       const updatedConfig = {
         ...this.config,
         rotateZ: 0
