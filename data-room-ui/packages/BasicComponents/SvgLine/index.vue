@@ -44,7 +44,6 @@ export default {
       path: null,
       points: [],
       circles: [],
-      deleteButtons: [],
       isDragging: false,
       isAdjustingSize: false,
       draggedPointIndex: -1,
@@ -325,9 +324,6 @@ export default {
     clearControlPoints() {
       this.circles.forEach(circle => circle.remove());
       this.circles = [];
-
-      this.deleteButtons.forEach(btn => btn.remove());
-      this.deleteButtons = [];
     },
 
     updateControlPoints() {
@@ -346,6 +342,12 @@ export default {
 
         circle.on('mousedown', (e) => {
           e.stopPropagation();
+
+          // 检查是否按下了Ctrl键并且有超过2个点
+          if (e.ctrlKey && this.points.length > 2) {
+            this.deletePoint(index);
+            return;
+          }
 
           let renderComponent = this.$parent;
           while (renderComponent && renderComponent.$options.name !== 'BigScreenRender') {
@@ -374,28 +376,6 @@ export default {
         });
 
         this.circles.push(circle);
-
-        if (this.points.length > 2) {
-          const deleteGroup = this.svgDraw.group();
-
-          deleteGroup.circle(16)
-            .center(point.x, point.y - 15)
-            .fill('#ff4d4f');
-
-          deleteGroup.text('×')
-            .center(point.x, point.y - 15)
-            .font({ size: 12, weight: 'bold' })
-            .fill('#fff')
-            .css('pointer-events', 'none');
-
-          deleteGroup.css('cursor', 'pointer')
-            .click((e) => {
-              e.stopPropagation();
-              this.deletePoint(index);
-            });
-
-          this.deleteButtons.push(deleteGroup);
-        }
       });
     },
 
@@ -435,7 +415,6 @@ export default {
 
         // 常量定义
         const POINT_RADIUS = 14; // 控制点半径
-        const DELETE_BUTTON_HEIGHT = 20; // 删除按钮高度
         const LEFT_PADDING = 25; // 左侧安全距离
 
         // 限制点不超出画布边界
@@ -445,8 +424,8 @@ export default {
           newX = canvasWidth - containerX - POINT_RADIUS;
         }
 
-        if (absoluteY - POINT_RADIUS - DELETE_BUTTON_HEIGHT < 0) {
-          newY = -containerY + POINT_RADIUS + DELETE_BUTTON_HEIGHT;
+        if (absoluteY - POINT_RADIUS < 0) {
+          newY = -containerY + POINT_RADIUS;
         } else if (absoluteY + POINT_RADIUS > canvasHeight) {
           newY = canvasHeight - containerY - POINT_RADIUS;
         }
@@ -459,10 +438,6 @@ export default {
       // 更新控制点位置
       if (this.circles[this.draggedPointIndex]) {
         this.circles[this.draggedPointIndex].center(newX, newY);
-      }
-
-      if (this.deleteButtons[this.draggedPointIndex]) {
-        this.deleteButtons[this.draggedPointIndex].center(newX, newY - 15);
       }
       
       // 实时调整容器大小

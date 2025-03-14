@@ -1,5 +1,29 @@
-<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1719391963543" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="6430" xmlns:xlink="http://www.w3.org/1999/xlink" width="260" height="260">
-<path d="M512 64C264.96 64 64 264.96 64 512s200.96 448 448 448 448-200.96 448-448S759.04 64 512 64z m0 832c-212.064 0-384-171.936-384-384s171.936-384 384-384 384 171.936 384 384-171.936 384-384 384z" fill="#1E88E5" p-id="6431"/>
-<path d="M512 320c-105.856 0-192 86.144-192 192 0 70.592 38.208 132.288 94.848 165.696l165.696-165.696c0-105.856-86.144-192-192-192z" fill="#42A5F5" p-id="6432"/>
-<path d="M512 448c-35.296 0-64 28.704-64 64s28.704 64 64 64 64-28.704 64-64-28.704-64-64-64z" fill="#90CAF9" p-id="6433"/>
+<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="260" height="260">
+  <!-- 背景圆 - 更细更淡 -->
+  <circle cx="512" cy="512" r="460" fill="none" stroke="#E3F2FD" stroke-width="8" opacity="0.3"/>
+  
+  <!-- 主要线条 - 加粗并调整颜色 -->
+  <path d="M256 512 C356 412, 668 612, 768 312" 
+        fill="none" 
+        stroke="#2196F3" 
+        stroke-width="48" 
+        stroke-linecap="round"/>
+  
+  <!-- 控制点 - 稍微放大并增加光晕效果 -->
+  <circle cx="256" cy="512" r="32" fill="#64B5F6" stroke="#fff" stroke-width="6"/>
+  <circle cx="512" cy="462" r="32" fill="#64B5F6" stroke="#fff" stroke-width="6"/>
+  <circle cx="768" cy="312" r="32" fill="#64B5F6" stroke="#fff" stroke-width="6"/>
+  
+  <!-- 控制点光晕 -->
+  <circle cx="256" cy="512" r="40" fill="none" stroke="#90CAF9" stroke-width="4" opacity="0.4"/>
+  <circle cx="512" cy="462" r="40" fill="none" stroke="#90CAF9" stroke-width="4" opacity="0.4"/>
+  <circle cx="768" cy="312" r="40" fill="none" stroke="#90CAF9" stroke-width="4" opacity="0.4"/>
+  
+  <!-- 装饰性虚线 - 更细更淡 -->
+  <path d="M256 512 L768 312" 
+        stroke="#42A5F5" 
+        stroke-width="3" 
+        stroke-dasharray="12,8" 
+        opacity="0.3"/>
 </svg> 

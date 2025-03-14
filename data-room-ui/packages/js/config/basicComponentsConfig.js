@@ -26,6 +26,7 @@ const typeList = [
   'timePicker',
   'dateTimePicker',
   
+  
   // 3. 装饰边框类
   'horizontalLine',
   'verticalLine', 
