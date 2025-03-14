@@ -76,11 +76,18 @@
                 @change="updateConfig"
               />
             </el-form-item>
-            <el-form-item label="曲线">
-              <el-switch 
-                v-model="config.customize.curved" 
+            <el-form-item label="线型">
+              <el-select 
+                v-model="config.customize.lineType" 
+                class="full-width-select"
                 @change="updateConfig"
-              />
+              >
+                <el-option label="直线" value="straight" />
+                <el-option label="曲线" value="curved" />
+                <el-option label="阶梯线" value="step" />
+                <el-option label="平滑曲线" value="smooth" />
+                <el-option label="贝塞尔曲线" value="bezier" />
+              </el-select>
             </el-form-item>
           </div>
           <SettingTitle>动画效果</SettingTitle>
@@ -214,6 +221,16 @@ export default {
     
     if (!this.config.customize.dashLength) {
       this.$set(this.config.customize, 'dashLength', 5)
+    }
+    
+    // 确保线型属性存在
+    if (!this.config.customize.lineType) {
+      // 兼容旧版本，如果有curved属性，则根据curved设置lineType
+      if (this.config.customize.curved !== undefined) {
+        this.$set(this.config.customize, 'lineType', this.config.customize.curved ? 'curved' : 'straight')
+      } else {
+        this.$set(this.config.customize, 'lineType', 'straight')
+      }
     }
   },
   methods: {

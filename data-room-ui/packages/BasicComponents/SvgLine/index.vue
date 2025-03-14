@@ -82,6 +82,14 @@ export default {
         glowColor: 'rgba(24, 144, 255, 0.3)',
         glowWidth: 10
       }
+    },
+    lineType() {
+      // 如果有lineType属性，直接使用
+      if (this.config.customize?.lineType) {
+        return this.config.customize.lineType;
+      }
+      // 兼容旧版本，根据curved属性返回lineType
+      return this.config.customize?.curved ? 'curved' : 'straight';
     }
   },
   watch: {
@@ -140,7 +148,7 @@ export default {
     'animation.particleColor'() {
       this.refreshAnimation();
     },
-    'config.customize.curved'() {
+    'config.customize.lineType'() {
       this.updatePath();
       this.refreshAnimation();
     }
@@ -298,24 +306,98 @@ export default {
 
       let pathData = '';
 
-      if (this.config.customize?.curved) {
-        pathData = `M ${this.points[0].x} ${this.points[0].y}`;
-
-        for (let i = 1; i < this.points.length; i++) {
-          const prev = this.points[i - 1];
-          const curr = this.points[i];
-          const cp1x = prev.x + (curr.x - prev.x) / 3;
-          const cp1y = prev.y;
-          const cp2x = prev.x + (curr.x - prev.x) * 2 / 3;
-          const cp2y = curr.y;
-          pathData += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
-        }
-      } else {
-        pathData = `M ${this.points[0].x} ${this.points[0].y}`;
-
-        for (let i = 1; i < this.points.length; i++) {
-          pathData += ` L ${this.points[i].x} ${this.points[i].y}`;
-        }
+      // 根据线型生成不同的路径
+      switch (this.lineType) {
+        case 'curved':
+          // 原来的曲线实现
+          pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+          for (let i = 1; i < this.points.length; i++) {
+            const prev = this.points[i - 1];
+            const curr = this.points[i];
+            const cp1x = prev.x + (curr.x - prev.x) / 3;
+            const cp1y = prev.y;
+            const cp2x = prev.x + (curr.x - prev.x) * 2 / 3;
+            const cp2y = curr.y;
+            pathData += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+          }
+          break;
+          
+        case 'step':
+          // 阶梯线实现
+          pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+          for (let i = 1; i < this.points.length; i++) {
+            const prev = this.points[i - 1];
+            const curr = this.points[i];
+            // 水平线 + 垂直线
+            pathData += ` H ${curr.x} V ${curr.y}`;
+          }
+          break;
+          
+        case 'smooth':
+          // 平滑曲线实现 (使用基数样条)
+          pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+          if (this.points.length === 2) {
+            // 只有两个点时，使用直线
+            pathData += ` L ${this.points[1].x} ${this.points[1].y}`;
+          } else {
+            // 使用基数样条曲线
+            pathData += ' T';
+            for (let i = 1; i < this.points.length; i++) {
+              pathData += ` ${this.points[i].x} ${this.points[i].y}`;
+            }
+          }
+          break;
+          
+        case 'bezier':
+          // 贝塞尔曲线实现
+          pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+          if (this.points.length === 2) {
+            // 只有两个点时，使用直线
+            pathData += ` L ${this.points[1].x} ${this.points[1].y}`;
+          } else {
+            // 对于多个点，使用三次贝塞尔曲线
+            for (let i = 1; i < this.points.length; i++) {
+              const prev = this.points[i - 1];
+              const curr = this.points[i];
+              
+              // 计算控制点
+              let cp1x, cp1y, cp2x, cp2y;
+              
+              if (i === 1) {
+                // 第一段曲线的第一个控制点
+                cp1x = prev.x + (curr.x - prev.x) / 4;
+                cp1y = prev.y + (curr.y - prev.y) / 4;
+              } else {
+                // 使用前一个点的方向
+                const prevPrev = this.points[i - 2];
+                cp1x = prev.x + (curr.x - prevPrev.x) / 4;
+                cp1y = prev.y + (curr.y - prevPrev.y) / 4;
+              }
+              
+              if (i === this.points.length - 1) {
+                // 最后一段曲线的第二个控制点
+                cp2x = curr.x - (curr.x - prev.x) / 4;
+                cp2y = curr.y - (curr.y - prev.y) / 4;
+              } else {
+                // 使用下一个点的方向
+                const next = this.points[i + 1];
+                cp2x = curr.x - (next.x - prev.x) / 4;
+                cp2y = curr.y - (next.y - prev.y) / 4;
+              }
+              
+              pathData += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${curr.x} ${curr.y}`;
+            }
+          }
+          break;
+          
+        case 'straight':
+        default:
+          // 直线实现
+          pathData = `M ${this.points[0].x} ${this.points[0].y}`;
+          for (let i = 1; i < this.points.length; i++) {
+            pathData += ` L ${this.points[i].x} ${this.points[i].y}`;
+          }
+          break;
       }
 
       this.path.plot(pathData);
