@@ -35,6 +35,7 @@
   </div>
 </template>
 <script>
+import { log } from '@antv/g2plot/lib/utils'
 import Nav from './NavTop.vue'
 // import Nav from './Nav.vue'
 export default {
@@ -127,6 +128,7 @@ export default {
     '$route': {
       handler(newRoute) {
         // 仅在有 ticket 时更新，没有时不处理
+        console.log(newRoute, 'newRoute')
         if (newRoute.query.ticket) {
           sessionStorage.setItem('ticket', newRoute.query.ticket);
         }
