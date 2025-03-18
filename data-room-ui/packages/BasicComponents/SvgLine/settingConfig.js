@@ -33,6 +33,7 @@ const customConfig = {
       enable: false,
       type: 'flow', // flow(水流), particle(粒子)
       speed: 5,
+      direction: 'forward', // forward(正向), reverse(反向), alternate(交替)
       flowColor: 'rgba(24, 144, 255, 0.6)',
       flowLength: 30,
       particleSize: 3,

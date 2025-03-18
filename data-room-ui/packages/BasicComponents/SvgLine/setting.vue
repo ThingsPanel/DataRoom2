@@ -111,6 +111,18 @@
                   <div style="height: 12px;"/>
                 </el-select>
               </el-form-item>
+              
+              <el-form-item label="动画方向" class="animation-direction-item">
+                <el-select 
+                  v-model="config.customize.animation.direction"
+                  @change="updateConfig"
+                  class="full-width-select"
+                >
+                  <el-option label="正向" value="forward" />
+                  <el-option label="反向" value="reverse" />
+                  <el-option label="交替" value="alternate" />
+                </el-select>
+              </el-form-item>
 
               <el-form-item label="动画速度">
                 <el-slider
@@ -232,6 +244,15 @@ export default {
         this.$set(this.config.customize, 'lineType', 'straight')
       }
     }
+    
+    // 确保动画方向属性存在
+    if (!this.config.customize.animation) {
+      this.$set(this.config.customize, 'animation', {})
+    }
+    
+    if (!this.config.customize.animation.direction) {
+      this.$set(this.config.customize.animation, 'direction', 'forward')
+    }
   },
   methods: {
     // 更新配置
@@ -270,6 +291,10 @@ export default {
     }
     
     &.animation-type-item {
+      margin-bottom: 22px;
+    }
+    
+    &.animation-direction-item {
       margin-bottom: 22px;
     }
   }
