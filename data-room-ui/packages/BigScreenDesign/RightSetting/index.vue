@@ -4,7 +4,7 @@
     @click.stop
   >
     <el-tabs
-      v-if="config.option.displayOption.dataAllocation.enable"
+      v-if="config.option && config.option.displayOption && config.option.displayOption.dataAllocation && config.option.displayOption.dataAllocation.enable"
       v-model="activeName"
       @tab-click="handleClick"
     >
@@ -23,6 +23,18 @@
             />
           </template>
         </DataSetting>
+      </el-tab-pane>
+      <el-tab-pane
+        v-if="showDynamicData"
+        label="动态数据"
+        name="dynamicData"
+      >
+        <DynamicDataConfig
+          ref="dynamicDataConfig"
+          :key="config.code"
+          :config="config"
+          @update="handleDynamicDataUpdate"
+        />
       </el-tab-pane>
       <el-tab-pane
         label="样式"
@@ -51,6 +63,7 @@
     </el-scrollbar>
   </div>
 </template>
+
 <script>
 import { resolveComponentType } from 'data-room-ui/js/utils'
 import DataSetting from './DataSetting.vue'
@@ -58,12 +71,12 @@ import rightSetting from 'data-room-ui/js/utils/rightSettingImport'
 import CustomComponent from './G2CustomSetting.vue'
 import EchartsCustomSetting from './EchartsCustomSetting.vue'
 import Svgs from 'data-room-ui/Svgs/setting.vue'
+import DynamicDataConfig from './DynamicDataConfig/index.vue'
 import { mapState, mapMutations } from 'vuex'
-// import _ from 'lodash'
 import isEqual from 'lodash/isEqual'
 import cloneDeep from 'lodash/cloneDeep'
 import { EventBus } from 'data-room-ui/js/utils/eventBus'
-// 整体动态导入右侧设置组件，不用手动注册
+
 const components = {}
 for (const key in rightSetting) {
   if (Object.hasOwnProperty.call(rightSetting, key)) {
@@ -71,6 +84,7 @@ for (const key in rightSetting) {
     components[key] = component
   }
 }
+
 export default {
   name: 'RightSetting',
   components: {
@@ -78,7 +92,7 @@ export default {
     DataSetting,
     CustomComponent,
     Svgs,
-    // 远程组件的样式配置也和g2Plot的样式配置一样，采用属性配置, 故使用一个组件
+    DynamicDataConfig,
     RemoteComponent: CustomComponent,
     EchartsComponent: EchartsCustomSetting
   },
@@ -95,6 +109,9 @@ export default {
       config: (state) => state.bigScreen.activeItemConfig,
       chartList: (state) => state.bigScreen.pageInfo.chartList
     }),
+    showDynamicData () {
+      return this.config.option?.displayOption?.dynamicData?.enable
+    },
     pageCode () {
       return this.$route.query.code
     },
@@ -132,14 +149,12 @@ export default {
     }
   },
   watch: {
-    // 只更新样式部分，不调用接口
     configStyle: {
       handler (val, oldValue) {
         this.handleConfigChange(val, oldValue, 'configStyle')
       },
       deep: true
     },
-    // 更新数据源部分，需要调用接口
     configDataSource: {
       handler (val, oldValue) {
         this.handleConfigChange(val, oldValue, 'configDataSource')
@@ -193,7 +208,6 @@ export default {
       this.$set(this, 'activeName', val.name)
     },
     resolveComponentType,
-    // 多个表单校验
     getFormPromise (form) {
       return new Promise((resolve) => {
         form.validate((res) => {
@@ -201,11 +215,8 @@ export default {
         })
       })
     },
-    // 更新
     update () {
-      // 有数据配置也有自定义配置的组件
       if (this.config.option.displayOption.dataAllocation.enable) {
-        // 获取子组件的表单元素
         const commonForm = this.$refs.dataSetting.$refs.form
         const customForm = this.$refs.customSetting.$refs.form
         Promise.all([commonForm, customForm].map(this.getFormPromise)).then(
@@ -228,7 +239,6 @@ export default {
           }
         )
       } else {
-        // 只有自定义配置的组件
         if (this.$refs.customSetting?.$refs?.form?.validate) {
           this.$refs.customSetting.$refs.form.validate((valid) => {
             if (valid) {
@@ -240,7 +250,6 @@ export default {
             }
           })
         } else {
-          // 边框装饰组件的右侧配置
           this.$refs.customSetting.$refs.form.$refs.form.validate((valid) => {
             if (valid) {
               this.$emit('updateSetting', this.config)
@@ -252,6 +261,12 @@ export default {
           })
         }
       }
+    },
+    handleDynamicDataUpdate (data) {
+      this.$emit('updateSetting', {
+        ...this.config,
+        dynamicData: data
+      })
     }
   }
 }
@@ -269,4 +284,4 @@ export default {
     top: 0;
   }
 }
-</style>
+</style> 

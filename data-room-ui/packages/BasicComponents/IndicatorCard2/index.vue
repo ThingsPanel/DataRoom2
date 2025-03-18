@@ -23,7 +23,7 @@
           'margin-bottom':customize.lineDistance +'px'
         }"
       >
-        {{ customize.secondLine }}
+        66{{ customize.secondLine }}
       </div>
       <div
         :style="{
@@ -73,10 +73,17 @@ export default {
   },
   data () {
     return {
-      customClass: {}
+      customClass: {},
+      dynamicValue: null
     }
   },
-  watch: {},
+  watch: {
+    'config.dynamicData': {
+      handler: 'initDynamicData',
+      immediate: true,
+      deep: true
+    }
+  },
   mounted () {
     // this.chartInit()
   },
@@ -94,7 +101,7 @@ export default {
       return this.config?.option
     },
     optionData () {
-      return this.option?.data ?? 80
+      return this.dynamicValue ?? this.option?.data ?? 80
     },
     customize () {
       return this.config?.customize
@@ -130,6 +137,52 @@ export default {
         data: dataList
       }
       return config
+    },
+    async initDynamicData () {
+      if (!this.config.dynamicData?.api) return
+      
+      try {
+        const response = await fetch(this.config.dynamicData.api, {
+          method: this.config.dynamicData.method || 'GET'
+        })
+        const data = await response.json()
+        
+        // 根据配置的数据路径获取数据
+        let value = data
+        if (this.config.dynamicData.dataPath) {
+          const paths = this.config.dynamicData.dataPath.split('.')
+          for (const path of paths) {
+            value = value[path]
+          }
+        }
+        
+        // 根据映射关系更新数据
+        if (this.config.dynamicData.mapping?.value) {
+          this.dynamicValue = value[this.config.dynamicData.mapping.value]
+        }
+
+        // 如果配置了轮询，设置定时器
+        if (this.config.dynamicData.polling?.enable) {
+          this.setupPolling()
+        }
+      } catch (error) {
+        console.error('动态数据获取失败:', error)
+      }
+    },
+    setupPolling () {
+      if (this.pollingTimer) {
+        clearInterval(this.pollingTimer)
+      }
+      
+      const interval = (this.config.dynamicData.polling.interval || 30) * 1000
+      this.pollingTimer = setInterval(() => {
+        this.initDynamicData()
+      }, interval)
+    }
+  },
+  beforeDestroy () {
+    if (this.pollingTimer) {
+      clearInterval(this.pollingTimer)
     }
   }
 }
