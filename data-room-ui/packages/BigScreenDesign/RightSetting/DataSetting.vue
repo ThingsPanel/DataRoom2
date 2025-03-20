@@ -52,18 +52,13 @@
               v-if="config.dataSource.source === 'dataset'"
               label="数据集"
             >
-              <data-set-select
+              <DataSetSetting
+                ref="dataSetSetting"
+                :config="config"
                 :dataset-name="datasetName"
-                :ds-id="config.dataSource.businessKey"
-                @getDsId="changeDsid"
-              >
-                <template #dataSetSelect="{value}">
-                  <slot
-                    name="dataSetSelect"
-                    :value="value"
-                  />
-                </template>
-              </data-set-select>
+                @getDsId="getDsId"
+                @getSelectDs="getSelectDs"
+              />
             </el-form-item>
             <el-form-item
               v-if="config.dataSource.source === 'expression' && config.option.displayOption.expression && config.option.displayOption.expression.enable"
@@ -870,24 +865,29 @@
             </div>
           </div>
           <div class="lc-field-body">
-            <el-form-item label="开启轮询">
+            <el-form-item
+              v-if="config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http'"
+              label="轮询"
+            >
               <el-switch
                 v-model="config.dataSource.polling"
+                class="bs-el-switch"
                 @change="handlePollingChange"
               />
             </el-form-item>
             <el-form-item
-              v-if="config.dataSource.polling"
-              label="轮询间隔(ms)"
+              v-if="config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http' && config.dataSource.polling"
+              label="轮询间隔"
             >
               <el-input-number
                 v-model="config.dataSource.pollingInterval"
+                class="bs-el-input-number"
                 :min="1000"
+                :max="3600000"
                 :step="1000"
-                controls-position="right"
-                placeholder="请输入轮询间隔"
                 @change="handlePollingIntervalChange"
               />
+              <span class="unit">毫秒</span>
             </el-form-item>
           </div>
         </div>
@@ -920,6 +920,7 @@ import dataSetSelect from 'data-room-ui/DataSetSetting/index.vue'
 import { mapState } from 'vuex'
 import { getDataSetDetails } from 'data-room-ui/js/api/bigScreenApi'
 import ExpressionDialog from 'data-room-ui/BigScreenDesign/RightSetting/ExpressionDialog.vue'
+import DataSetSetting from 'data-room-ui/DataSetSetting/index.vue'
 export default {
   name: 'DataSetting',
   components: {
@@ -927,7 +928,8 @@ export default {
     ComponentBinding,
     dataSetSelect,
     ElDragSelect,
-    ExpressionDialog
+    ExpressionDialog,
+    DataSetSetting
   },
   data () {
     return {
@@ -1124,7 +1126,7 @@ export default {
       this.config.expression = 'return '
       this.config.expressionCodes = []
     },
-    changeDsid (dsId) {
+    getDsId (dsId) {
       this.clearVerify()
       if (this.config.customize && this.config.customize.columnConfig) {
         this.config.customize.columnConfig = []
@@ -1300,15 +1302,14 @@ export default {
           delete window._pollingTimers[this.config.code]
         }
         // 同时也尝试清理config中可能存在的定时器
-        if (this.config.pollTimer) {
-          clearInterval(this.config.pollTimer)
-          this.config.pollTimer = null
+        if (this.config.dataSource.pollTimer) {
+          clearInterval(this.config.dataSource.pollTimer)
+          this.config.dataSource.pollTimer = null
         }
       }
       
-      // 如果开启轮询，确保数据集类型为http
+      // 如果开启轮询，设置默认轮询间隔
       if (val) {
-        this.config.dataSource.datasetType = 'http'
         // 如果没有设置轮询间隔，设置默认值
         if (!this.config.dataSource.pollingInterval) {
           this.config.dataSource.pollingInterval = 5000 // 默认5秒
@@ -1353,9 +1354,9 @@ export default {
         }
         
         // 同时也尝试清理config中可能存在的定时器
-        if (this.config.pollTimer) {
-          clearInterval(this.config.pollTimer)
-          this.config.pollTimer = null
+        if (this.config.dataSource.pollTimer) {
+          clearInterval(this.config.dataSource.pollTimer)
+          this.config.dataSource.pollTimer = null
         }
         
         // 重新初始化组件会重新创建定时器
@@ -1371,6 +1372,12 @@ export default {
       
       // 更新配置
       this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
+    },
+    getSelectDs (selectDs) {
+      this.datasetName = selectDs.name
+      this.config.dataSource.businessKey = selectDs.id
+      this.config.dataSource.datasetType = selectDs.datasetType
+      this.getDataSetDetailsById(selectDs.id, 'initial')
     }
     // 改变缓存数据集key
     // changeCacheBusinessKey (id) {

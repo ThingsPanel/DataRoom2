@@ -210,7 +210,6 @@ export default {
         makeRequest().then(updatedConfig => {
           // 如果配置了轮询且是HTTP数据集，启动轮询
           if (config.dataSource?.polling && 
-              config.dataSource?.datasetType === 'http' && 
               config.dataSource?.pollingInterval) {
             
             // 确保全局轮询管理器存在
@@ -229,7 +228,7 @@ export default {
             }, config.dataSource.pollingInterval)
             
             // 同时保存到config和全局管理器中
-            config.pollTimer = timerId
+            config.dataSource.pollTimer = timerId
             window._pollingTimers[config.code] = timerId
             
             console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
@@ -347,7 +346,6 @@ export default {
         makeRequest().then(updatedConfig => {
           // 如果配置了轮询且是HTTP数据集，启动轮询
           if (config.dataSource?.polling && 
-              config.dataSource?.datasetType === 'http' && 
               config.dataSource?.pollingInterval) {
             
             // 确保全局轮询管理器存在
@@ -366,17 +364,13 @@ export default {
             }, config.dataSource.pollingInterval)
             
             // 同时保存到config和全局管理器中
-            config.pollTimer = timerId
+            config.dataSource.pollTimer = timerId
             window._pollingTimers[config.code] = timerId
             
             console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
             
             // 存储定时器ID到config中
             this.changeChartConfig(config)
-          }
-          
-          if (config) {
-            config.loading = false
           }
           resolve(updatedConfig)
         })

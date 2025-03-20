@@ -545,13 +545,16 @@ export default {
     },
     // 获取选中数据集信息
     getSelectDs () {
-      if (!this.isDialog) return
+      if (!this.isDialog) {
+        console.warn('当前不在对话框模式')
+        return null
+      }
       if (this.multiple) {
         // 多选返回
-        return this.multipleSelection
+        return this.multipleSelection && this.multipleSelection.length > 0 ? this.multipleSelection : null
       } else {
         // 单选返回
-        return this.curRow ? this.curRow : null
+        return this.curRow || null
       }
     },
     // 单选数据集

@@ -168,13 +168,19 @@ export default {
       this.componentInstance = vueComponent.$children[0]
     },
     sure () {
+      if (!this.componentInstance) {
+        console.warn('组件实例未初始化')
+        return
+      }
       this.dataSetVisible = false
       const getSelectDs = this.componentInstance.getSelectDs()
-      if (Object.prototype.hasOwnProperty.call(getSelectDs, 'id')) {
+      if (getSelectDs && Object.prototype.hasOwnProperty.call(getSelectDs, 'id')) {
         this.dataSetId = getSelectDs.id
+        this.$emit('getDsId', this.dataSetId)
+        this.$emit('getSelectDs', getSelectDs)
+      } else {
+        console.warn('未选择有效的数据集')
       }
-      this.$emit('getDsId', this.dataSetId)
-      this.$emit('getSelectDs', getSelectDs)
     }
   }
 }
