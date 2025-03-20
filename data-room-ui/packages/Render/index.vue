@@ -170,6 +170,13 @@ export default {
   beforeDestroy() {
     // 移除事件监听
     EventBus.$off('disable-parent-drag', this.setDraggableDisabled)
+    // 清理所有轮询定时器
+    if (window._pollingTimers) {
+      Object.keys(window._pollingTimers).forEach(code => {
+        clearInterval(window._pollingTimers[code])
+        delete window._pollingTimers[code]
+      })
+    }
   },
   methods: {
     ...mapMutations('bigScreen', [

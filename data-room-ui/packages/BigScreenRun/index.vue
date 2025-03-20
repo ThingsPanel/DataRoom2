@@ -180,6 +180,13 @@ export default {
   },
   beforeDestroy () {
     this.stopTimer()
+    // 清理所有轮询定时器
+    if (window._pollingTimers) {
+      Object.keys(window._pollingTimers).forEach(code => {
+        clearInterval(window._pollingTimers[code])
+        delete window._pollingTimers[code]
+      })
+    }
   },
   methods: {
     ...mapActions('bigScreen', [

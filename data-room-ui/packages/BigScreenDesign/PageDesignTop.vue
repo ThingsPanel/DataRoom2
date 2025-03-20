@@ -527,8 +527,19 @@ export default {
       const newChartList = chartList?.map((chart) => {
         // 如果是自定义组件，需要将option转换为json字符串，因为其中可能有函数
         if (['customComponent', 'remoteComponent', 'echartsComponent'].includes(chart.type)) {
-          // chart.option.data = []
           chart.option = stringifyObjectFunctions(chart.option)
+        }
+        // 确保轮询配置被正确保存
+        if (chart.dataSource) {
+          const dataSource = { ...chart.dataSource }
+          // 保留轮询相关配置
+          dataSource.polling = dataSource.polling || false
+          dataSource.pollingInterval = dataSource.pollingInterval || 5000
+          // 如果开启轮询，确保数据集类型为http
+          if (dataSource.polling) {
+            dataSource.datasetType = 'http'
+          }
+          chart.dataSource = dataSource
         }
         return chart
       })

@@ -135,24 +135,33 @@ export default {
      * @returns {Promise<unknown>}
      */
     changeDataByCode (config) {
+      // 如果存在旧的轮询定时器，先清除
+      if (config.pollTimer) {
+        clearInterval(config.pollTimer)
+        config.pollTimer = null
+      }
+
       let currentPage = 1
       let size = 10
       if (config?.option?.pagination) {
         currentPage = config.option.pagination.currentPage
         size = config.option.pagination.pageSize
       }
-      return new Promise((resolve, reject) => {
-        config.loading = true
-        getChatInfo({
-          // innerChartCode: this.pageCode ? config.code : undefined,
-          chartCode: config.code,
-          current: currentPage,
-          pageCode: this.pageCode,
-          size: size,
-          type: config.type
-        }).then(async (res) => {
+
+      // 封装请求函数
+      const makeRequest = async () => {
+        try {
+          const res = await getChatInfo({
+            chartCode: config.code,
+            current: currentPage,
+            pageCode: this.pageCode,
+            size: size,
+            type: config.type
+          })
+
           config.loading = false
           let _res = cloneDeep(res)
+          
           // 如果是http数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http') {
@@ -179,16 +188,56 @@ export default {
               }
             }
           }
+
           // 将后端返回的数据保存
           if (_res.success) {
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
           }
           config = this.dataFormatting(config, _res)
           this.changeChartConfig(config)
-        }).catch((err) => {
+          return config
+        } catch (err) {
           console.info(err)
-        }).finally(() => {
-          resolve(config)
+          config.loading = false
+          return config
+        }
+      }
+
+      return new Promise((resolve) => {
+        config.loading = true
+        
+        // 执行首次请求
+        makeRequest().then(updatedConfig => {
+          // 如果配置了轮询且是HTTP数据集，启动轮询
+          if (config.dataSource?.polling && 
+              config.dataSource?.datasetType === 'http' && 
+              config.dataSource?.pollingInterval) {
+            
+            // 确保全局轮询管理器存在
+            if (!window._pollingTimers) {
+              window._pollingTimers = {}
+            }
+            
+            // 清除之前可能存在的定时器
+            if (window._pollingTimers[config.code]) {
+              clearInterval(window._pollingTimers[config.code])
+            }
+            
+            // 设置轮询定时器
+            const timerId = setInterval(async () => {
+              await makeRequest()
+            }, config.dataSource.pollingInterval)
+            
+            // 同时保存到config和全局管理器中
+            config.pollTimer = timerId
+            window._pollingTimers[config.code] = timerId
+            
+            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
+            
+            // 存储定时器ID到config中
+            this.changeChartConfig(config)
+          }
+          resolve(updatedConfig)
         })
       })
     },
@@ -198,6 +247,12 @@ export default {
      * @param {Array} filterList
      */
     changeData (config, filterList) {
+      // 如果存在旧的轮询定时器，先清除
+      if (config.pollTimer) {
+        clearInterval(config.pollTimer)
+        config.pollTimer = null
+      }
+
       const list = config?.paramsList?.map((item) => {
         if (item.value === '${level}') {
           return { ...item, value: config.customize.level }
@@ -207,6 +262,7 @@ export default {
           return item
         }
       })
+
       const params = {
         chart: {
           ...config,
@@ -218,11 +274,14 @@ export default {
         type: config.type,
         filterList: filterList || this.filterList
       }
-      return new Promise((resolve, reject) => {
-        config.loading = true
-        getUpdateChartInfo(params).then(async (res) => {
+
+      // 封装请求函数
+      const makeRequest = async () => {
+        try {
+          const res = await getUpdateChartInfo(params)
           config.loading = false
           let _res = cloneDeep(res)
+          
           // 如果是http数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http') {
@@ -252,11 +311,13 @@ export default {
               }
             }
           }
+
           // 将后端返回的数据保存
           if (_res.success) {
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
           }
           config = this.dataFormatting(config, _res)
+          
           if (this.chart) {
             // 单指标组件和多指标组件的changeData传参不同
             if (['Liquid', 'Gauge', 'RingProgress', 'Progress'].includes(config.chartType)) {
@@ -264,19 +325,60 @@ export default {
             } else {
               this.chart.changeData(config.option.data)
             }
-          } if (this.config.type === 'candlestick' && this.charts) {
+          } else if (this.config.type === 'candlestick' && this.charts) {
             this.updateChartData(config, _res)
           } else if (this.charts) {
             // 地图组件的被联动更新
             this.changeMapData(config.option.data)
           }
-        }).catch(err => {
+          
+          return config
+        } catch (err) {
           console.info(err)
-        }).finally(() => {
+          config.loading = false
+          return config
+        }
+      }
+
+      return new Promise((resolve) => {
+        config.loading = true
+        
+        // 执行首次请求
+        makeRequest().then(updatedConfig => {
+          // 如果配置了轮询且是HTTP数据集，启动轮询
+          if (config.dataSource?.polling && 
+              config.dataSource?.datasetType === 'http' && 
+              config.dataSource?.pollingInterval) {
+            
+            // 确保全局轮询管理器存在
+            if (!window._pollingTimers) {
+              window._pollingTimers = {}
+            }
+            
+            // 清除之前可能存在的定时器
+            if (window._pollingTimers[config.code]) {
+              clearInterval(window._pollingTimers[config.code])
+            }
+            
+            // 设置轮询定时器
+            const timerId = setInterval(async () => {
+              await makeRequest()
+            }, config.dataSource.pollingInterval)
+            
+            // 同时保存到config和全局管理器中
+            config.pollTimer = timerId
+            window._pollingTimers[config.code] = timerId
+            
+            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
+            
+            // 存储定时器ID到config中
+            this.changeChartConfig(config)
+          }
+          
           if (config) {
             config.loading = false
           }
-          resolve(config)
+          resolve(updatedConfig)
         })
       })
     },

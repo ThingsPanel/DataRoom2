@@ -13,7 +13,7 @@
     >
       <div class="data-setting-box">
         <div
-          v-if="config.option.displayOption.dataSourceType.enable"
+          v-if="config.option && config.option.displayOption && config.option.displayOption.dataSourceType && config.option.displayOption.dataSourceType.enable"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -859,62 +859,38 @@
             </el-table>
           </div>
         </div>
-        <!-- <div
-          v-if="config.option.displayOption.serverPagination.enable"
+        <!-- 添加轮询配置区域 -->
+        <div
+          v-if="config.dataSource && config.dataSource.source === 'dataset'"
           class="data-setting-data-box"
-          name="分页配置"
         >
           <div class="lc-field-head">
             <div class="lc-field-title">
-              分页配置
+              轮询配置
             </div>
           </div>
-          <div class="form">
-            <el-form-item
-              v-if="config.option.displayOption.serverPagination.enable"
-              label="服务端分页"
-              prop="dataSource.serverPagination"
-            >
-              <el-radio-group
-                v-model="config.dataSource.serverPagination"
-                class="bs-el-radio-group"
-                size="mini"
-                @change="serverPaginationChange"
-              >
-                <el-radio-button :label="true">
-                  开启
-                </el-radio-button>
-                <el-radio-button :label="false">
-                  关闭
-                </el-radio-button>
-              </el-radio-group>
+          <div class="lc-field-body">
+            <el-form-item label="开启轮询">
+              <el-switch
+                v-model="config.dataSource.polling"
+                @change="handlePollingChange"
+              />
             </el-form-item>
             <el-form-item
-              v-if="
-                config.dataSource.serverPagination &&
-                  config.option.displayOption.pageSize.enable
-              "
-              label="分页长度"
-              prop="dataSource.pageSize"
+              v-if="config.dataSource.polling"
+              label="轮询间隔(ms)"
             >
-              <el-select
-                v-model="config.dataSource.pageSize"
-                class="bs-el-select"
-                popper-class="bs-el-select"
-                filterable
-                allow-create
-                default-first-option
-              >
-                <el-option
-                  v-for="size in pageSizeList"
-                  :key="size"
-                  :label="size"
-                  :value="size"
-                />
-              </el-select>
+              <el-input-number
+                v-model="config.dataSource.pollingInterval"
+                :min="1000"
+                :step="1000"
+                controls-position="right"
+                placeholder="请输入轮询间隔"
+                @change="handlePollingIntervalChange"
+              />
             </el-form-item>
           </div>
-        </div> -->
+        </div>
         <ComponentBinding
           v-if="['button'].includes(config.type)"
           :config="config"
@@ -1028,10 +1004,10 @@ export default {
       // cacheDataSets: state => state.bigScreen.pageInfo.pageConfig.cacheDataSets
     }),
     dataSourceDataList () {
-      return this.fieldsList?.map(item => ({
+      return this.fieldsList && this.fieldsList.map(item => ({
         ...item,
-        comment: item?.fieldDesc || item?.fieldName,
-        name: item?.fieldName
+        comment: item && (item.fieldDesc || item.fieldName),
+        name: item && item.fieldName
       }))
     },
     appCode: {
@@ -1051,11 +1027,20 @@ export default {
     },
     // 映射字段
     sourceFieldList () {
-      const list = this?.config?.customize?.bindComponents || this.fieldsList
-      const modifiedList = list?.map(field => ({
-        label: field.comment || field.fieldDesc,
-        value: field.name || field.fieldName
-      })) || []
+      let list = null
+      if (this.config && this.config.customize && this.config.customize.bindComponents) {
+        list = this.config.customize.bindComponents
+      } else {
+        list = this.fieldsList
+      }
+      
+      let modifiedList = []
+      if (list) {
+        modifiedList = list.map(field => ({
+          label: field.comment || field.fieldDesc,
+          value: field.name || field.fieldName
+        }))
+      }
 
       if (['input', 'timePicker', 'dateTimePicker'].includes(this.config.type)) {
         modifiedList.push({ label: '当前组件值', value: this.config.code })
@@ -1094,7 +1079,7 @@ export default {
     },
     'config.dataSource.dimensionField' (val) {
       if (['select'].includes(this.config.type)) {
-        if (this.config.customize?.placeholder) {
+        if (this.config.customize && this.config.customize.placeholder) {
           this.config.customize.placeholder = '请选择' + this.dataSourceDataList.find(item => item.fieldName === val).comment
         }
       }
@@ -1124,6 +1109,13 @@ export default {
           value: ''
         }
       }
+    }
+  },
+  beforeDestroy () {
+    // 清理轮询定时器
+    if (this.config && this.config.code && window._pollingTimers && window._pollingTimers[this.config.code]) {
+      clearInterval(window._pollingTimers[this.config.code])
+      delete window._pollingTimers[this.config.code]
     }
   },
   methods: {
@@ -1288,6 +1280,97 @@ export default {
         }
         return item
       })
+    },
+    handlePollingChange (val) {
+      // 更新轮询状态
+      this.config.dataSource.polling = val
+      
+      // 定义全局轮询管理器，确保定时器可以被访问
+      if (!window._pollingTimers) {
+        window._pollingTimers = {}
+      }
+      
+      // 如果关闭轮询，清理定时器
+      if (!val) {
+        // 使用全局存储的定时器ID
+        const timerId = window._pollingTimers[this.config.code]
+        if (timerId) {
+          console.info('停止轮询，组件ID:', this.config.code, '定时器ID:', timerId)
+          clearInterval(timerId)
+          delete window._pollingTimers[this.config.code]
+        }
+        // 同时也尝试清理config中可能存在的定时器
+        if (this.config.pollTimer) {
+          clearInterval(this.config.pollTimer)
+          this.config.pollTimer = null
+        }
+      }
+      
+      // 如果开启轮询，确保数据集类型为http
+      if (val) {
+        this.config.dataSource.datasetType = 'http'
+        // 如果没有设置轮询间隔，设置默认值
+        if (!this.config.dataSource.pollingInterval) {
+          this.config.dataSource.pollingInterval = 5000 // 默认5秒
+        }
+        console.info('轮询已开启，间隔：', this.config.dataSource.pollingInterval, 'ms')
+      }
+      
+      // 确保轮询配置被正确保存到组件配置中
+      this.config.dataSource = {
+        ...this.config.dataSource,
+        polling: val,
+        pollingInterval: this.config.dataSource.pollingInterval || 5000
+      }
+      
+      // 更新配置
+      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
+      
+      // 打印当前组件的轮询状态用于调试
+      console.info('组件轮询状态:', {
+        组件ID: this.config.code,
+        是否开启轮询: this.config.dataSource.polling,
+        轮询间隔: this.config.dataSource.pollingInterval,
+        定时器ID: window._pollingTimers[this.config.code]
+      })
+    },
+    handlePollingIntervalChange (val) {
+      // 更新轮询间隔
+      this.config.dataSource.pollingInterval = val
+      console.info('轮询间隔已更新为：', val, 'ms')
+      
+      // 如果正在轮询，需要重新启动定时器
+      if (this.config.dataSource.polling) {
+        // 确保全局轮询管理器存在
+        if (!window._pollingTimers) {
+          window._pollingTimers = {}
+        }
+        
+        // 清除之前可能存在的定时器（全局管理器中的）
+        if (window._pollingTimers[this.config.code]) {
+          clearInterval(window._pollingTimers[this.config.code])
+          delete window._pollingTimers[this.config.code]
+        }
+        
+        // 同时也尝试清理config中可能存在的定时器
+        if (this.config.pollTimer) {
+          clearInterval(this.config.pollTimer)
+          this.config.pollTimer = null
+        }
+        
+        // 重新初始化组件会重新创建定时器
+        this.chartInit()
+        console.info('重新启动轮询，组件ID:', this.config.code, '新间隔:', val, 'ms')
+      }
+      
+      // 确保轮询配置被正确保存到组件配置中
+      this.config.dataSource = {
+        ...this.config.dataSource,
+        pollingInterval: val
+      }
+      
+      // 更新配置
+      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
     }
     // 改变缓存数据集key
     // changeCacheBusinessKey (id) {
