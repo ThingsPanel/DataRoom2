@@ -158,6 +158,7 @@
                 popper-class="bs-el-select"
                 filterable
                 clearable
+                @change="dimensionFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -189,6 +190,7 @@
                 popper-class="bs-el-select"
                 filterable
                 clearable
+                @change="metricFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -211,7 +213,7 @@
             <el-form-item
               v-if="config.option.displayOption.seriesField.enable"
               :label="config.option.displayOption.seriesField.label"
-              prop="dataSource.metricField"
+              prop="dataSource.seriesField"
               class="data-form-item"
             >
               <el-select
@@ -219,6 +221,7 @@
                 class="bs-el-select"
                 popper-class="bs-el-select"
                 clearable
+                @change="seriesFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -856,7 +859,7 @@
         </div>
         <!-- 添加轮询配置区域 -->
         <div
-          v-if="config.dataSource && (config.dataSource.source === 'dataset' || config.dataSource.polling)"
+          v-if="config.dataSource && config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -866,7 +869,7 @@
           </div>
           <div class="lc-field-body">
             <el-form-item
-              v-if="config.dataSource.source === 'dataset' || config.dataSource.polling"
+              v-if="config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
               label="轮询"
             >
               <el-switch
@@ -1122,6 +1125,33 @@ export default {
     ...mapMutations({
       clearPollingTimer: 'bigScreen/CLEAR_POLLING_TIMER'
     }),
+    // 指标字段变更时触发更新
+    metricFieldChange () {
+      // 特别处理IOT类型数据集，确保指标选择后触发请求
+      console.log('metricFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集指标变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
+    // 维度字段变更时触发更新
+    dimensionFieldChange () {
+      // 特别处理IOT类型数据集，确保维度选择后触发请求
+      console.log('dimensionFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集维度变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
+    // 分组字段变更时触发更新
+    seriesFieldChange () {
+      // 特别处理IOT类型数据集，确保分组选择后触发请求
+      console.log('seriesFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集分组变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
     // 切换数据源的时候将文字和数字组件的相关配置清空
     sourceChange (val) {
       this.config.expression = 'return '

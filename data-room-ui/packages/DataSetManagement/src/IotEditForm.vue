@@ -1,5 +1,5 @@
 <template>
-  <div class="inner-container" :element-loading-text="saveText">
+  <div class="inner-container" v-loading="saveloading" :element-loading-text="saveText">
     <el-scrollbar class="data-set-scrollbar">
       <div class="header">
         <el-page-header class="bs-el-page-header">
@@ -13,6 +13,7 @@
                   v-if="isEdit"
                   type="primary"
                   size="small"
+                  :loading="saveloading"
                   @click="save('form')"
                 >
                   保存
@@ -34,7 +35,7 @@
           <el-col :span="isEdit ? 16 : 24">
             <el-form
               ref="form"
-              :model="dataForm"
+              :model="{ ...dataForm, queryParams }"
               :rules="rules"
               label-width="90px"
               size="small"
@@ -446,7 +447,7 @@
 </template>
 
 <script>
-import { getDataset, getCategoryTree, datasetExecuteTest } from 'data-room-ui/js/utils/datasetConfigService'
+import { getDataset, getCategoryTree, datasetExecuteTest, datasetAdd, datasetUpdate } from '../../js/utils/datasetConfigService'
 import { getDeviceList, getDeviceMetrics } from '../../js/utils/iotApiService'
 import { Message } from 'element-ui'
 import LabelSelect from 'data-room-ui/DataSetLabelManagement/src/LabelSelect.vue'
@@ -480,6 +481,7 @@ export default {
   data () {
     return {
       saveText: '',
+      saveloading: false,
       dataForm: {
         id: '',
         name: '',
@@ -993,6 +995,13 @@ export default {
       Object.keys(this.queryParams).forEach(key => {
         // 只添加有值的参数
         if (this.queryParams[key] !== null && this.queryParams[key] !== undefined && this.queryParams[key] !== '') {
+          // 当data_mode为latest时，跳过历史数据相关参数
+          if (this.queryParams.data_mode === 'latest' && 
+              ['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(key)) {
+            console.log(`跳过历史数据参数 ${key}，因为当前模式是最新数据`)
+            return
+          }
+          
           // 对于数据标识key，优先使用selectedMetric中的完整信息
           if (key === 'key') {
             if (this.selectedMetric) {
@@ -1089,11 +1098,51 @@ export default {
         // 确保config中含有字段列表
         this.dataForm.config.fieldList = this.outputFieldList
         console.log('保存前的字段列表:', this.outputFieldList)
+        
+        // 确保当data_mode为latest时，移除所有历史数据相关参数
+        if (this.queryParams.data_mode === 'latest' && this.dataForm.config.params) {
+          this.dataForm.config.params = this.dataForm.config.params.filter(param => 
+            !['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(param.key)
+          )
+          console.log('过滤后的参数列表:', this.dataForm.config.params)
+        }
       }
       
-      console.log('最终的数据表单:', this.dataForm)
-      console.log('查询参数:', this.queryParams)
-      return true
+      // 开始保存流程
+      this.saveloading = true
+      this.saveText = '正在保存...'
+      const { datasetId, dataForm, appCode, outputFieldList } = this
+      const form = {
+        id: datasetId,
+        name: dataForm.name,
+        typeId: dataForm.typeId,
+        remark: dataForm.remark,
+        cache: dataForm.cache,
+        datasetType: 'iot',
+        moduleCode: appCode,
+        editable: appCode ? 1 : 0,
+        labelIds: dataForm.labelIds,
+        config: dataForm.config
+      }
+      
+      // 确保数据传递正确
+      console.log('最终的保存数据:', form)
+      
+      // 判断是新增还是更新
+      const datasetSave = this.dataForm.id === '' ? datasetAdd : datasetUpdate
+      datasetSave(form).then(() => {
+        Message.success('保存成功')
+        this.$parent.init(false)
+        this.$parent.setType = null
+        this.saveloading = false
+        this.saveText = ''
+        this.goBack()
+      }).catch((error) => {
+        console.error('保存失败:', error)
+        this.saveloading = false
+        this.saveText = ''
+        Message.error('保存失败')
+      })
     },
 
     // 分类相关方法
@@ -1189,7 +1238,9 @@ export default {
         // 将输出字段列表保存到config中，确保保存时能正确包含字段信息
         if (this.dataForm && this.dataForm.config) {
           this.dataForm.config.fieldList = this.outputFieldList
-          console.log('已将字段列表更新到config中:', this.outputFieldList)
+          // 更新字段描述到config.fieldDesc
+          this.buildFieldDesc()
+          console.log('已将字段列表和描述更新到config中:', this.outputFieldList)
         }
       } else {
         this.outputFieldList = []
@@ -1197,6 +1248,8 @@ export default {
         // 当没有数据时，清空config中的字段列表
         if (this.dataForm && this.dataForm.config) {
           this.dataForm.config.fieldList = []
+          // 清空字段描述
+          this.dataForm.config.fieldDesc = {}
         }
       }
     },
@@ -1232,13 +1285,13 @@ export default {
     buildFieldDesc() {
       const fieldDesc = {}
       this.outputFieldList.forEach(field => {
-        if (this.dataForm.fieldDesc && this.dataForm.fieldDesc.hasOwnProperty(field.fieldName)) {
-          fieldDesc[field.fieldName] = this.dataForm.fieldDesc[field.fieldName]
+        if (this.dataForm.config.fieldDesc && this.dataForm.config.fieldDesc.hasOwnProperty(field.fieldName)) {
+          fieldDesc[field.fieldName] = this.dataForm.config.fieldDesc[field.fieldName]
         } else {
           fieldDesc[field.fieldName] = field.fieldDesc || ''
         }
       })
-      this.dataForm.fieldDesc = fieldDesc
+      this.dataForm.config.fieldDesc = fieldDesc
     },
 
     // 格式化时间
@@ -1273,12 +1326,12 @@ export default {
 
     // 字段值填充
     fieldDescFill() {
-      this.dataForm.fieldDesc = {}
+      this.dataForm.config.fieldDesc = {}
       this.outputFieldList.forEach(field => {
         if (field.fieldDesc === '' || !field.hasOwnProperty('fieldDesc')) {
-          this.dataForm.fieldDesc[field.fieldName] = field.fieldName
+          this.dataForm.config.fieldDesc[field.fieldName] = field.fieldName
         } else {
-          this.dataForm.fieldDesc[field.fieldName] = field.fieldDesc
+          this.dataForm.config.fieldDesc[field.fieldName] = field.fieldDesc
         }
       })
       this.$refs.fieldFillDialog.close()
@@ -1434,6 +1487,9 @@ export default {
       }
       
       this.executeLoading = true
+      
+      // 执行前构建字段描述信息，确保它保存在config中
+      this.buildFieldDesc()
       
       // 执行前对参数进行处理，最新数据模式不需要传递历史数据参数
       if (this.queryParams.data_mode === 'latest') {

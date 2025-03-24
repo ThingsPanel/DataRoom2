@@ -166,11 +166,39 @@ export default {
           config.loading = false
           let _res = cloneDeep(res)
           
-          // 如果是http数据集的前端代理，则需要调封装的axios请求
+          // 如果是http或iot数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
-            if (res.data.datasetType === 'http') {
+            if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
+              console.log('处理API数据集请求:', res.data.datasetType, res.data)
+              
+              // 确保iot数据集有正确的URL和参数
+              if (res.data.datasetType === 'iot' && (!res.data.url || !res.data.params)) {
+                console.warn('IOT数据集缺少必要的URL或参数:', res.data)
+                console.log('IOT数据集详情:', JSON.stringify(res.data, null, 2))
+                // 设置默认URL如果未提供
+                if (!res.data.url) {
+                  console.log('设置IOT数据集默认URL')
+                  res.data.url = 'http://47.115.210.16:9999/api/v1/device/metrics/chart'
+                }
+                // 确保params数组存在
+                if (!res.data.params) {
+                  console.log('设置IOT数据集默认params')
+                  res.data.params = []
+                }
+                // 确保paramsList数组存在
+                if (!res.data.paramsList) {
+                  console.log('设置IOT数据集默认paramsList')
+                  res.data.paramsList = []
+                }
+                // 确保method存在
+                if (!res.data.method) {
+                  console.log('设置IOT数据集默认method')
+                  res.data.method = 'get'
+                }
+              }
+              
               _res = await axiosFormatting(res.data)
-              _res = this.httpDataFormatting(res, _res)
+              _res = this.apiDataFormatting(res, _res)
             }
             if (res.data.datasetType === 'js') {
               try {
@@ -198,13 +226,67 @@ export default {
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
           }
           config = this.dataFormatting(config, _res)
-          this.changeChartConfig(config)
 
+          // 根据不同的组件类型更新图表数据
+          if (this.chart) {
+            console.log('轮询时更新图表:', config.code, config.dataSource?.datasetType)
+            // 单指标组件和多指标组件的changeData传参不同
+            if (['Liquid', 'Gauge', 'RingProgress', 'Progress'].includes(config.chartType)) {
+              this.chart.changeData(config.option.percent)
+            } else if (config.dataSource && config.dataSource.datasetType === 'iot') {
+              // 对IOT数据集特殊处理，确保更新成功
+              console.log('轮询时更新IOT图表数据:', config.option.data)
+              try {
+                this.chart.changeData(config.option.data)
+              } catch (error) {
+                console.warn('轮询更新IOT图表数据失败，尝试使用update方法:', error)
+                this.chart.update(config.option)
+              }
+            } else {
+              // 其他类型图表正常更新
+              this.chart.changeData(config.option.data)
+            }
+          } else if (this.config?.type === 'candlestick' && this.charts) {
+            this.updateChartData(config, _res)
+          } else if (this.charts) {
+            // 地图组件的被联动更新
+            this.changeMapData(config.option.data)
+          }
+
+          this.changeChartConfig(config)
           return config
         } catch (err) {
           console.info(err)
           config.loading = false
           return config
+        }
+      }
+
+      // 封装轮询定时器的创建
+      const setupPolling = (updatedConfig) => {
+        // 只有在polling为true且pollingInterval存在时才启动轮询
+        if (updatedConfig.dataSource?.polling === true && updatedConfig.dataSource?.pollingInterval) {
+          // 再次确保之前的定时器被清除
+          this.clearPollingTimer(config.code)
+          if (window._pollingTimers[config.code]) {
+            clearInterval(window._pollingTimers[config.code])
+            delete window._pollingTimers[config.code]
+          }
+          
+          // 创建新的轮询定时器
+          const timerId = setInterval(async () => {
+            console.log('执行轮询请求:', config.code)
+            const updatedData = await makeRequest()
+            console.log('轮询请求完成，配置已更新')
+          }, updatedConfig.dataSource.pollingInterval)
+          
+          // 将定时器ID存储到Vuex中
+          this.addPollingTimer({ code: config.code, timerId })
+          
+          // 同时在全局对象中也存储一份，用于后续清理
+          window._pollingTimers[config.code] = timerId
+          
+          console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', updatedConfig.dataSource.pollingInterval)
         }
       }
 
@@ -223,7 +305,10 @@ export default {
             }
             
             const timerId = setInterval(async () => {
+              console.log('执行轮询请求:', config.code, config.dataSource?.datasetType)
+              // 注意：每次轮询请求都需要处理返回的数据，包括调用图表更新方法
               await makeRequest()
+              console.log('轮询请求处理完成')
             }, updatedConfig.dataSource.pollingInterval)
             
             // 将定时器ID存储到Vuex中
@@ -286,11 +371,39 @@ export default {
           config.loading = false
           let _res = cloneDeep(res)
           
-          // 如果是http数据集的前端代理，则需要调封装的axios请求
+          // 如果是http或iot数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
-            if (res.data.datasetType === 'http') {
+            if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
+              console.log('处理API数据集请求:', res.data.datasetType, res.data)
+              
+              // 确保iot数据集有正确的URL和参数
+              if (res.data.datasetType === 'iot' && (!res.data.url || !res.data.params)) {
+                console.warn('IOT数据集缺少必要的URL或参数:', res.data)
+                console.log('IOT数据集详情:', JSON.stringify(res.data, null, 2))
+                // 设置默认URL如果未提供
+                if (!res.data.url) {
+                  console.log('设置IOT数据集默认URL')
+                  res.data.url = 'http://47.115.210.16:9999/api/v1/device/metrics/chart'
+                }
+                // 确保params数组存在
+                if (!res.data.params) {
+                  console.log('设置IOT数据集默认params')
+                  res.data.params = []
+                }
+                // 确保paramsList数组存在
+                if (!res.data.paramsList) {
+                  console.log('设置IOT数据集默认paramsList')
+                  res.data.paramsList = []
+                }
+                // 确保method存在
+                if (!res.data.method) {
+                  console.log('设置IOT数据集默认method')
+                  res.data.method = 'get'
+                }
+              }
+              
               _res = await axiosFormatting(res.data)
-              _res = this.httpDataFormatting(res, _res)
+              _res = this.apiDataFormatting(res, _res)
             }
             if (res.data.datasetType === 'js') {
               try {
@@ -322,11 +435,22 @@ export default {
           }
           config = this.dataFormatting(config, _res)
           
+          // 根据不同的组件类型更新图表数据
           if (this.chart) {
             // 单指标组件和多指标组件的changeData传参不同
             if (['Liquid', 'Gauge', 'RingProgress', 'Progress'].includes(config.chartType)) {
               this.chart.changeData(config.option.percent)
+            } else if (config.dataSource && config.dataSource.datasetType === 'iot') {
+              // 对IOT数据集特殊处理，确保更新成功
+              console.log('直接更新IOT图表数据')
+              try {
+                this.chart.changeData(config.option.data)
+              } catch (error) {
+                console.warn('更新IOT图表数据失败，尝试使用update方法:', error)
+                this.chart.update(config.option)
+              }
             } else {
+              // 其他类型图表正常更新
               this.chart.changeData(config.option.data)
             }
           } else if (this.config?.type === 'candlestick' && this.charts) {
@@ -341,6 +465,34 @@ export default {
           console.info(err)
           config.loading = false
           return config
+        }
+      }
+
+      // 封装轮询定时器的创建
+      const setupPolling = (updatedConfig) => {
+        // 只有在polling为true且pollingInterval存在时才启动轮询
+        if (updatedConfig.dataSource?.polling === true && updatedConfig.dataSource?.pollingInterval) {
+          // 再次确保之前的定时器被清除
+          this.clearPollingTimer(config.code)
+          if (window._pollingTimers[config.code]) {
+            clearInterval(window._pollingTimers[config.code])
+            delete window._pollingTimers[config.code]
+          }
+          
+          // 创建新的轮询定时器
+          const timerId = setInterval(async () => {
+            console.log('执行轮询请求:', config.code)
+            const updatedData = await makeRequest()
+            console.log('轮询请求完成，配置已更新')
+          }, updatedConfig.dataSource.pollingInterval)
+          
+          // 将定时器ID存储到Vuex中
+          this.addPollingTimer({ code: config.code, timerId })
+          
+          // 同时在全局对象中也存储一份，用于后续清理
+          window._pollingTimers[config.code] = timerId
+          
+          console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', updatedConfig.dataSource.pollingInterval)
         }
       }
 
@@ -359,7 +511,10 @@ export default {
             }
             
             const timerId = setInterval(async () => {
+              console.log('执行轮询请求:', config.code, config.dataSource?.datasetType)
+              // 注意：每次轮询请求都需要处理返回的数据，包括调用图表更新方法
               await makeRequest()
+              console.log('轮询请求处理完成')
             }, updatedConfig.dataSource.pollingInterval)
             
             // 将定时器ID存储到Vuex中
@@ -378,19 +533,107 @@ export default {
     updateChartData () {
 
     },
-    // http前台代理需要对返回的数据进行重新组装
-    httpDataFormatting (chartRes, httpRes) {
+    // http和iot前台代理需要对返回的数据进行重新组装
+    apiDataFormatting (chartRes, apiRes) {
+      console.log('正在处理API数据集响应:', chartRes.data.datasetType)
+      console.log('chartRes数据结构:', chartRes)
+      console.log('apiRes数据结构:', apiRes)
+      
       let result = {}
-      result = {
-        columnData: chartRes.columnData,
-        data: httpRes,
-        success: chartRes.success
-
+      
+      // 处理IOT数据集
+      if (chartRes.data.datasetType === 'iot') {
+        console.log('处理IOT数据集响应')
+        
+        // 处理嵌套数据结构
+        let iotData = []
+        
+        // 检查是否是嵌套结构的数组
+        if (Array.isArray(apiRes.data)) {
+          // 遍历数组并提取真正的数据
+          apiRes.data.forEach(item => {
+            if (item && item.data) {
+              // 如果item.data是一个对象，把它添加到数据数组
+              iotData.push(item.data)
+            }
+          })
+        } else if (apiRes.data && apiRes.data.data) {
+          // 如果apiRes.data是一个包含data属性的对象
+          iotData = [apiRes.data.data]
+        } else if (apiRes.data) {
+          // 直接使用apiRes.data
+          iotData = Array.isArray(apiRes.data) ? apiRes.data : [apiRes.data]
+        } else {
+          // 如果没有data属性，尝试使用apiRes本身
+          iotData = Array.isArray(apiRes) ? apiRes : [apiRes]
+        }
+        
+        console.log('提取后的IOT数据:', iotData)
+        
+        // 确保返回正确的数据结构
+        result = {
+          columnData: chartRes.columnData || {},
+          data: iotData,
+          success: true
+        }
+        
+        console.log('IOT数据集最终处理结果:', result)
+      } else {
+        // 处理HTTP或其他类型数据集
+        result = {
+          columnData: chartRes.columnData,
+          data: apiRes,
+          success: chartRes.success
+        }
       }
+      
       return result
     },
     dataFormatting (config, data) {
-      // 覆盖
+      // 这是一个基础实现，会被组件自己的dataFormatting覆盖
+      // 但是提供一个默认实现，确保IOT数据集可以正确更新
+      console.log('基础dataFormatting被调用:', config.type, config.dataSource?.datasetType)
+      console.log('接收到的数据:', data)
+      
+      if (config.dataSource && config.dataSource.datasetType === 'iot') {
+        console.log('处理IOT数据集, 组件类型:', config.type)
+        
+        if (!config.option) {
+          config.option = {}
+        }
+        
+        // 提取数据
+        let chartData = data.data
+        if (!chartData) {
+          console.warn('IOT数据集没有data字段:', data)
+          chartData = []
+        }
+        
+        console.log('IOT数据字段列表:', config.dataSource.dimensionField, config.dataSource.metricField, config.dataSource.seriesField)
+        
+        // 设置数据 - 基于图表类型进行处理
+        config.option.data = chartData
+        
+        // 特殊处理不同类型的图表
+        if (['pie', 'donut', 'rose'].includes(config.chartType)) {
+          // 饼图类型需要特定格式
+          config.option.angleField = config.dataSource.metricField
+          config.option.colorField = config.dataSource.dimensionField
+        } else if (['column', 'bar', 'line', 'area'].includes(config.chartType)) {
+          // 柱状图、折线图类型
+          config.option.xField = config.dataSource.dimensionField
+          config.option.yField = config.dataSource.metricField
+          config.option.seriesField = config.dataSource.seriesField
+        }
+        
+        console.log('处理后的配置:', config.option)
+        
+        // 返回修改后的配置
+        return config
+      }
+      
+      // 其他类型由具体组件实现覆盖
+      return config
     },
     newChart (option) {
       // 覆盖
@@ -414,7 +657,7 @@ export default {
         // 如果是缓存数据集
         // 且当前组件的businessKey和缓存的dataSetId相等时，更新组件
         if (
-          this.config.dataSource.dataSetType === '2' &&
+          (this.config.dataSource.dataSetType === '2' || this.config.dataSource.datasetType === 'iot') &&
           this.config.dataSource.businessKey === dataSetId
         ) {
           const config = this.dataFormatting(this.config, data)

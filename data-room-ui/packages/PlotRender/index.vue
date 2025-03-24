@@ -167,6 +167,59 @@ export default {
       return config
     },
     dataFormatting (config, data) {
+      // 添加日志记录接收到的数据类型和来源
+      console.log('PlotRender组件dataFormatting被调用:', config.type, config.dataSource?.datasetType)
+      console.log('PlotRender接收到的数据类型:', typeof data, '数据内容:', data)
+      
+      // 特殊处理IOT数据集
+      if (config.dataSource && config.dataSource.datasetType === 'iot') {
+        console.log('PlotRender处理IOT数据集')
+        // 确保数据已初始化
+        if (!config.option) {
+          config.option = {}
+        }
+        
+        // 处理数据 - 获取正确的数据数组
+        let processedData = []
+        
+        // 检查data是否包含data字段(apiDataFormatting已处理过)
+        if (data && Array.isArray(data.data)) {
+          processedData = data.data
+        } else if (data && data.data) {
+          // data.data可能是对象或数组
+          processedData = Array.isArray(data.data) ? data.data : [data.data]
+        } else if (Array.isArray(data)) {
+          // 直接是数组
+          processedData = data
+        } else if (data) {
+          // 单个对象，转为数组
+          processedData = [data]
+        }
+        
+        console.log('IOT处理后的最终数据:', processedData)
+        
+        // 设置图表维度和指标字段
+        config = this.transformSettingToOption(config, 'data')
+        
+        // 设置图表数据
+        config.option.data = processedData
+        
+        // 如果没有在数据配置中设置字段映射，根据dataSource配置设置
+        if (config.dataSource.dimensionField && !config.option.xField) {
+          config.option.xField = config.dataSource.dimensionField
+        }
+        if (config.dataSource.metricField && !config.option.yField) {
+          config.option.yField = config.dataSource.metricField
+        }
+        if (config.dataSource.seriesField && !config.option.seriesField) {
+          config.option.seriesField = config.dataSource.seriesField
+        }
+        
+        console.log('IOT图表最终配置:', config.option)
+        return config
+      }
+      
+      // 原有的数据处理逻辑
       // 数据返回成功则赋值
       if (data.success) {
         data = data.data || []
@@ -207,10 +260,6 @@ export default {
       } else {
         // 数据返回失败则赋前端的模拟数据
         config.option.data = this.plotList?.find(plot => plot.name === config.name)?.option?.data || config?.option?.data
-        const _xField = this.plotList?.find(plot => plot.name === config.name)?.option?.xField || config?.option?.xField
-        const _yField = this.plotList?.find(plot => plot.name === config.name)?.option?.yField || config?.option?.yField
-        const _seriesField = this.plotList?.find(plot => plot.name === config.name)?.option?.seriesField || config?.option?.seriesField
-        config.option = _seriesField ? { ...config.option, xField: _xField, yField: _yField, seriesField: _seriesField } : { ...config.option, xField: _xField, yField: _yField }
       }
       return config
     },

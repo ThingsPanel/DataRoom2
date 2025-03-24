@@ -3,7 +3,13 @@ import axios from 'axios'
 // import _ from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 export default function axiosFormatting (customConfig) {
+  console.log('axiosFormatting 被调用，数据集类型:', customConfig.datasetType)
   const newCustomConfig = replaceParams(customConfig)
+  console.log('处理后的请求配置:', {
+    url: newCustomConfig.url,
+    method: newCustomConfig.method,
+    datasetType: newCustomConfig.datasetType
+  })
   // 将请求头和请求参数的值转化为对象形式
   const httpConfig = {
     timeout: 1000 * 30,
@@ -48,6 +54,12 @@ export default function axiosFormatting (customConfig) {
   const body = newCustomConfig?.body.replace(/: ,/g, ':undefined,').replace(/, }/g, ',undefined}')
   /** 发送请求  **/
   return new Promise((resolve, reject) => {
+    console.log('准备发送请求:', {
+      method: newCustomConfig.method,
+      url: newCustomConfig.url,
+      params: newCustomConfig.params,
+      datasetType: newCustomConfig.datasetType
+    })
     instance({
       method: newCustomConfig.method,
       url: newCustomConfig.url,
@@ -84,58 +96,86 @@ function replaceUrlParam (url, paramName, paramValue) {
 }
 // 将参数的值替换掉其他配置中对应属性的值
 function replaceParams (customConfig) {
-  const newConfig = cloneDeep(customConfig)
-  newConfig.url = evalStrFunc(newConfig.paramsList, newConfig.url)
-  newConfig.headers = evalArrFunc(newConfig.paramsList, newConfig.headers)
-  newConfig.params = evalArrFunc(newConfig.paramsList, newConfig.params)
-  newConfig.body = evalStrFunc(newConfig.paramsList, newConfig.body)
+  const newConfig = cloneDeep(customConfig || {})
+  // 确保关键属性有默认值，防止 undefined 错误
+  newConfig.url = newConfig.url || ''
+  newConfig.headers = newConfig.headers || []
+  newConfig.params = newConfig.params || []
+  newConfig.body = newConfig.body || '{}'
+  newConfig.paramsList = newConfig.paramsList || []
+  // 安全地处理参数替换
+  try {
+    newConfig.url = evalStrFunc(newConfig.paramsList, newConfig.url)
+    newConfig.headers = evalArrFunc(newConfig.paramsList, newConfig.headers)
+    newConfig.params = evalArrFunc(newConfig.paramsList, newConfig.params)
+    newConfig.body = evalStrFunc(newConfig.paramsList, newConfig.body)
+  } catch (error) {
+    console.error('参数替换错误:', error)
+  }
   return newConfig
 }
+
+// 处理字符串类型参数
 function evalStrFunc (paramsList, string) {
-  // 取name作为变量名, value作为变量值 { name: '站三', token: '123'}
-  const params = paramsList.reduce((acc, cur) => {
-    acc[cur.name] = cur.value
-    return acc
-  }, {})
-  // 将url中 ${xxx} 替换成 ${params.xxx}
-  const str = string.replace(/\$\{(\w+)\}/g, (match, p1) => {
-    return '${params.' + p1 + '}'
-  })
-  const transformStr = ''
-  // 将字符串中的${}替换为变量, 使用eval执行
-  eval('transformStr = `' + str + '`')
-  return transformStr
+  // 如果输入无效，返回空字符串
+  if (!string) return ''
+  try {
+    // 创建参数映射
+    const paramMap = createParamMap(paramsList)
+    // 替换模板字符串
+    const processedString = string.replace(/\$\{(\w+)\}/g, (match, key) => {
+      return paramMap[key] !== undefined ? paramMap[key] : match
+    })
+    return processedString
+  } catch (error) {
+    console.error('字符串参数处理错误:', error)
+    return string || ''
+  }
 }
+
+// 处理数组类型参数
 function evalArrFunc (paramsList, arr) {
-  // 取name作为变量名, value作为变量值 { name: '站三', token: '123'}
-  const params = paramsList.reduce((acc, cur) => {
-    acc[cur.name] = cur.value
-    return acc
-  }, {})
-  // 取name作为变量名, value作为变量值 { _name: '${name}', _token: '${token}'}
-  const paramsListObj = arr.reduce((acc, cur) => {
-    if (acc[cur.key]) {
-      if (Array.isArray(acc[cur.key])) {
-        acc[cur.key].push(cur.value)
-      } else {
-        acc[cur.key] = [acc[cur.key], cur.value]
+  // 如果输入无效，返回空对象
+  if (!arr || !Array.isArray(arr) || arr.length === 0) return {}
+  try {
+    // 创建参数映射
+    const paramMap = createParamMap(paramsList)
+    // 构建结果对象
+    const result = arr.reduce((acc, item) => {
+      if (!item || !item.key) return acc
+      // 处理值中的模板字符串
+      let value = item.value
+      if (typeof value === 'string') {
+        value = value.replace(/\$\{(\w+)\}/g, (match, key) => {
+          return paramMap[key] !== undefined ? paramMap[key] : match
+        })
       }
-    } else {
-      acc[cur.key] = cur.value
+      // 根据键值添加到结果
+      if (acc[item.key]) {
+        if (Array.isArray(acc[item.key])) {
+          acc[item.key].push(value)
+        } else {
+          acc[item.key] = [acc[item.key], value]
+        }
+      } else {
+        acc[item.key] = value
+      }
+      return acc
+    }, {})
+    return result
+  } catch (error) {
+    console.error('数组参数处理错误:', error)
+    return {}
+  }
+}
+
+// 创建参数映射辅助函数
+function createParamMap (paramsList) {
+  if (!paramsList || !Array.isArray(paramsList)) return {}
+  return paramsList.reduce((map, param) => {
+    if (param && param.name !== undefined) {
+      map[param.name] = param.value
     }
-    return acc
+    return map
   }, {})
-
-  // 转成字符串
-  const paramsListStr = JSON.stringify(paramsListObj)
-
-  // 将url中 ${xxx} 替换成 ${params.xxx}
-  const str = paramsListStr.replace(/\$\{(\w+)\}/g, (match, p1) => {
-    return '${params.' + p1 + '}'
-  })
-  const transformStr = ''
-  // 将字符串中的${}替换为变量, 使用eval执行
-  eval('transformStr = `' + str + '`')
-  const obj = JSON.parse(transformStr)
-  return obj
 }
