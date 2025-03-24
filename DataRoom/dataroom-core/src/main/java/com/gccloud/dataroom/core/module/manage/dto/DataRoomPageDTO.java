@@ -22,6 +22,8 @@ import java.util.List;
 @Data
 public class DataRoomPageDTO extends BasePageDTO {
 
+    
+
     @JsonDeserialize(using = EmptyAsNullDeserializer.class)
     @NotBlank(message = "id不能为空", groups = Update.class)
     @ApiModelProperty(notes = "主键id")
@@ -61,6 +63,12 @@ public class DataRoomPageDTO extends BasePageDTO {
 
     @ApiModelProperty(notes = "页面模板id")
     private String pageTemplateId;
+
+    /**
+     * 租户ID
+     */
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
 
     /**
      * 参考：{@link PageDesignConstant.Type}

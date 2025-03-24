@@ -57,6 +57,8 @@ public class PageEntity extends SuperEntity implements Serializable {
     @ApiModelProperty(notes = "所属应用编码")
     private String appCode;
 
+    @ApiModelProperty(notes = "租户ID")
+    private String tenantId;
 
 
 }

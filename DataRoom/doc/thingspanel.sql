@@ -25,3 +25,9 @@ ALTER TABLE ds_label ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租�
 
 # big_screen_map表增加tenant_id字段
 ALTER TABLE big_screen_map ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租户ID';
+
+# big_screen_page表增加tenant_id字段
+ALTER TABLE big_screen_page ADD COLUMN tenant_id varchar(36) DEFAULT NULL COMMENT '租户ID';
+
+
+

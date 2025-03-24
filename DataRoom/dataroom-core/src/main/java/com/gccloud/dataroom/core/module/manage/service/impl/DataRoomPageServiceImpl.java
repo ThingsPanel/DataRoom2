@@ -107,6 +107,7 @@ public class DataRoomPageServiceImpl extends ServiceImpl<DataRoomPageDao, PageEn
         }
         PageEntity bigScreenEntity = BeanConvertUtils.convert(bigScreenPageDTO, PageEntity.class);
         bigScreenEntity.setConfig(bigScreenPageDTO);
+        bigScreenEntity.setTenantId(bigScreenPageDTO.getTenantId());
         AssertUtils.isTrue(!checkNameRepeat(bigScreenEntity), "名称重复");
         AssertUtils.isTrue(!checkCodeRepeat(bigScreenEntity), "编码重复");
         this.save(bigScreenEntity);
@@ -218,6 +219,7 @@ public class DataRoomPageServiceImpl extends ServiceImpl<DataRoomPageDao, PageEn
         if (StringUtils.isNotBlank(searchDTO.getParentCode())) {
             queryWrapper.eq(PageEntity::getParentCode, searchDTO.getParentCode());
         }
+        queryWrapper.eq(StringUtils.isNotBlank(searchDTO.getTenantId()), PageEntity::getTenantId, searchDTO.getTenantId());
         queryWrapper.eq(PageEntity::getType, searchDTO.getType());
         queryWrapper.select(PageEntity::getCode);
         List<PageEntity> idEntityList = this.list(queryWrapper);
