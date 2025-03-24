@@ -185,6 +185,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+    case 'canvasLine':   // Canvas线条
+      return {
+        name: 'Canvas线条',
+        title: 'Canvas线条',
+        icon: Icon.getNameList()[39], // 暂时使用svgLine的图标
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
     
     // 4. 媒体展示类
     case 'picture':      // 图片

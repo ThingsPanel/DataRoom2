@@ -32,6 +32,7 @@ const typeList = [
   'verticalLine', 
   'rectangle',
   'svgLine',
+  'canvasLine',
   
   // 4. 媒体展示类
   'picture',

@@ -244,23 +244,28 @@ export default {
      * @param {Array} filterList
      */
     changeData (config, filterList) {
-      // 清除已存在的定时器
+      // Clear existing polling timer
       this.clearPollingTimer(config.code)
       
-      // 确保全局轮询管理器存在
+      // Ensure global polling manager exists
       if (!window._pollingTimers) {
         window._pollingTimers = {}
       }
 
       const list = config?.paramsList?.map((item) => {
         if (item.value === '${level}') {
-          return { ...item, value: config.customize.level }
+          return { ...item, value: config.customize?.level }
         } else if (item.value === '${name}') {
-          return { ...item, value: config.customize.scope }
+          return { ...item, value: config.customize?.scope }
         } else {
           return item
         }
       })
+
+      // Add a check to ensure dataSource exists before creating the params object
+      if (!config.dataSource) {
+        config.dataSource = {}  // Initialize dataSource if it doesn't exist
+      }
 
       const params = {
         chart: {

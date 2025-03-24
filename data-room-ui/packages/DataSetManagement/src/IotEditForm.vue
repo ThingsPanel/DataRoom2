@@ -50,11 +50,11 @@
                       prop="name"
                     >
                       <div class="name-with-checkbox">
-                        <el-input
-                          v-model="dataForm.name"
-                          class="bs-el-input"
-                          clearable
-                          :disabled="!isEdit"
+                      <el-input
+                        v-model="dataForm.name"
+                        class="bs-el-input"
+                        clearable
+                        :disabled="!isEdit"
                           @input="handleNameInput"
                         />
                         <div class="name-operations">
@@ -175,10 +175,10 @@
                   <el-col :span="12">
                     <el-form-item
                       label="数据类型"
-                      prop="config.data_type"
+                      prop="data_type"
                     >
                       <el-select
-                        v-model="dataForm.config.data_type"
+                        v-model="dataForm.data_type"
                         class="bs-el-select"
                         popper-class="bs-el-select"
                         @change="handleDataTypeChange"
@@ -193,10 +193,10 @@
                   <el-col :span="12">
                     <el-form-item
                       label="数据模式"
-                      prop="config.data_mode"
+                      prop="data_mode"
                     >
                       <el-select
-                        v-model="dataForm.config.data_mode"
+                        v-model="dataForm.data_mode"
                         class="bs-el-select"
                         popper-class="bs-el-select"
                         @change="handleDataModeChange"
@@ -205,23 +205,23 @@
                         <el-option
                           label="历史数据"
                           value="history"
-                          :disabled="dataForm.config.data_type !== 'telemetry'"
+                          :disabled="dataForm.data_type !== 'telemetry'"
                         />
                       </el-select>
                     </el-form-item>
                   </el-col>
                 </el-row>
-                <div v-if="dataForm.config.data_mode === 'history' && dataForm.config.data_type === 'telemetry'">
+                <div v-if="dataForm.data_mode === 'history' && dataForm.data_type === 'telemetry'">
                   <el-divider content-position="left">历史数据参数</el-divider>
                   <el-row :gutter="16">
                     <el-col :span="12">
                       <el-form-item
                         label="时间范围"
-                        prop="config.time_range"
+                        prop="time_range"
                         label-width="80px"
                       >
                         <el-select
-                          v-model="dataForm.config.time_range"
+                          v-model="dataForm.time_range"
                           class="bs-el-select"
                           popper-class="bs-el-select"
                           @change="handleTimeRangeChange"
@@ -246,7 +246,7 @@
                         </el-select>
                       </el-form-item>
                     </el-col>
-                    <el-col :span="12" v-if="dataForm.config.time_range === 'custom'">
+                    <el-col :span="12" v-if="dataForm.time_range === 'custom'">
                       <el-form-item
                         label="时间区间"
                         prop="customTimeRange"
@@ -268,34 +268,34 @@
                     <el-col :span="12">
                       <el-form-item
                         label="聚合间隔"
-                        prop="config.aggregate_window"
+                        prop="aggregate_window"
                         label-width="80px"
                         class="aggregate-item"
                       >
                         <el-select
-                          v-model="dataForm.config.aggregate_window"
+                          v-model="dataForm.aggregate_window"
+                          placeholder="请选择聚合窗口"
                           class="bs-el-select"
                           popper-class="bs-el-select"
-                          @change="handleAggregateWindowChange"
                         >
-                          <el-option 
-                            v-for="option in availableAggregateWindows" 
-                            :key="option.value" 
-                            :label="option.label" 
-                            :value="option.value" 
+                          <el-option
+                            v-for="option in availableAggregateWindows"
+                            :key="option.value"
+                            :label="option.label"
+                            :value="option.value"
                             :disabled="option.disabled"
                           />
                         </el-select>
                       </el-form-item>
                     </el-col>
-                    <el-col :span="12" v-if="dataForm.config.aggregate_window !== 'no_aggregate'">
+                    <el-col :span="12" v-if="dataForm.aggregate_window !== 'no_aggregate'">
                       <el-form-item
                         label="聚合方式"
-                        prop="config.aggregate_function"
+                        prop="aggregate_function"
                         label-width="80px"
                       >
                         <el-select
-                          v-model="dataForm.config.aggregate_function"
+                          v-model="dataForm.aggregate_function"
                           class="bs-el-select"
                           popper-class="bs-el-select"
                         >
@@ -314,42 +314,39 @@
                   <el-col :span="12">
                     <el-form-item
                       label="设备"
-                      prop="config.device_id"
-                      label-width="80px"
+                      prop="device_id"
                     >
-                      <el-input
-                        v-model="selectedDeviceName"
-                        class="bs-el-input"
-                        placeholder="请选择设备"
-                        readonly
-                        @click.native="openDeviceDialog"
-                      >
-                        <el-button slot="append" icon="el-icon-search" @click.native.stop="openDeviceDialog" />
-                      </el-input>
+                      <div class="device-select-input">
+                        <el-input
+                          v-model="selectedDeviceName"
+                          readonly
+                          placeholder="请选择设备"
+                          class="bs-el-input"
+                        />
+                        <el-button
+                          type="primary"
+                          icon="el-icon-plus"
+                          size="mini"
+                          @click="openDeviceDialog"
+                        >
+                          选择设备
+                        </el-button>
+                      </div>
                     </el-form-item>
                   </el-col>
                   <el-col :span="12">
                     <el-form-item
                       label="数据标识"
-                      prop="config.key"
-                      label-width="80px"
+                      prop="key"
                     >
-                      <el-select
-                        v-model="dataForm.config.key"
-                        class="bs-el-select"
-                        popper-class="bs-el-select"
-                        placeholder="请选择数据标识"
-                        filterable
-                        :disabled="!dataForm.config.device_id"
-                        @change="handleKeyChange"
-                      >
-                        <el-option
-                          v-for="item in keyList"
-                          :key="item.key"
-                          :label="item.name"
-                          :value="item.key"
-                        />
-                      </el-select>
+                      <MetricsSelect
+                        ref="metricsSelect"
+                        :device-id="dataForm.device_id"
+                        :selected-key="dataForm.key"
+                        :data-type="dataForm.data_type"
+                        :loading="keyLoading"
+                        @change="handleMetricsSelect"
+                      />
                     </el-form-item>
                   </el-col>
                 </el-row>
@@ -370,16 +367,16 @@
                   type="primary"
                   size="small"
                   :loading="executeLoading"
-                  @click="executeQuery"
+                  @click="handleExecuteClick"
                 >
                   执行
                 </el-button>
               </div>
               
-              <el-form size="small" label-width="80px">
-                <el-form-item label="数据路径">
+              <el-form size="small" label-width="80px" :model="pathForm">
+                <el-form-item label="数据路径" prop="dataPath">
                   <el-input
-                    v-model="dataPath"
+                    v-model="pathForm.dataPath"
                     class="bs-el-input"
                     placeholder="如：data.value 或 data.points"
                   />
@@ -389,7 +386,12 @@
               <!-- 响应数据展示 -->
               <div class="result-container">
                 <el-card v-if="responseData" class="response-card">
-                  <pre class="response-code">{{ JSON.stringify(responseData, null, 2) }}</pre>
+                  <div v-if="parsedResponseData">
+                    <pre class="response-code">{{ JSON.stringify(parsedResponseData, null, 2) }}</pre>
+                  </div>
+                  <div v-else>
+                    <pre class="response-code">{{ JSON.stringify(responseData, null, 2) }}</pre>
+                  </div>
                 </el-card>
                 <div v-else class="empty-placeholder">
                   <i class="el-icon-data-analysis"></i>
@@ -402,54 +404,55 @@
       </div>
     </el-scrollbar>
 
-    <!-- 设备选择弹窗 -->
     <el-dialog
-      title="选择设备"
-      :visible.sync="deviceDialogVisible"
-      width="60%"
-      append-to-body
-      class="bs-el-dialog"
+      title="字段描述"
+      :visible.sync="fieldFillDialogVisible"
+      width="30%"
+      center
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      custom-class="bs-el-dialog"
     >
-      <div class="device-dialog-content">
-        <div class="search-bar">
-          <el-input
-            v-model="deviceSearchKeyword"
-            placeholder="请输入设备名称或ID搜索"
-            prefix-icon="el-icon-search"
-            clearable
-            @input="handleDeviceSearch"
-          />
+      <div class="field-fill-form">
+        <p class="field-fill-desc">您还有字段描述为空，请选择：</p>
+        <div class="field-fill-btns">
+          <el-button @click="fieldDescFill" type="primary">自动填充</el-button>
+          <el-button @click="fieldDescEdit">进入编辑</el-button>
+          <el-button @click="toSave">继续保存</el-button>
         </div>
-        <div class="device-list">
-          <el-table
-            :data="filteredDeviceList"
-            height="400"
-            border
-            @row-click="handleSelectDevice"
-          >
-            <el-table-column prop="id" label="设备ID" width="180" />
-            <el-table-column prop="name" label="设备名称" />
-            <el-table-column prop="type" label="设备类型" width="120" />
-          </el-table>
-        </div>
-      </div>
-      <div slot="footer">
-        <el-button @click="deviceDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="confirmSelectDevice">确 定</el-button>
       </div>
     </el-dialog>
+
+    <DeviceSelectDialog 
+      ref="deviceSelectDialog"
+      @select="handleDeviceSelect"
+    />
+
+    <output-field-dialog
+      ref="outputFieldDialog"
+      :output-field-list="outputFieldList"
+      @confirm="handleOutputConfirm"
+    />
   </div>
 </template>
 
 <script>
-import { datasetAdd, datasetUpdate, datasetExecuteTest } from 'data-room-ui/js/utils/datasetConfigService'
+import { getDataset, getCategoryTree } from 'data-room-ui/js/utils/datasetConfigService'
+import { getDeviceList, getDeviceMetrics } from '../../js/utils/iotApiService'
 import { Message } from 'element-ui'
 import LabelSelect from 'data-room-ui/DataSetLabelManagement/src/LabelSelect.vue'
+import OutputFieldDialog from './JsComponents/OutputFieldDialog.vue'
+import DeviceSelectDialog from './JsComponents/DeviceSelectDialog.vue'
+import MetricsSelect from './JsComponents/MetricsSelect.vue'
 
 export default {
   name: 'IotEditForm',
   components: {
-    LabelSelect
+    LabelSelect,
+    OutputFieldDialog,
+    DeviceSelectDialog,
+    MetricsSelect
   },
   props: {
     isEdit: {
@@ -459,41 +462,68 @@ export default {
     datasetId: {
       type: [String, Number],
       default: ''
+    },
+    appCode: {
+      type: String,
+      default: ''
     }
   },
-  data() {
+  data () {
     return {
       saveText: '',
       dataForm: {
         id: '',
         name: '',
         typeId: '',
-        datasetType: 'iot',
+        datasetType: '',
         remark: '',
         cache: 0,
-        moduleCode: '',
-        editable: true,
         labelIds: [],
+        device_id: '',
+        key: '',
+        data_type: 'telemetry',
+        data_mode: 'latest',
+        time_range: 'last_1_hour',
+        aggregate_window: '1m',
+        aggregate_function: 'avg',
         config: {
-          device_id: '',
-          key: '',
-          data_type: 'telemetry',
-          data_mode: 'latest',
-          time_range: 'last_5m',
-          aggregate_window: 'no_aggregate',
-          aggregate_function: 'avg'
+          className: 'com.gccloud.dataset.entity.config.IotDataSetConfig', // 修正为IotDataSetConfig
+          requestType: 'frontend',  // 默认使用前端代理
+          method: 'get',
+          url: 'http://47.115.210.16:9999/api/v1/device/metrics/chart',
+          headers: [],
+          params: [],
+          body: '',
+          paramsList: [],
+          fieldList: [],
+          fieldDesc: null,
+          responseScript: 'return resp.data' // 添加默认响应脚本
         }
+      },
+      // 单独创建查询参数对象，这些参数不会直接存储到dataForm中
+      queryParams: {
+        device_id: '',
+        device_name: '',
+        key: '',
+        data_type: 'telemetry',
+        data_mode: 'latest',
+        time_range: 'last_1_hour',
+        aggregate_window: '1m',
+        aggregate_function: 'avg',
+        start_ts: null,
+        end_ts: null
       },
       rules: {
         name: [{ required: true, message: '请输入数据集名称', trigger: 'blur' }],
         typeId: [{ required: true, message: '请选择分组', trigger: 'change' }],
-        'config.device_id': [{ required: true, message: '请选择设备', trigger: 'change' }],
-        'config.key': [{ required: true, message: '请选择数据标识', trigger: 'change' }],
-        'config.data_type': [{ required: true, message: '请选择数据类型', trigger: 'change' }],
-        'config.data_mode': [{ required: true, message: '请选择数据模式', trigger: 'change' }],
-        'config.time_range': [{ required: true, message: '请选择时间范围', trigger: 'change' }],
-        'config.aggregate_window': [{ required: true, message: '请选择聚合窗口', trigger: 'change' }],
-        'config.aggregate_function': [{ required: true, message: '请选择聚合方式', trigger: 'change' }]
+        device_id: [{ required: true, message: '请选择设备', trigger: 'change' }],
+        key: [{ required: true, message: '请选择数据标识', trigger: 'change' }],
+        data_type: [{ required: true, message: '请选择数据类型', trigger: 'change' }],
+        data_mode: [{ required: true, message: '请选择数据模式', trigger: 'change' }],
+        time_range: [{ required: true, message: '请选择时间范围', trigger: 'change' }],
+        aggregate_window: [{ required: true, message: '请选择聚合窗口', trigger: 'change' }],
+        aggregate_function: [{ required: true, message: '请选择聚合方式', trigger: 'change' }],
+        customTimeRange: [{ required: true, message: '请选择时间区间', trigger: 'change' }]
       },
       categoryData: [],
       typeName: '',
@@ -507,7 +537,7 @@ export default {
       selectedDeviceName: '',
       selectedDevice: null,
       filteredDeviceList: [],
-      dataPath: 'res.data.value',
+      dataPath: 'data',
       responseData: null,
       customTimeRange: null,
       pickerOptions: {
@@ -567,50 +597,74 @@ export default {
         latest: '新',
         history: '历'
       },
-      lastAutoName: ''
+      lastAutoName: '',
+      deviceLoading: false,
+      devicePagination: {
+        page: 1,
+        page_size: 10,
+        total: 0
+      },
+      metricsDataByType: {},
+      keyLoading: false,
+      metricsSearchKeyword: '',
+      filteredKeyList: [],
+      filteredMetricsDataByType: {},
+      deviceOnlineFilter: '',
+      deviceStatusLoading: false,
+      onlineStatusOptions: [
+        { label: '全部', value: '' },
+        { label: '在线', value: '1' },
+        { label: '离线', value: '0' }
+      ],
+      fieldFillDialogVisible: false,
+      shouldAutoExecute: false,
+      groupNameMap: {},
+      pathForm: {
+        dataPath: 'data'
+      }
     }
   },
   computed: {
-    availableAggregateWindows() {
-      const timeRange = this.dataForm.config.time_range;
-      let minWindowIndex = 0; // 默认所有选项都可用
+    availableAggregateWindows () {
+      const timeRange = this.dataForm.time_range
+      let minWindowIndex = 0 // 默认所有选项都可用
 
       // 根据时间范围设置最小可用聚合间隔
       if (timeRange === 'last_3h') {
-        minWindowIndex = 1; // 从30s开始
+        minWindowIndex = 1 // 从30s开始
       } else if (timeRange === 'last_6h') {
-        minWindowIndex = 2; // 从1m开始
+        minWindowIndex = 2 // 从1m开始
       } else if (timeRange === 'last_12h') {
-        minWindowIndex = 3; // 从2m开始
+        minWindowIndex = 3 // 从2m开始
       } else if (timeRange === 'last_24h') {
-        minWindowIndex = 4; // 从5m开始
+        minWindowIndex = 4 // 从5m开始
       } else if (timeRange === 'last_3d') {
-        minWindowIndex = 5; // 从10m开始
+        minWindowIndex = 5 // 从10m开始
       } else if (timeRange === 'last_7d') {
-        minWindowIndex = 6; // 从30m开始
+        minWindowIndex = 6 // 从30m开始
       } else if (timeRange === 'last_15d') {
-        minWindowIndex = 7; // 从1h开始
+        minWindowIndex = 7 // 从1h开始
       } else if (timeRange === 'last_30d') {
-        minWindowIndex = 8; // 从3h开始
+        minWindowIndex = 8 // 从3h开始
       } else if (timeRange === 'last_60d') {
-        minWindowIndex = 9; // 从6h开始
+        minWindowIndex = 9 // 从6h开始
       } else if (timeRange === 'last_90d') {
-        minWindowIndex = 10; // 从1d开始
+        minWindowIndex = 10 // 从1d开始
       } else if (timeRange === 'last_6m') {
-        minWindowIndex = 11; // 从7d开始
+        minWindowIndex = 11 // 从7d开始
       } else if (timeRange === 'last_1y') {
-        minWindowIndex = 12; // 只能选1mo
+        minWindowIndex = 12 // 只能选1mo
       } else if (timeRange === 'custom' && this.customTimeRange) {
         // 自定义时间范围的处理
-        const [start, end] = this.customTimeRange;
-        const diffHours = (end - start) / (1000 * 60 * 60);
+        const [start, end] = this.customTimeRange
+        const diffHours = (end - start) / (1000 * 60 * 60)
         
         if (diffHours >= 3 && diffHours < 6) {
-          minWindowIndex = 1; // 从30s开始
+          minWindowIndex = 1 // 从30s开始
         } else if (diffHours >= 6 && diffHours < 12) {
-          minWindowIndex = 2; // 从1m开始
+          minWindowIndex = 2 // 从1m开始
         } else if (diffHours >= 12 && diffHours < 24) {
-          minWindowIndex = 3; // 从2m开始
+          minWindowIndex = 3 // 从2m开始
         }
         // ... 其他区间按照类似的逻辑处理
       }
@@ -619,7 +673,36 @@ export default {
       return this.aggregateWindowOptions.map((option, index) => ({
         ...option,
         disabled: index < minWindowIndex
-      }));
+      }))
+    },
+    parsedResponseData() {
+      if (!this.responseData || !this.pathForm.dataPath) return null
+
+      try {
+        // 解析数据路径 data 或 data.points
+        const paths = this.pathForm.dataPath.split('.')
+        let result = this.responseData
+
+        // 顺着路径取值
+        for (const path of paths) {
+          if (result && result[path] !== undefined) {
+            result = result[path]
+          } else {
+            console.warn(`数据路径 ${this.pathForm.dataPath} 不存在`)
+            return null
+          }
+        }
+
+        return result
+      } catch (error) {
+        console.error('解析数据失败:', error)
+        return null
+      }
+    },
+    groupDisplayName() {
+      return this.dataForm.config.typeId && this.groupNameMap[this.dataForm.config.typeId] 
+        ? this.groupNameMap[this.dataForm.config.typeId]
+        : this.dataForm.config.typeId || ''
     }
   },
   watch: {
@@ -627,445 +710,847 @@ export default {
     'selectedDeviceName': function(newVal) {
       if (this.autoNaming) this.updateAutoName();
     },
-    'dataForm.config.key': function(newVal) {
+    'queryParams.key': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.key = newVal;
       if (this.autoNaming) this.updateAutoName();
     },
-    'dataForm.config.data_type': function(newVal) {
+    'queryParams.data_type': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.data_type = newVal;
       if (this.autoNaming) this.updateAutoName();
     },
-    'dataForm.config.data_mode': function(newVal) {
+    'queryParams.data_mode': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.data_mode = newVal;
       if (this.autoNaming) this.updateAutoName();
+    },
+    'queryParams.device_id': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.device_id = newVal;
+    },
+    'queryParams.time_range': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.time_range = newVal;
+    },
+    'queryParams.aggregate_window': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.aggregate_window = newVal;
+    },
+    'queryParams.aggregate_function': function(newVal) {
+      // 同步到dataForm
+      this.dataForm.aggregate_function = newVal;
     }
   },
+  created() {
+    // 初始化表单数据
+    this.initFormData()
+  },
+  mounted() {
+    // 组件挂载完成后的处理
+  },
   methods: {
-    // 打开设备选择弹窗
-    openDeviceDialog() {
-      this.deviceDialogVisible = true
-      this.deviceSearchKeyword = ''
-      this.filteredDeviceList = this.deviceList
-    },
-
-    // 处理设备搜索
-    handleDeviceSearch(keyword) {
-      if (!keyword) {
-        this.filteredDeviceList = this.deviceList
-        return
-      }
-      
-      this.filteredDeviceList = this.deviceList.filter(device => 
-        device.name.toLowerCase().includes(keyword.toLowerCase()) ||
-        device.id.toLowerCase().includes(keyword.toLowerCase())
-      )
-    },
-
-    // 选择设备
-    handleSelectDevice(row) {
-      this.selectedDevice = row
-      this.selectedDeviceName = row.name
-    },
-
-    // 确认选择设备
-    confirmSelectDevice() {
-      if (this.selectedDevice) {
-        this.dataForm.config.device_id = this.selectedDevice.id
-        this.selectedDeviceName = this.selectedDevice.name
-        this.handleDeviceChange(this.selectedDevice.id)
-      }
-      this.deviceDialogVisible = false
-    },
-
-    // 设备变更
-    async handleDeviceChange(deviceId) {
-      if (!deviceId) {
-        this.keyList = []
-        this.dataForm.config.key = ''
-        return
-      }
-      
-      // 获取设备数据标识列表
-      this.keyList = [
-        { key: 'temperature', name: '温度' },
-        { key: 'humidity', name: '湿度' },
-        { key: 'pressure', name: '压力' }
-      ]
-      
-      // 如果启用了自动命名，则更新名称
-      if (this.autoNaming) {
-        this.updateAutoName();
-      }
-    },
-
-    // 数据类型变更
-    handleDataTypeChange(type) {
-      // 如果不是遥测数据，则只能使用最新值模式
-      if (type !== 'telemetry') {
-        this.dataForm.config.data_mode = 'latest'
-      }
-    },
-
-    // 数据模式变更
-    handleDataModeChange(mode) {
-      if (mode === 'latest') {
-        this.dataForm.config.time_range = '';
-        this.dataForm.config.aggregate_window = '';
-        this.dataForm.config.aggregate_function = '';
-        this.customTimeRange = null;
-      } else {
-        // 历史数据模式下的默认值
-        this.dataForm.config.time_range = 'last_1h';
-        this.dataForm.config.aggregate_window = 'no_aggregate';
-        this.dataForm.config.aggregate_function = '';
-        this.customTimeRange = null;
-      }
-    },
-
-    // 执行查询
-    async executeQuery() {
-      if (!this.dataForm.config.device_id || !this.dataForm.config.key) {
-        Message.warning('请选择设备和数据标识')
-        return
-      }
-
-      // 检查历史数据模式的限制条件
-      if (this.dataForm.config.data_mode === 'history' && this.dataForm.config.data_type !== 'telemetry') {
-        Message.warning('历史数据模式仅支持遥测数据类型')
-        return
-      }
-
-      this.executeLoading = true
+    // 初始化表单数据
+    async initFormData() {
+      // 获取分类树数据
       try {
-        const params = {
-          device_id: this.dataForm.config.device_id,
-          key: this.dataForm.config.key,
-          data_type: this.dataForm.config.data_type,
-          data_mode: this.dataForm.config.data_mode
+        this.categoryData = await getCategoryTree({ tableName: 'dataset', moduleCode: this.appCode })
+        
+        // 如果只有分类ID，不是编辑模式，设置默认分类
+        if (this.typeId && !this.datasetId) {
+          this.dataForm.typeId = this.typeId
+          this.$nextTick(() => {
+            try {
+              this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
+            } catch (error) {
+              console.error(error)
+            }
+          })
         }
-
-        // 添加历史数据查询参数
-        if (this.dataForm.config.data_mode === 'history') {
-          params.time_range = this.dataForm.config.time_range
-          params.aggregate_window = this.dataForm.config.aggregate_window
-          params.aggregate_function = this.dataForm.config.aggregate_function
-        }
-
-        // 添加API密钥到请求头
-        const headers = {
-          'x-api-key': sessionStorage.getItem('ticket') || ''
-        }
-
-        const res = await datasetExecuteTest({
-          url: '/api/v1/iot/data',
-          method: 'get',
-          params,
-          headers
-        })
-
-        if (res.code === 0) {
-          // 自动识别数据结构
-          if (this.dataForm.config.data_mode === 'latest') {
-            this.dataPath = 'res.data.value'
-            this.dataPreviewList = [{ 
-              timestamp: res.data.timestamp,
-              value: res.data.value
-            }]
-          } else {
-            this.dataPath = 'res.data.points'
-            this.dataPreviewList = (res.data.points || []).map(point => ({
-              timestamp: point.timestamp,
-              value: point.value
-            }))
+        
+        // 如果在编辑模式，获取数据集详情
+        if (this.datasetId) {
+          try {
+            const response = await getDataset(this.datasetId)
+            console.log('获取到数据集详情:', response)
+            
+            // 检查返回的数据结构
+            if (response && response.id) {
+              // 直接使用response作为结果，不需要result字段
+              const {
+                id,
+                name,
+                typeId,
+                remark,
+                datasetType,
+                moduleCode,
+                editable,
+                sourceId,
+                cache,
+                config = {}
+              } = response
+              
+              // 设置表单数据
+              this.dataForm = {
+                id, // 保存ID，用于判断是新增还是更新
+                name,
+                typeId,
+                remark,
+                datasetType,
+                moduleCode,
+                editable,
+                sourceId,
+                cache,
+                config: { ...config } // 复制config以避免引用问题
+              }
+              
+              // 设置分组名称
+              if (this.dataForm.typeId) {
+                this.$nextTick(() => {
+                  try {
+                    this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
+                  } catch (error) {
+                    console.error(error)
+                  }
+                })
+              }
+              
+              // 设置自动命名状态
+              if (this.isEdit) {
+                this.autoNaming = false // 编辑模式下默认关闭自动命名
+              }
+              
+              // 处理配置数据
+              if (config) {
+                // 直接设置设备ID和数据标识
+                if (config.device_id) {
+                  this.dataForm.queryParams.device_id = config.device_id
+                }
+                
+                if (config.key) {
+                  this.dataForm.queryParams.key = config.key
+                }
+                
+                // 处理params，查找device_id和设备名称
+                if (config.params && Array.isArray(config.params)) {
+                  // 移除重复的参数，保留最后一个
+                  const uniqueParams = {}
+                  config.params.forEach(param => {
+                    uniqueParams[param.key] = param.value
+                  })
+                  
+                  // 优先从params中获取device_name
+                  if (uniqueParams.device_name) {
+                    this.selectedDeviceName = uniqueParams.device_name
+                  }
+                  
+                  // 如果没有设置device_id，从params中获取
+                  if (!this.dataForm.queryParams.device_id && uniqueParams.device_id) {
+                    this.dataForm.queryParams.device_id = uniqueParams.device_id
+                  }
+                  
+                  // 如果没有设置key，从params中获取
+                  if (!this.dataForm.queryParams.key && uniqueParams.key) {
+                    this.dataForm.queryParams.key = uniqueParams.key
+                  }
+                  
+                  // 从params获取分类名称
+                  if (uniqueParams.type_name && !this.typeName) {
+                    this.typeName = uniqueParams.type_name
+                  }
+                  
+                  // 回显time_range
+                  if (uniqueParams.time_range && !this.dataForm.queryParams.time_range) {
+                    this.dataForm.queryParams.time_range = uniqueParams.time_range
+                  }
+                  
+                  // 回显aggregate_window
+                  if (uniqueParams.aggregate_window && !this.dataForm.queryParams.aggregate_window) {
+                    this.dataForm.queryParams.aggregate_window = uniqueParams.aggregate_window
+                  }
+                  
+                  // 回显aggregate_function
+                  if (uniqueParams.aggregate_function && !this.dataForm.queryParams.aggregate_function) {
+                    this.dataForm.queryParams.aggregate_function = uniqueParams.aggregate_function
+                  }
+                  
+                  // 回显data_type
+                  if (uniqueParams.data_type && !this.dataForm.queryParams.data_type) {
+                    this.dataForm.queryParams.data_type = uniqueParams.data_type
+                  }
+                  
+                  // 回显data_mode
+                  if (uniqueParams.data_mode && !this.dataForm.queryParams.data_mode) {
+                    this.dataForm.queryParams.data_mode = uniqueParams.data_mode
+                  }
+                }
+                
+                // 设置字段描述和输出字段列表
+                this.dataForm.fieldDesc = config.fieldDesc || {}
+                this.outputFieldList = config.fieldList || []
+              }
+              
+              // 如果是历史数据模式，设置时间选择器的值
+              if (this.dataForm.data_mode === 'history') {
+                if (this.dataForm.time_range === 'custom') {
+                  if (config.start_ts && config.end_ts) {
+                    this.customTimeRange = [
+                      new Date(Number(config.start_ts)),
+                      new Date(Number(config.end_ts))
+                    ]
+                  } 
+                  // 尝试从config.params中获取时间戳
+                  else if (config.params && Array.isArray(config.params)) {
+                    const uniqueParams = {}
+                    config.params.forEach(param => {
+                      uniqueParams[param.key] = param.value
+                    })
+                  
+                    if (uniqueParams.start_ts && uniqueParams.end_ts) {
+                      this.dataForm.queryParams.start_ts = uniqueParams.start_ts
+                      this.dataForm.queryParams.end_ts = uniqueParams.end_ts
+                      this.customTimeRange = [
+                        new Date(Number(uniqueParams.start_ts)),
+                        new Date(Number(uniqueParams.end_ts))
+                      ]
+                    }
+                  }
+                }
+              }
+              
+              // 确保数据路径设置正确
+              this.setDataPath()
+            } else {
+              // 处理格式不正确的响应
+              console.error('数据集详情格式不正确:', response)
+              Message.error('获取数据集详情失败')
+            }
+          } catch (error) {
+            console.error('获取数据集详情失败:', error)
+            Message.error('获取数据集详情失败')
           }
-          this.updateOutputFieldList()
-          Message.success('执行成功')
         } else {
-          this.responseData = {
-            code: res.code,
-            message: res.message,
-            data: null
-          }
-          this.dataPreviewList = []
-          Message.error(res.message || '执行失败')
-        }
-      } catch (error) {
-        console.error('执行查询失败:', error)
-        this.responseData = {
-          error: error.message || '执行失败'
-        }
-        this.dataPreviewList = []
-        Message.error('执行查询失败')
-      } finally {
-        this.executeLoading = false
-      }
-    },
-
-    // 更新输出字段列表
-    updateOutputFieldList () {
-      if (!this.dataPreviewList.length) {
-        this.outputFieldList = []
-        return
-      }
-
-      const newFields = []
-      const sample = this.dataPreviewList[0]
-
-      // 保存旧的字段描述
-      const oldFieldMap = {}
-      this.outputFieldList.forEach(field => {
-        oldFieldMap[field.field] = field.name
-      })
-
-      Object.keys(sample).forEach(key => {
-        newFields.push({
-          field: key,
-          name: oldFieldMap[key] || key // 保留旧的字段名称，如果没有则使用字段本身
-        })
-      })
-
-      this.outputFieldList = newFields
-    },
-
-    // 保存
-    async save (formName) {
-      this.$refs[formName].validate(async (valid) => {
-        if (!valid) return
-
-        const params = {
-          ...this.dataForm
-        }
-
-        try {
-          if (this.dataForm.id) {
-            await datasetUpdate(params)
-          } else {
-            await datasetAdd(params)
+          // 新增模式，初始化表单
+          this.dataForm = {
+            name: '',
+            typeId: '',
+            categoryId: '',
+            source: 'http',
+            datasetType: 'iot', // 添加datasetType字段
+            queryParams: {
+              device_id: null,
+              key: '',
+              data_type: 'telemetry',
+              data_mode: 'latest',
+              time_range: 'last_1_hour',
+              aggregate_window: '1m',
+              aggregate_function: 'avg',
+              start_ts: null,
+              end_ts: null
+            },
+            config: {
+              className: 'com.gccloud.dataset.entity.config.IotDataSetConfig', // 使用正确的类名
+              requestType: 'frontend',  // 默认使用前端代理
+              method: 'get',
+              url: 'http://47.115.210.16:9999/api/v1/device/metrics/chart',
+              headers: [],
+              params: [],
+              body: '',
+              responseScript: ''
+            }
           }
           
-          this.$emit('success')
-          Message.success('保存成功')
-        } catch (error) {
-          console.error('保存失败:', error)
-          Message.error('保存失败')
+          // 初始化数据路径表单
+          this.pathForm = {
+            dataPath: 'data'
+          }
+          
+          // 默认查询参数
+          this.dataForm.queryParams = {
+            device_id: null,
+            key: '',
+            data_type: 'telemetry',
+            data_mode: 'latest',
+            time_range: 'last_1_hour',
+            aggregate_window: '1m',
+            aggregate_function: 'avg',
+            start_ts: null,
+            end_ts: null
+          }
+          
+          // 初始化数据路径
+          this.setDataPath()
         }
-      })
+      } catch (error) {
+        console.error('初始化表单数据失败:', error)
+        Message.error('初始化数据失败')
+      }
     },
 
-    // 返回
-    goBack () {
-      this.$emit('back')
-    },
-
-    // 渲染表头
-    renderHeader (label) {
-      if (label.length <= 10) return label
-      return label.slice(0, 10) + '...'
+    // 保存 - 简化逻辑，移除自动执行
+    async save(formName, ignoreFill = false) {
+      // 方法已移除，保存逻辑已删除
+      console.log('保存方法已被禁用')
     },
 
     // 分类相关方法
-    clearType () {
-      this.dataForm.typeId = ''
+    clearType() {
       this.typeName = ''
+      this.dataForm.typeId = ''
     },
 
-    setCurrentNode () {
-      if (this.dataForm.typeId) {
-        this.$nextTick(() => {
-          const node = this.$refs.categorySelectTree.getNode(this.dataForm.typeId)
-          if (node) {
-            this.$refs.categorySelectTree.setCurrentKey(this.dataForm.typeId)
-          }
-        })
+    setCurrentNode(event) {
+      if (event) {
+        const key = this.dataForm.typeId || null
+        this.$refs.categorySelectTree.setCurrentKey(key)
       }
     },
 
-    selectParentCategory (data) {
-      this.dataForm.typeId = data.id
-      this.typeName = data.name
+    selectParentCategory(value) {
+      this.dataForm.typeId = value.id
+      this.typeName = value.name
       this.$refs.selectParentName.blur()
-    },
-
-    handleTimeRangeChange(value) {
-      // 保存当前选择的聚合窗口
-      const currentWindow = this.dataForm.config.aggregate_window;
-      
-      // 处理自定义时间范围的特殊情况
-      if (value === 'custom') {
-        // 对于自定义时间范围，我们在handleCustomTimeChange中处理聚合间隔的调整
-        return;
-      }
-      
-      // 获取当前时间范围下的最小可用聚合窗口索引
-      let minWindowIndex = 0;
-      
-      // 根据新选择的时间范围确定最小可用聚合间隔
-      if (value === 'last_3h') {
-        minWindowIndex = 1; // 从30s开始
-      } else if (value === 'last_6h') {
-        minWindowIndex = 2; // 从1m开始
-      } else if (value === 'last_12h') {
-        minWindowIndex = 3; // 从2m开始
-      } else if (value === 'last_24h') {
-        minWindowIndex = 4; // 从5m开始
-      } else if (value === 'last_3d') {
-        minWindowIndex = 5; // 从10m开始
-      } else if (value === 'last_7d') {
-        minWindowIndex = 6; // 从30m开始
-      } else if (value === 'last_15d') {
-        minWindowIndex = 7; // 从1h开始
-      } else if (value === 'last_30d') {
-        minWindowIndex = 8; // 从3h开始
-      } else if (value === 'last_60d') {
-        minWindowIndex = 9; // 从6h开始
-      } else if (value === 'last_90d') {
-        minWindowIndex = 10; // 从1d开始
-      } else if (value === 'last_6m') {
-        minWindowIndex = 11; // 从7d开始
-      } else if (value === 'last_1y') {
-        minWindowIndex = 12; // 只能选1mo
-      }
-      
-      // 获取当前选择的聚合窗口在选项中的索引
-      const currentWindowIndex = this.aggregateWindowOptions.findIndex(option => option.value === currentWindow);
-      
-      // 如果当前选择的聚合窗口不可用（索引小于最小可用索引），则自动选择第一个可用选项
-      if (currentWindowIndex < minWindowIndex) {
-        // 选择第一个可用的聚合窗口选项
-        this.dataForm.config.aggregate_window = this.aggregateWindowOptions[minWindowIndex].value;
-        
-        // 更新聚合方式
-        this.handleAggregateWindowChange(this.dataForm.config.aggregate_window);
-      }
     },
 
     handleCustomTimeChange(timeRange) {
       if (!timeRange) {
-        this.dataForm.config.start_time = null;
-        this.dataForm.config.end_time = null;
-        return;
+        this.dataForm.queryParams.start_time = null
+        this.dataForm.queryParams.end_time = null
+        return
       }
       
-      this.dataForm.config.start_time = timeRange[0].toISOString();
-      this.dataForm.config.end_time = timeRange[1].toISOString();
+      this.dataForm.queryParams.start_time = timeRange[0].toISOString()
+      this.dataForm.queryParams.end_time = timeRange[1].toISOString()
       
       // 计算时间区间小时差
-      const diffHours = (timeRange[1] - timeRange[0]) / (1000 * 60 * 60);
+      const diffHours = (timeRange[1] - timeRange[0]) / (1000 * 60 * 60)
       
       // 当前选择的聚合窗口
-      const currentWindow = this.dataForm.config.aggregate_window;
+      const currentWindow = this.dataForm.queryParams.aggregate_window
       
       // 获取当前选择的聚合窗口在选项中的索引
-      const currentWindowIndex = this.aggregateWindowOptions.findIndex(option => option.value === currentWindow);
+      const currentWindowIndex = this.aggregateWindowOptions.findIndex(option => option.value === currentWindow)
       
       // 根据时间区间长度确定最小可用聚合间隔索引
-      let minWindowIndex = 0;
+      let minWindowIndex = 0
       
       if (diffHours >= 3 && diffHours < 6) {
-        minWindowIndex = 1; // 从30s开始
+        minWindowIndex = 1 // 从30s开始
       } else if (diffHours >= 6 && diffHours < 12) {
-        minWindowIndex = 2; // 从1m开始
+        minWindowIndex = 2 // 从1m开始
       } else if (diffHours >= 12 && diffHours < 24) {
-        minWindowIndex = 3; // 从2m开始
+        minWindowIndex = 3 // 从2m开始
       } else if (diffHours >= 24 && diffHours < 72) {
-        minWindowIndex = 4; // 从5m开始
+        minWindowIndex = 4 // 从5m开始
       } else if (diffHours >= 72 && diffHours < 168) {
-        minWindowIndex = 5; // 从10m开始
+        minWindowIndex = 5 // 从10m开始
       } else if (diffHours >= 168 && diffHours < 360) {
-        minWindowIndex = 6; // 从30m开始
+        minWindowIndex = 6 // 从30m开始
       } else if (diffHours >= 360 && diffHours < 720) {
-        minWindowIndex = 7; // 从1h开始
+        minWindowIndex = 7 // 从1h开始
       } else if (diffHours >= 720 && diffHours < 1440) {
-        minWindowIndex = 8; // 从3h开始
+        minWindowIndex = 8 // 从3h开始
       } else if (diffHours >= 1440 && diffHours < 2160) {
-        minWindowIndex = 9; // 从6h开始
+        minWindowIndex = 9 // 从6h开始
       } else if (diffHours >= 2160 && diffHours < 4320) {
-        minWindowIndex = 10; // 从1d开始
+        minWindowIndex = 10 // 从1d开始
       } else if (diffHours >= 4320) {
-        minWindowIndex = 11; // 从7d开始
+        minWindowIndex = 11 // 从7d开始
       }
       
       // 如果当前选择的聚合窗口不可用，则自动选择第一个可用选项
       if (currentWindowIndex < minWindowIndex) {
-        this.dataForm.config.aggregate_window = this.aggregateWindowOptions[minWindowIndex].value;
-        this.handleAggregateWindowChange(this.dataForm.config.aggregate_window);
+        this.dataForm.queryParams.aggregate_window = this.aggregateWindowOptions[minWindowIndex].value
+        this.handleAggregateWindowChange(this.dataForm.queryParams.aggregate_window)
       }
     },
 
-    handleAggregateWindowChange(value) {
-      if (value === 'no_aggregate') {
-        this.dataForm.config.aggregate_function = '';
-      } else if (!this.dataForm.config.aggregate_function) {
-        this.dataForm.config.aggregate_function = 'avg';
+    // 更新输出字段列表（与HttpEditForm保持一致）
+    updateOutputFieldList(dataList) {
+      if (dataList && dataList.length) {
+        const newList = Object.keys(dataList?.[0])?.map(key => {
+          return {
+            fieldName: key,
+            fieldDesc: ''
+          }
+        })
+        // 如果之前已经有字段列表，则需要进行对比
+        if (this.outputFieldList && this.outputFieldList.length) {
+          this.outputFieldList = this.compareArr(newList, this.outputFieldList)
+        } else {
+          this.outputFieldList = newList
+        }
       }
     },
 
-    handleAutoNamingChange(val) {
-      if (val) {
-        this.updateAutoName();
+    // 用来对两个数组进行对比（与HttpEditForm保持一致）
+    compareArr(newList, oldList) {
+      // 创建一个空数组，用于存储最终的结果
+      const result = []
+      // 遍历新列表中的每个字段
+      newList.forEach(newField => {
+        // 在旧列表中查找相同名称的字段
+        const oldField = oldList.find(item => item.fieldName === newField.fieldName)
+        if (oldField) {
+          // 如果在旧列表中找到了相同名称的字段，则保留旧字段的描述
+          result.push({
+            fieldName: newField.fieldName,
+            fieldDesc: oldField.fieldDesc || '',
+            required: oldField.required || false
+          })
+        } else {
+          // 如果在旧列表中没有找到相同名称的字段，则添加新字段
+          result.push({
+            fieldName: newField.fieldName,
+            fieldDesc: '',
+            required: false
+          })
+        }
+      })
+      return result
+    },
+
+    // 字段描述构建及同步（与HttpEditForm完全一致）
+    buildFieldDesc() {
+      const fieldDesc = {}
+      this.outputFieldList.forEach(field => {
+        if (this.dataForm.fieldDesc && this.dataForm.fieldDesc.hasOwnProperty(field.fieldName)) {
+          fieldDesc[field.fieldName] = this.dataForm.fieldDesc[field.fieldName]
+        } else {
+          fieldDesc[field.fieldName] = field.fieldDesc || ''
+        }
+      })
+      this.dataForm.fieldDesc = fieldDesc
+    },
+
+    // 格式化时间
+    formatTime(timestamp) {
+      if (!timestamp) return '暂无数据'
+      try {
+        const date = new Date(timestamp)
+        return date.toLocaleString()
+      } catch (error) {
+        return '时间格式错误'
       }
     },
 
-    updateAutoName() {
-      if (!this.selectedDeviceName && !this.getKeyName()) {
-        return; // 如果没有设备名和数据标识，则不生成
-      }
-      
-      const parts = [];
-      
-      // 添加设备名称
-      if (this.selectedDeviceName) {
-        parts.push(this.selectedDeviceName);
-      }
-      
-      // 添加数据标识名称
-      const keyName = this.getKeyName();
-      if (keyName) {
-        parts.push(keyName);
-      }
-      
-      // 添加数据类型简称
-      const dataTypeName = this.dataTypeNameMap[this.dataForm.config.data_type] || '';
-      if (dataTypeName) {
-        parts.push(dataTypeName);
-      }
-      
-      // 添加数据模式简称
-      const dataModeName = this.dataModeNameMap[this.dataForm.config.data_mode] || '';
-      if (dataModeName) {
-        parts.push(dataModeName);
-      }
-      
-      // 生成最终名称并保存
-      this.dataForm.name = parts.join('-');
-      this.lastAutoName = this.dataForm.name; // 保存自动生成的名称用于比较
+    // 获取数据类型显示名称
+    getDataTypeLabel(type) {
+      // 直接返回原始值，不翻译
+      return type
+    },
+    
+    // 刷新设备列表
+    resetDeviceSearch() {
+      this.deviceSearchKeyword = ''
+      this.deviceOnlineFilter = ''
+      this.devicePagination.page = 1
     },
 
-    getKeyName() {
-      const key = this.dataForm.config.key;
-      if (!key) return '';
-      
-      const keyObj = this.keyList.find(item => item.key === key);
-      return keyObj ? keyObj.name : key;
+    // 更新所有设备的在线状态 - 不再调用API
+    async updateAllDevicesStatus() {
+      // 设备列表中已包含在线状态，不需要额外请求
+      // 可以移除此方法或保留为空实现
     },
 
-    handleKeyChange() {
+    // 字段值填充
+    fieldDescFill() {
+      this.dataForm.fieldDesc = {}
+      this.outputFieldList.forEach(field => {
+        if (field.fieldDesc === '' || !field.hasOwnProperty('fieldDesc')) {
+          this.dataForm.fieldDesc[field.fieldName] = field.fieldName
+        } else {
+          this.dataForm.fieldDesc[field.fieldName] = field.fieldDesc
+        }
+      })
+      this.$refs.fieldFillDialog.close()
+    },
+    
+    // 继续保存
+    toSave() {
+      // 方法已移除，保存逻辑已删除
+      console.log('保存方法已被禁用')
+      this.$refs.fieldFillDialog.close()
+    },
+    
+    // 进入编辑
+    fieldDescEdit() {
+      this.$refs.fieldFillDialog.close()
+      this.$refs.outputFieldDialog.open()
+    },
+
+    handleOutputConfirm(outputFieldList) {
+      // 方法已移除，保存逻辑已删除
+      console.log('输出字段确认逻辑已被禁用')
+      this.outputFieldList = outputFieldList
+      this.$refs.outputFieldDialog.close()
+    },
+
+    handleDeviceSelect(device) {
+      if (!device) return
+      
+      this.dataForm.device_id = device.id
+      this.selectedDeviceName = device.name
+      this.dataForm.queryParams.device_id = device.id
+      this.dataForm.queryParams.device_name = device.name
+      this.dataForm.key = ''
+      
       if (this.autoNaming) {
-        this.updateAutoName();
+        this.updateAutoName()
+      }
+    },
+    
+    handleMetricsChange(item) {
+      if (!item) return
+      
+      if (this.autoNaming) {
+        this.updateAutoName()
       }
     },
 
-    handleNameInput(val) {
-      // 如果启用自动命名且用户手动修改了名称
-      if (this.autoNaming && val !== this.lastAutoName) {
-        this.$confirm('手动编辑名称将禁用自动命名功能，是否继续？', '提示', {
-          confirmButtonText: '继续编辑',
-          cancelButtonText: '保持自动命名',
-          type: 'warning'
-        }).then(() => {
-          // 用户选择继续编辑，禁用自动命名
-          this.autoNaming = false;
-        }).catch(() => {
-          // 用户选择保持自动命名，恢复自动生成的名称
-          this.updateAutoName();
-        });
+    // 处理MetricsSelect组件的选择事件
+    handleMetricsSelect(key) {
+      this.dataForm.key = key
+      this.queryParams.key = key
+      
+      if (this.autoNaming) {
+        this.updateAutoName()
+      }
+    },
+
+    // 更新数据路径
+    setDataPath() {
+      if (this.queryParams.data_mode === 'latest') {
+        this.pathForm.dataPath = 'data'
+        // 更新responseScript，与HTTP保持一致
+        this.dataForm.config.responseScript = 'return resp.data'
+      } else if (this.queryParams.data_mode === 'history') {
+        this.pathForm.dataPath = 'data'
+        // 更新responseScript，与HTTP保持一致
+        this.dataForm.config.responseScript = 'return resp.data'
+      }
+    },
+
+    // 打开设备选择弹窗
+    openDeviceDialog() {
+      // 设置选中的设备 (用于回显)
+      this.$refs.deviceSelectDialog.show(this.selectedDevice)
+    },
+
+    // 更新自动名称方法
+    updateAutoName() {
+      if (!this.autoNaming) return
+      
+      let newName = ''
+      
+      // 设备名称部分
+      if (this.selectedDeviceName) {
+        newName += this.selectedDeviceName
+      }
+      
+      // 数据标识部分
+      if (this.queryParams.key) {
+        if (newName) newName += ' - '
+        newName += this.queryParams.key
+      }
+      
+      // 数据类型部分
+      if (this.queryParams.data_type) {
+        if (newName) newName += ' - '
+        newName += this.getDataTypeLabel(this.queryParams.data_type)
+      }
+      
+      // 数据模式部分
+      if (this.queryParams.data_mode === 'history') {
+        if (newName) newName += ' - '
+        newName += '历史数据'
+      } else {
+        if (newName) newName += ' - '
+        newName += '最新数据'
+      }
+      
+      // 设置新名称
+      if (newName) {
+        this.dataForm.name = newName.trim()
+      }
+    },
+
+    // 处理自动命名复选框变更
+    handleAutoNamingChange(checked) {
+      if (checked) {
+        this.updateAutoName()
+      }
+    },
+
+    handleNameInput(value) {
+      this.dataForm.name = value
+      // 当用户手动输入名称时，关闭自动命名
+      this.autoNaming = false
+    },
+
+    handleDataTypeChange(value) {
+      this.queryParams.data_type = value
+      if (this.autoNaming) {
+        this.updateAutoName()
+      }
+    },
+
+    handleDataModeChange(value) {
+      this.queryParams.data_mode = value
+      // 更新数据路径
+      this.setDataPath()
+      
+      if (this.autoNaming) {
+        this.updateAutoName()
+      }
+    },
+
+    handleTimeRangeChange(value) {
+      this.dataForm.queryParams.time_range = value
+      if (this.autoNaming) {
+        this.updateAutoName()
+      }
+    },
+
+    // 添加fetchDeviceList方法
+    async fetchDeviceList() {
+      try {
+        // 如果已经有设备列表，不需要重新获取
+        if (this.deviceList && this.deviceList.length > 0) {
+          return
+        }
+        
+        // 获取设备列表
+        const response = await getDeviceList({})
+        console.log('设备列表API响应:', response)
+        
+        // 处理不同格式的API响应
+        let deviceListData = []
+        if (response) {
+          // 如果response包含data字段(标准响应)
+          if (response.data) {
+            if (response.data.code === 0 || response.data.code === 200) {
+              deviceListData = response.data.result || response.data.data || []
+            } else {
+              deviceListData = response.data.list || response.data || []
+            }
+          } 
+          // 如果response直接包含code字段(直接响应)
+          else if (response.code === 0 || response.code === 200) {
+            deviceListData = response.result || response.list || response.data || []
+          } 
+          // 如果response本身就是数组
+          else if (Array.isArray(response)) {
+            deviceListData = response
+          }
+          // 其他情况，尝试各种可能的字段
+          else {
+            deviceListData = response.list || response.result || response || []
+          }
+          
+          // 转换设备列表格式
+          this.deviceList = Array.isArray(deviceListData) ? deviceListData.map(device => {
+            return {
+              id: device.id || device.deviceId,
+              name: device.name,
+              type: device.type || device.deviceType,
+              status: device.status || device.connected ? 'online' : 'offline',
+              lastActiveTime: device.lastActiveTime || device.lastActivityTime,
+              description: device.description || device.desc || ''
+            }
+          }) : []
+          
+          this.filteredDeviceList = [...this.deviceList]
+          
+          // 如果有设备ID，查找对应的设备设置为selectedDevice
+          if (this.dataForm.queryParams.device_id) {
+            this.selectedDevice = this.deviceList.find(d => d.id === this.dataForm.queryParams.device_id) || null
+          }
+          
+          console.log('处理后的设备列表:', this.deviceList)
+        } else {
+          console.error('获取设备列表响应为空')
+        }
+      } catch (error) {
+        console.error('获取设备列表失败:', error)
+        this.deviceList = []
+        this.filteredDeviceList = []
+      } finally {
+        this.deviceLoading = false
+      }
+    },
+
+    // 将key转换为对象格式，与后端要求保持一致
+    transformKeyToObject(key) {
+      // 如果已经是对象，直接返回
+      if (typeof key === 'object' && key !== null) {
+        return key
+      }
+      
+      // 找到对应的metrics对象
+      let selectedMetric = null
+      
+      if (this.allMetrics && this.allMetrics.length > 0) {
+        selectedMetric = this.allMetrics.find(metric => 
+          metric.key === key || 
+          metric.name === key || 
+          metric.id === key
+        )
+      }
+      
+      // 如果找到metrics对象，使用它的属性
+      if (selectedMetric) {
+        return {
+          key: selectedMetric.key || selectedMetric.name || key,
+          name: selectedMetric.name || selectedMetric.key || key,
+          type: selectedMetric.type || selectedMetric.dataType || 'string',
+          description: selectedMetric.description || ''
+        }
+      }
+      
+      // 如果没找到，构造一个基础对象
+      const groupKey = this.dataForm.queryParams.typeId || this.dataForm.queryParams.data_type || 'telemetry'
+      
+      return {
+        key: key,
+        name: key,
+        type: 'string',
+        description: ''
+      }
+    },
+
+    // 处理聚合窗口变化
+    handleAggregateWindowChange(value) {
+      this.dataForm.queryParams.aggregate_window = value
+    },
+
+    // 处理聚合函数变化
+    handleAggregateFunctionChange(value) {
+      this.dataForm.queryParams.aggregate_function = value
+    },
+    
+    // 返回上一页
+    goBack() {
+      this.$emit('back')
+    },
+
+    // 执行按钮点击处理
+    handleExecuteClick() {
+      // 方法已被禁用，数据处理逻辑已删除
+      console.log('执行查询功能已被禁用')
+    },
+
+    // 修改handleDeviceChange方法，优化分组数据回显
+    async handleDeviceChange(deviceId) {
+      if (!deviceId) return
+      
+      try {
+        this.loading = true
+        
+        // 获取设备的数据标识
+        const response = await getDeviceMetrics(deviceId)
+        console.log('设备数据标识API响应:', response)
+        
+        // 处理不同格式的API响应
+        if (response) {
+          let metricsData = null
+          
+          // 如果response包含data字段(标准响应)
+          if (response.data) {
+            if (response.data.code === 0 || response.data.code === 200) {
+              metricsData = response.data.result || response.data.data || response.data
+            }
+          } 
+          // 如果response直接包含code字段(直接响应)
+          else if (response.code === 0 || response.code === 200) {
+            metricsData = response.result || response.data || response
+          } 
+          // 其他情况，尝试各种可能的字段
+          else {
+            metricsData = response
+          }
+          
+          // 设置数据标识分组
+          this.metricsGroups = metricsData || {}
+          console.log('处理后的数据标识分组:', this.metricsGroups)
+          
+          // 构建分组名称映射
+          this.groupNameMap = {}
+          Object.keys(this.metricsGroups).forEach(groupKey => {
+            // 根据分组键设置更友好的名称
+            switch(groupKey) {
+              case 'telemetry':
+                this.groupNameMap[groupKey] = '遥测数据'
+                break
+              case 'attributes':
+                this.groupNameMap[groupKey] = '属性数据'
+                break
+              case 'clientAttributes':
+                this.groupNameMap[groupKey] = '客户端属性'
+                break
+              case 'serverAttributes':
+                this.groupNameMap[groupKey] = '服务端属性'
+                break
+              case 'sharedAttributes':
+                this.groupNameMap[groupKey] = '共享属性'
+                break
+              default:
+                this.groupNameMap[groupKey] = groupKey
+                break
+            }
+          })
+          
+          // 提取所有指标到一个扁平数组，便于搜索
+          this.allMetrics = []
+          Object.keys(this.metricsGroups).forEach(groupKey => {
+            const group = this.metricsGroups[groupKey]
+            if (Array.isArray(group)) {
+              this.allMetrics = this.allMetrics.concat(group)
+            }
+          })
+          
+          // 如果有config.key，找到对应的标识进行回显
+          if (this.dataForm.queryParams.key) {
+            // 检查是否有匹配的数据标识
+            let found = false
+            
+            // 在各个分组中查找
+            Object.keys(this.metricsGroups).forEach(groupKey => {
+              const group = this.metricsGroups[groupKey]
+              if (Array.isArray(group)) {
+                const foundMetric = group.find(metric => 
+                  metric.key === this.dataForm.queryParams.key || 
+                  metric.name === this.dataForm.queryParams.key ||
+                  metric.id === this.dataForm.queryParams.key
+                )
+                
+                if (foundMetric && !found) {
+                  found = true
+                  
+                  // 更新typeId以匹配分组
+                  this.dataForm.queryParams.typeId = groupKey
+                  
+                  // 同时更新表单中的typeId，确保表单提交时包含正确的分组信息
+                  if (this.dataForm.queryParams.typeId && !this.dataForm.typeId) {
+                    this.dataForm.typeId = this.dataForm.queryParams.typeId
+                    
+                    // 设置分组名称
+                    if (this.groupNameMap[groupKey]) {
+                      this.typeName = this.groupNameMap[groupKey]
+                    }
+                  }
+                  
+                  console.log(`找到匹配的数据标识，分组: ${groupKey}`, foundMetric)
+                }
+              }
+            })
+          }
+        }
+      } catch (error) {
+        console.error('获取设备数据标识失败:', error)
+        Message.warning('获取设备数据标识失败: ' + (error.message || error))
+      } finally {
+        this.loading = false
       }
     }
   }
@@ -1077,7 +1562,7 @@ export default {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--bs-background-2);
+  background-color: var(--bs-background-1);
   border-radius: 4px;
   overflow: hidden;
 
@@ -1196,19 +1681,41 @@ export default {
   }
 
   .device-dialog-content {
-    .search-bar {
-      margin-bottom: 10px;
-    }
-
-    .device-list {
+    .filter-container {
+      padding: 16px;
+      background-color: var(--bs-background-3);
       border-radius: 4px;
-      overflow: hidden;
-    }
+      margin-bottom: 16px;
 
-    .el-table {
-      th, td {
-        padding: 8px 10px !important;
+      .filter-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+
+        .filter-item {
+          display: flex;
+          align-items: center;
+          margin: 0;
+
+          &.search-item {
+            flex: 1;
+            max-width: 300px;
+          }
+
+          .online-filter-select {
+            width: 120px;
+          }
+
+          .reset-btn {
+            white-space: nowrap;
+          }
+        }
       }
+    }
+    
+    .bs-table-box {
+      background-color: var(--bs-background-2);
+      border-radius: 4px;
     }
   }
 
@@ -1256,8 +1763,8 @@ export default {
     
     .auto-naming-checkbox {
       margin-left: 10px;
-      color: var(--bs-el-text);
-      
+  color: var(--bs-el-text);
+
       :deep(.el-checkbox__label) {
         color: var(--bs-el-text);
         font-size: 12px;
@@ -1274,8 +1781,8 @@ export default {
   .naming-rule-tooltip {
     max-width: 200px;
     padding: 10px;
-    background-color: var(--bs-background-3);
-    border-radius: 4px;
+  background-color: var(--bs-background-3);
+  border-radius: 4px;
     color: var(--bs-el-text);
     font-size: 12px;
     line-height: 1.5;
@@ -1293,75 +1800,269 @@ export default {
     margin-left: 5px;
     cursor: pointer;
   }
+
+  .search-filter-row {
+    display: flex;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    align-items: center;
+    
+    .filter-item {
+      display: flex;
+      align-items: center;
+      margin-right: 20px;
+      margin-bottom: 8px;
+      
+      .filter-label {
+    color: var(--bs-el-text);
+        margin-right: 8px;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+    }
+    
+    .online-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      
+      .device-status-dot {
+        margin-left: 8px;
+      }
+    }
+  }
 }
 
 // 引入主题变量
 @import 'data-room-ui/assets/style/bsTheme.scss';
 
 // 覆盖 element-ui 组件样式
-:deep(.el-input__inner),
-:deep(.el-textarea__inner) {
-  background-color: var(--bs-background-2);
-  border-color: var(--bs-border-color);
-  color: var(--bs-el-text);
-
-  &:focus {
-    border-color: var(--bs-el-color-primary);
+:deep(.bs-el-input) {
+  .el-input__inner {
+    background-color: var(--bs-background-2) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-el-text) !important;
+    
+    &:focus {
+      border-color: var(--bs-el-color-primary) !important;
+    }
+  }
+  
+  .el-input-group__append {
+    background-color: var(--bs-background-3) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-el-text) !important;
+    
+    &:hover {
+      background-color: var(--bs-background-4) !important;
+    }
   }
 }
 
-:deep(.el-table) {
-  background-color: var(--bs-background-3);
-  border-radius: 4px;
-  overflow: hidden;
+:deep(.bs-el-select) {
+  width: 100% !important;
   
-  th.el-table__cell {
-    background-color: var(--bs-background-4);
-    border-bottom: 1px solid var(--bs-border-color);
-    color: var(--bs-el-text);
+  .el-input__inner {
+    background-color: var(--bs-background-2) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-el-text) !important;
+    
+    &:focus {
+      border-color: var(--bs-el-color-primary) !important;
+    }
+  }
+}
+
+:deep(.el-select-dropdown.bs-el-select) {
+  background-color: var(--bs-background-1) !important;
+  border: 1px solid var(--bs-border-color) !important;
+  margin: 12px 0 !important;
+
+  .el-select-dropdown__item {
+    color: #fff !important;
+    background-color: var(--bs-background-1) !important;
+    padding: 12px !important;
+    margin: 4px 0 !important;
+    display: flex !important;
+    align-items: center !important;
+
+    &:hover {
+      background-color: var(--bs-background-2) !important;
+    }
+
+    &.selected {
+      background-color: var(--bs-background-2) !important;
+    }
+  }
+
+  .el-select-dropdown__list {
     padding: 6px 0;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  .el-select-group__title {
+    padding: 12px !important;
+    font-size: 13px !important;
+    color: #fff !important;
+  }
+
+  .el-select-group__wrap:not(:last-of-type)::after {
+    background-color: var(--bs-background-3) !important;
+  }
+
+  .el-select-dropdown__empty {
+    padding: 12px !important;
+    color: #fff !important;
+    text-align: center !important;
+    height: 40px !important;
+    line-height: 40px !important;
+  }
+
+  .popper__arrow {
+    border-bottom-color: var(--bs-border-color) !important;
+    
+    &::after {
+      border-bottom-color: var(--bs-background-1) !important;
+    }
+  }
+}
+
+.el-select-dropdown.el-popper {
+  margin: 8px 0 !important;
+  background-color: var(--bs-background-1) !important;
+}
+
+.el-select-dropdown.el-popper[x-placement^="bottom"] {
+  margin-top: 12px !important;
+  
+  .popper__arrow {
+    border-bottom-color: var(--bs-border-color) !important;
+    
+    &::after {
+      border-bottom-color: var(--bs-background-1) !important;
+    }
+  }
+}
+
+.el-select-dropdown.el-popper[x-placement^="top"] {
+  margin-bottom: 12px !important;
+  
+  .popper__arrow {
+    border-top-color: var(--bs-border-color) !important;
+    
+    &::after {
+      border-top-color: var(--bs-background-1) !important;
+    }
+  }
+}
+
+.metrics-option-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  
+  .metrics-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .metrics-name {
+  color: var(--bs-el-text);
+}
+
+    .metrics-key {
+      color: var(--bs-el-text-secondary);
+      font-size: 12px;
+    }
   }
   
-  td.el-table__cell {
-    background-color: var(--bs-background-3);
-    border-bottom: 1px solid var(--bs-border-color);
-    color: var(--bs-el-text);
-    padding: 4px;
-  }
-
-  .el-table__empty-text {
-    color: var(--bs-el-text);
+  .metrics-data-type {
+    color: var(--bs-el-text-secondary);
+    font-size: 12px;
   }
 }
+</style>
 
-:deep(.el-form-item__label) {
-  color: #f2f2f2;
-}
+<style lang="scss">
+.form-item-container {
+  .el-select-dropdown {
+    background-color: var(--bs-background-1) !important;
+    border: 1px solid var(--bs-border-color) !important;
+    margin: 12px 0 !important;
 
-// 滚动条样式
-::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
-}
+    .el-select-dropdown__item {
+      color: #fff !important;
+      background-color: var(--bs-background-1) !important;
+      padding: 12px !important;
+      margin: 4px 0 !important;
+      display: flex !important;
+      align-items: center !important;
 
-::-webkit-scrollbar-thumb {
-  background: var(--bs-scrollbar);
-  border-radius: 2px;
-}
+      &:hover {
+        background-color: var(--bs-background-2) !important;
+      }
 
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-// 响应式调整
-@media (max-width: 1366px) {
-  .el-col {
-    &.el-col-16 {
-      width: 60%;
+      &.selected {
+        background-color: var(--bs-background-2) !important;
+      }
     }
-    &.el-col-8 {
-      width: 40%;
+
+    .el-select-dropdown__list {
+      padding: 6px 0;
+      max-height: 300px;
+      overflow-y: auto;
     }
+
+    .el-select-group__title {
+      padding: 12px !important;
+      font-size: 13px !important;
+      color: #fff !important;
+    }
+
+    .el-select-group__wrap:not(:last-of-type)::after {
+      background-color: var(--bs-border-color);
+    }
+
+    .el-select-dropdown__empty {
+      padding: 12px !important;
+      color: #fff !important;
+      text-align: center !important;
+      height: 40px !important;
+      line-height: 40px !important;
+    }
+
+    .popper__arrow {
+      border-bottom-color: var(--bs-border-color) !important;
+      
+      &::after {
+        border-bottom-color: var(--bs-background-1) !important;
+      }
+    }
+  }
+}
+
+.bs-pagination .el-select .el-input .el-input__inner {
+  background-color: var(--bs-background-3) !important;
+  border-color: var(--bs-border-color) !important;
+  color: var(--bs-el-text) !important;
+}
+
+.empty-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bs-el-text-secondary);
+  
+  i {
+    margin-right: 8px;
+    font-size: 16px;
+  }
+  
+  span {
+    font-size: 13px;
   }
 }
 </style>
