@@ -11,6 +11,7 @@ import com.gccloud.dataroom.core.module.manage.service.IDataRoomPageService;
 import com.gccloud.dataroom.core.module.manage.vo.StaticFileVO;
 import com.gccloud.dataroom.core.permission.Permission;
 import com.gccloud.common.permission.ApiPermission;
+import com.gccloud.dataroom.core.utils.TenantContext;
 import com.gccloud.dataroom.core.utils.Webjars;
 import com.gccloud.common.exception.GlobalException;
 import com.gccloud.common.utils.BeanConvertUtils;
@@ -67,10 +68,21 @@ public class DataRoomPageController {
         return resp;
     }
 
+    @SuppressWarnings("unchecked")
     @ApiPermission(permissions = {Permission.DataRoom.VIEW})
     @GetMapping("/page")
-    @ApiOperation(value = "大屏/组件分页列表", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "大屏/组件分页列表（租户分离）", position = 10, produces = MediaType.APPLICATION_JSON_VALUE)
     public MixinsResp<PageVO<PageEntity>> page(DataRoomSearchDTO searchDTO) {
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {
+            log.error("租户ID为空，不允许查询组件");
+            return (MixinsResp<PageVO<PageEntity>>) MixinsResp.error(403,"租户ID为空，不允许查询组件");
+        }
+        searchDTO.setTenantId(TenantContext.getTenantId());
         PageVO<PageEntity> page = bigScreenPageService.getByCategory(searchDTO);
         MixinsResp<PageVO<PageEntity>> resp = new MixinsResp<PageVO<PageEntity>>().setData(page);
         resp.setCode(DataRoomConst.Response.Code.SUCCESS);
@@ -78,11 +90,22 @@ public class DataRoomPageController {
     }
 
 
+    @SuppressWarnings("unchecked")
     @ApiPermission(permissions = {Permission.DataRoom.ADD})
     @PostMapping("/add")
-    @ApiOperation(value = "从空白新增大屏/组件", position = 20, produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "从空白新增大屏/组件（租户分离）", position = 20, produces = MediaType.APPLICATION_JSON_VALUE)
     public R<String> add(@RequestBody DataRoomPageDTO bigScreenPageDTO) {
         ValidatorUtils.validateEntity(bigScreenPageDTO, Insert.class);
+        // 从 TenantContext 获取当前租户ID
+        String tenantId = TenantContext.getTenantId();
+        log.info("当前查询的租户ID: {}", tenantId);
+        
+        // 检查租户ID是否为空
+        if (StringUtils.isBlank(tenantId)) {    
+            log.error("租户ID为空，不允许新增大屏/组件");
+            return (R<String>) R.error(403,"租户ID为空，不允许新增大屏/组件");
+        }
+        bigScreenPageDTO.setTenantId(tenantId);
         bigScreenPageService.add(bigScreenPageDTO);
         return R.success(bigScreenPageDTO.getCode());
     }

@@ -19,4 +19,9 @@ public class DataRoomSearchDTO extends SearchDTO {
      * 类型
      */
     private String type;
+
+    /**
+     * 租户ID
+     */
+    private String tenantId;
 }

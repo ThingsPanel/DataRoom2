@@ -38,6 +38,11 @@ public interface DatasetConstant {
          * HTTP数据集
          */
         String HTTP = "http";
+
+        /**
+         * 物联网平台数据集
+         */
+        String IOT = "iot";
     }
 
     interface DatasourceType {
