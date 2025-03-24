@@ -38,16 +38,16 @@
           >
             <el-option
               v-for="item in items"
-              :key="item.uniqueId"
+              :key="item.uniqueId || item.key"
               :label="item.name || item.key"
-              :value="item.key"
+              :value="item"
             >
               <div class="metrics-option-content">
                 <div class="metrics-info">
                   <span class="metrics-name">{{ item.name || item.key }}</span>
-                  <span class="metrics-key">({{ item.key }})</span>
+                  <span class="metrics-key" v-if="item.key">({{ item.key }})</span>
                 </div>
-                <span class="metrics-data-type">{{ item.data_type }}</span>
+                <span class="metrics-data-type" v-if="item.data_type">{{ item.data_type }}</span>
               </div>
             </el-option>
           </el-option-group>
@@ -69,8 +69,16 @@ export default {
       default: ''
     },
     value: {
-      type: String,
+      type: [String, Object],
       default: ''
+    },
+    dataType: {
+      type: String,
+      default: 'telemetry'
+    },
+    placeholder: {
+      type: String,
+      default: '请选择数据标识'
     }
   },
   data() {
@@ -95,7 +103,35 @@ export default {
     value: {
       immediate: true,
       handler(newVal) {
-        this.selectedKey = newVal
+        console.log('MetricsSelect received value:', newVal)
+        
+        // 处理不同类型的值
+        if (typeof newVal === 'object' && newVal !== null) {
+          // 如果收到的是对象，直接设置为选中项
+          this.selectedKey = newVal
+          console.log('MetricsSelect 设置选中对象:', this.selectedKey)
+        } else if (newVal) {
+          // 如果是字符串类型的key，尝试在keyList中查找对应的对象
+          if (this.keyList && this.keyList.length > 0) {
+            const foundMetric = this.keyList.find(item => 
+              item.key === newVal || 
+              item.name === newVal || 
+              item.id === newVal
+            )
+            
+            if (foundMetric) {
+              this.selectedKey = foundMetric
+              console.log('MetricsSelect 找到匹配对象:', this.selectedKey)
+            } else {
+              this.selectedKey = newVal
+              console.log('MetricsSelect 未找到匹配对象，使用原始值:', this.selectedKey)
+            }
+          } else {
+            this.selectedKey = newVal
+          }
+        } else {
+          this.selectedKey = ''
+        }
       }
     }
   },
@@ -251,8 +287,15 @@ export default {
       }
     },
     handleChange(value) {
-      if (!value) return
-      this.$emit('change', value)
+      console.log('数据标识选择变更:', value)
+      
+      // 确保不会传递undefined
+      const selectedValue = value || ''
+      
+      // 发出事件通知父组件 - 确保传递完整对象而不是仅传递key
+      this.$emit('input', selectedValue)
+      this.$emit('select', selectedValue)
+      this.$emit('change', selectedValue)
     },
     selectKey(key) {
       if (!key) return
