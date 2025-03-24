@@ -110,7 +110,9 @@ export default {
       changeChartConfig: 'bigScreen/changeChartConfig',
       changeActiveItemConfig: 'bigScreen/changeActiveItemConfig',
       updateDataset: 'bigScreen/updateDataset',
-      updateComputedDatas: 'bigScreen/updateComputedDatas'
+      updateComputedDatas: 'bigScreen/updateComputedDatas',
+      addPollingTimer: 'bigScreen/ADD_POLLING_TIMER',
+      clearPollingTimer: 'bigScreen/CLEAR_POLLING_TIMER'
     }),
     /**
      * 初始化组件
@@ -135,10 +137,12 @@ export default {
      * @returns {Promise<unknown>}
      */
     changeDataByCode (config) {
-      // 如果存在旧的轮询定时器，先清除
-      if (config.pollTimer) {
-        clearInterval(config.pollTimer)
-        config.pollTimer = null
+      // 清除已存在的定时器
+      this.clearPollingTimer(config.code)
+      
+      // 确保全局轮询管理器存在
+      if (!window._pollingTimers) {
+        window._pollingTimers = {}
       }
 
       let currentPage = 1
@@ -171,7 +175,7 @@ export default {
             if (res.data.datasetType === 'js') {
               try {
                 const scriptAfterReplacement = res.data.script.replace(/\${(.*?)}/g, (match, p) => {
-                  const value = this.config.dataSource?.params[p]
+                  const value = config.dataSource?.params[p]
                   if (value === null || value === undefined || value === '') {
                     return "''"
                   } else if (!isNaN(value)) {
@@ -195,6 +199,7 @@ export default {
           }
           config = this.dataFormatting(config, _res)
           this.changeChartConfig(config)
+
           return config
         } catch (err) {
           console.info(err)
@@ -208,33 +213,26 @@ export default {
         
         // 执行首次请求
         makeRequest().then(updatedConfig => {
-          // 如果配置了轮询且是HTTP数据集，启动轮询
-          if (config.dataSource?.polling && 
-              config.dataSource?.pollingInterval) {
-            
-            // 确保全局轮询管理器存在
-            if (!window._pollingTimers) {
-              window._pollingTimers = {}
-            }
-            
-            // 清除之前可能存在的定时器
+          // 只有在polling为true且pollingInterval存在时才启动轮询
+          if (updatedConfig.dataSource?.polling === true && updatedConfig.dataSource?.pollingInterval) {
+            // 再次确保之前的定时器被清除
+            this.clearPollingTimer(config.code)
             if (window._pollingTimers[config.code]) {
               clearInterval(window._pollingTimers[config.code])
+              delete window._pollingTimers[config.code]
             }
             
-            // 设置轮询定时器
             const timerId = setInterval(async () => {
               await makeRequest()
-            }, config.dataSource.pollingInterval)
+            }, updatedConfig.dataSource.pollingInterval)
             
-            // 同时保存到config和全局管理器中
-            config.dataSource.pollTimer = timerId
+            // 将定时器ID存储到Vuex中
+            this.addPollingTimer({ code: config.code, timerId })
+            
+            // 同时在全局对象中也存储一份，用于后续清理
             window._pollingTimers[config.code] = timerId
             
-            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
-            
-            // 存储定时器ID到config中
-            this.changeChartConfig(config)
+            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', updatedConfig.dataSource.pollingInterval)
           }
           resolve(updatedConfig)
         })
@@ -246,10 +244,12 @@ export default {
      * @param {Array} filterList
      */
     changeData (config, filterList) {
-      // 如果存在旧的轮询定时器，先清除
-      if (config.pollTimer) {
-        clearInterval(config.pollTimer)
-        config.pollTimer = null
+      // 清除已存在的定时器
+      this.clearPollingTimer(config.code)
+      
+      // 确保全局轮询管理器存在
+      if (!window._pollingTimers) {
+        window._pollingTimers = {}
       }
 
       const list = config?.paramsList?.map((item) => {
@@ -290,10 +290,10 @@ export default {
             if (res.data.datasetType === 'js') {
               try {
                 params.filterList.forEach(item => {
-                  this.config.dataSource.params[item.column] = item.value
+                  config.dataSource.params[item.column] = item.value
                 })
                 const scriptAfterReplacement = res.data.script.replace(/\${(.*?)}/g, (match, p) => {
-                  const value = this.config.dataSource?.params[p]
+                  const value = config.dataSource?.params[p]
                   if (value === null || value === undefined || value === '') {
                     return "''"
                   } else if (!isNaN(value)) {
@@ -324,7 +324,7 @@ export default {
             } else {
               this.chart.changeData(config.option.data)
             }
-          } else if (this.config.type === 'candlestick' && this.charts) {
+          } else if (this.config?.type === 'candlestick' && this.charts) {
             this.updateChartData(config, _res)
           } else if (this.charts) {
             // 地图组件的被联动更新
@@ -344,33 +344,26 @@ export default {
         
         // 执行首次请求
         makeRequest().then(updatedConfig => {
-          // 如果配置了轮询且是HTTP数据集，启动轮询
-          if (config.dataSource?.polling && 
-              config.dataSource?.pollingInterval) {
-            
-            // 确保全局轮询管理器存在
-            if (!window._pollingTimers) {
-              window._pollingTimers = {}
-            }
-            
-            // 清除之前可能存在的定时器
+          // 只有在polling为true且pollingInterval存在时才启动轮询
+          if (updatedConfig.dataSource?.polling === true && updatedConfig.dataSource?.pollingInterval) {
+            // 再次确保之前的定时器被清除
+            this.clearPollingTimer(config.code)
             if (window._pollingTimers[config.code]) {
               clearInterval(window._pollingTimers[config.code])
+              delete window._pollingTimers[config.code]
             }
             
-            // 设置轮询定时器
             const timerId = setInterval(async () => {
               await makeRequest()
-            }, config.dataSource.pollingInterval)
+            }, updatedConfig.dataSource.pollingInterval)
             
-            // 同时保存到config和全局管理器中
-            config.dataSource.pollTimer = timerId
+            // 将定时器ID存储到Vuex中
+            this.addPollingTimer({ code: config.code, timerId })
+            
+            // 同时在全局对象中也存储一份，用于后续清理
             window._pollingTimers[config.code] = timerId
             
-            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', config.dataSource.pollingInterval)
-            
-            // 存储定时器ID到config中
-            this.changeChartConfig(config)
+            console.info('开始轮询，组件ID:', config.code, '定时器ID:', timerId, '间隔:', updatedConfig.dataSource.pollingInterval)
           }
           resolve(updatedConfig)
         })

@@ -70,7 +70,8 @@ export const defaultData = {
   // 页面上所有组件的数据集的数据信息
   computedDatas: {},
   // 是否开启磁吸
-  snapTolerance: 3
+  snapTolerance: 3,
+  pollingTimers: {} // 用于存储所有组件的轮询定时器，key为组件code，value为定时器ID
 }
 
 export default () => ({

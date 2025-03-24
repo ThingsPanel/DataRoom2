@@ -440,6 +440,17 @@ export default {
   // 修改磁吸状态
   snapChange (state, snap) {
     state.snapTolerance = snap
+  },
+  // 添加定时器
+  ADD_POLLING_TIMER (state, { code, timerId }) {
+    state.pollingTimers[code] = timerId
+  },
+  // 清除定时器
+  CLEAR_POLLING_TIMER (state, code) {
+    if (state.pollingTimers[code]) {
+      clearInterval(state.pollingTimers[code])
+      delete state.pollingTimers[code]
+    }
   }
 }
 function deldataset (state, type, codes) {

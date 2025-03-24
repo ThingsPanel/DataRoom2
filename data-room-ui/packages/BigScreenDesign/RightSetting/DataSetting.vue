@@ -856,7 +856,7 @@
         </div>
         <!-- 添加轮询配置区域 -->
         <div
-          v-if="config.dataSource && config.dataSource.source === 'dataset'"
+          v-if="config.dataSource && (config.dataSource.source === 'dataset' || config.dataSource.polling)"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -866,7 +866,7 @@
           </div>
           <div class="lc-field-body">
             <el-form-item
-              v-if="config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http'"
+              v-if="config.dataSource.source === 'dataset' || config.dataSource.polling"
               label="轮询"
             >
               <el-switch
@@ -876,7 +876,7 @@
               />
             </el-form-item>
             <el-form-item
-              v-if="config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http' && config.dataSource.polling"
+              v-if="config.dataSource.polling"
               label="轮询间隔"
             >
               <el-input-number
@@ -911,22 +911,20 @@
 </template>
 <script>
 import ElDragSelect from './ElDragSelect.vue'
-// import { isEmpty, cloneDeep } from 'lodash'
 import isEmpty from 'lodash/isEmpty'
 import cloneDeep from 'lodash/cloneDeep'
 import ComponentRelation from 'data-room-ui/BigScreenDesign/RightSetting/ComponentRelation/index.vue'
 import ComponentBinding from 'data-room-ui/BigScreenDesign/RightSetting/ComponentBinding/index.vue'
-import dataSetSelect from 'data-room-ui/DataSetSetting/index.vue'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 import { getDataSetDetails } from 'data-room-ui/js/api/bigScreenApi'
 import ExpressionDialog from 'data-room-ui/BigScreenDesign/RightSetting/ExpressionDialog.vue'
 import DataSetSetting from 'data-room-ui/DataSetSetting/index.vue'
+
 export default {
   name: 'DataSetting',
   components: {
     ComponentRelation,
     ComponentBinding,
-    dataSetSelect,
     ElDragSelect,
     ExpressionDialog,
     DataSetSetting
@@ -1115,12 +1113,15 @@ export default {
   },
   beforeDestroy () {
     // 清理轮询定时器
-    if (this.config && this.config.code && window._pollingTimers && window._pollingTimers[this.config.code]) {
+    if (this.config?.code && window._pollingTimers?.[this.config.code]) {
       clearInterval(window._pollingTimers[this.config.code])
       delete window._pollingTimers[this.config.code]
     }
   },
   methods: {
+    ...mapMutations({
+      clearPollingTimer: 'bigScreen/CLEAR_POLLING_TIMER'
+    }),
     // 切换数据源的时候将文字和数字组件的相关配置清空
     sourceChange (val) {
       this.config.expression = 'return '
@@ -1287,90 +1288,33 @@ export default {
       // 更新轮询状态
       this.config.dataSource.polling = val
       
-      // 定义全局轮询管理器，确保定时器可以被访问
-      if (!window._pollingTimers) {
-        window._pollingTimers = {}
-      }
-      
       // 如果关闭轮询，清理定时器
-      if (!val) {
-        // 使用全局存储的定时器ID
-        const timerId = window._pollingTimers[this.config.code]
-        if (timerId) {
-          console.info('停止轮询，组件ID:', this.config.code, '定时器ID:', timerId)
-          clearInterval(timerId)
-          delete window._pollingTimers[this.config.code]
-        }
-        // 同时也尝试清理config中可能存在的定时器
-        if (this.config.dataSource.pollTimer) {
-          clearInterval(this.config.dataSource.pollTimer)
-          this.config.dataSource.pollTimer = null
-        }
+      if (!val && window._pollingTimers?.[this.config.code]) {
+        clearInterval(window._pollingTimers[this.config.code])
+        delete window._pollingTimers[this.config.code]
       }
       
-      // 如果开启轮询，设置默认轮询间隔
+      // 如果开启轮询，创建定时器
       if (val) {
-        // 如果没有设置轮询间隔，设置默认值
+        // 确保有轮询间隔
         if (!this.config.dataSource.pollingInterval) {
           this.config.dataSource.pollingInterval = 5000 // 默认5秒
         }
-        console.info('轮询已开启，间隔：', this.config.dataSource.pollingInterval, 'ms')
-      }
-      
-      // 确保轮询配置被正确保存到组件配置中
-      this.config.dataSource = {
-        ...this.config.dataSource,
-        polling: val,
-        pollingInterval: this.config.dataSource.pollingInterval || 5000
+        
+        // 创建定时器
+        window._pollingTimers = window._pollingTimers || {}
+        window._pollingTimers[this.config.code] = setInterval(() => {
+          // 触发数据更新
+          this.$emit('updateDataSetting', this.config)
+        }, this.config.dataSource.pollingInterval)
       }
       
       // 更新配置
       this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
-      
-      // 打印当前组件的轮询状态用于调试
-      console.info('组件轮询状态:', {
-        组件ID: this.config.code,
-        是否开启轮询: this.config.dataSource.polling,
-        轮询间隔: this.config.dataSource.pollingInterval,
-        定时器ID: window._pollingTimers[this.config.code]
-      })
     },
     handlePollingIntervalChange (val) {
-      // 更新轮询间隔
+      // 只更新间隔值
       this.config.dataSource.pollingInterval = val
-      console.info('轮询间隔已更新为：', val, 'ms')
-      
-      // 如果正在轮询，需要重新启动定时器
-      if (this.config.dataSource.polling) {
-        // 确保全局轮询管理器存在
-        if (!window._pollingTimers) {
-          window._pollingTimers = {}
-        }
-        
-        // 清除之前可能存在的定时器（全局管理器中的）
-        if (window._pollingTimers[this.config.code]) {
-          clearInterval(window._pollingTimers[this.config.code])
-          delete window._pollingTimers[this.config.code]
-        }
-        
-        // 同时也尝试清理config中可能存在的定时器
-        if (this.config.dataSource.pollTimer) {
-          clearInterval(this.config.dataSource.pollTimer)
-          this.config.dataSource.pollTimer = null
-        }
-        
-        // 重新初始化组件会重新创建定时器
-        this.chartInit()
-        console.info('重新启动轮询，组件ID:', this.config.code, '新间隔:', val, 'ms')
-      }
-      
-      // 确保轮询配置被正确保存到组件配置中
-      this.config.dataSource = {
-        ...this.config.dataSource,
-        pollingInterval: val
-      }
-      
-      // 更新配置
       this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
     },
     getSelectDs (selectDs) {
