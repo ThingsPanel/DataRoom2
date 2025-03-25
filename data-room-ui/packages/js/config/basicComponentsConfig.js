@@ -14,52 +14,51 @@ import { setModules, dataModules } from 'data-room-ui/js/utils/configImport'
 const typeList = [
   // 1. 基础文本类
   'texts',
-  'numbers', 
+  'numbers',
   'marquee',
   'currentTime',
   'timeCountDown',
   'linkChart',
-  
+
   // 2. 输入控件类
   'input',
   'select',
   'timePicker',
   'dateTimePicker',
-  
-  
+
+
   // 3. 装饰边框类
   'horizontalLine',
-  'verticalLine', 
+  'verticalLine',
   'rectangle',
   'svgLine',
-  'canvasLine',
-  
+  // 'canvasLine',
   // 4. 媒体展示类
   'picture',
   'video',
   'iframeChart',
   'customHtml',
-  
+
   // 5. 数据展示类
   'tables',
   'screenScrollBoard',
   'screenScrollRanking',
   'digitalFlop',
-  
+
   // 6. 指标卡片类
   'indicatorCard',
   'indicatorCard2',
   'indexCard',
   'indexCard2',
-  
+
   // 7. 图表类
   'candlestick',
   'sankey',
-  
+
   // 8. 地图类
   'map',
   'flyMap',
-  
+
   // 9. 其他
   'chartTab',
   'themeSelect'

@@ -81,7 +81,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 2. 输入控件类
     case 'input':        // 输入框
       return {
@@ -131,7 +131,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 3. 装饰边框类
     case 'horizontalLine': // 水平线
       return {
@@ -185,21 +185,21 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    case 'canvasLine':   // Canvas线条
-      return {
-        name: 'Canvas线条',
-        title: 'Canvas线条',
-        icon: Icon.getNameList()[39], // 暂时使用svgLine的图标
-        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
-        w: 200,
-        h: 100,
-        x: 0,
-        y: 0,
-        type
-      }
-    
+      // case 'canvasLine':   // Canvas线条
+      //   return {
+      //     name: 'Canvas线条',
+      //     title: 'Canvas线条',
+      //     icon: Icon.getNameList()[39], // 暂时使用svgLine的图标
+      //     className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+      //     w: 200,
+      //     h: 100,
+      //     x: 0,
+      //     y: 0,
+      //     type
+      //   }
+
     // 4. 媒体展示类
-    case 'picture':      // 图片
+    case 'picture': // 图片
       return {
         name: '图片',
         title: '图片',
@@ -251,7 +251,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 5. 数据展示类
     case 'tables':       // 表格
       return {
@@ -306,7 +306,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 6. 指标卡片类
     case 'indicatorCard':  // 指标卡一
       return {
@@ -360,7 +360,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 7. 图表类
     case 'candlestick':   // K线图
       return {
@@ -386,7 +386,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 8. 地图类
     case 'map':          // 地图
       return {
@@ -412,7 +412,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 9. 容器类
     case 'chartTab':     // 图表Tab页
       return {
@@ -426,7 +426,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    
+
     // 10. 主题类
     case 'themeSelect':  // 主题切换
       return {

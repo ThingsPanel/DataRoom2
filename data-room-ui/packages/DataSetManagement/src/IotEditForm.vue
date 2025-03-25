@@ -59,9 +59,9 @@
                           @input="handleNameInput"
                         />
                         <div class="name-operations">
-                          <el-checkbox 
-                            v-if="isEdit" 
-                            v-model="autoNaming" 
+                          <el-checkbox
+                            v-if="isEdit"
+                            v-model="autoNaming"
                             class="auto-naming-checkbox"
                             @change="handleAutoNamingChange"
                           >
@@ -325,18 +325,20 @@
                       prop="queryParams.device_id"
                       :rules="queryParamsRules.device_id"
                     >
-                      <div class="device-select-input">
+                      <div class="device-select-input"  @click="openDeviceDialog">
                         <el-input
                           v-model="selectedDeviceName"
                           readonly
+                          width="250px"
                           placeholder="请选择设备"
                           class="bs-el-input"
                         />
                         <el-button
+
                           type="primary"
-                          icon="el-icon-plus"
-                          size="mini"
-                          @click="openDeviceDialog"
+
+                          size="small"
+                          style="padding:0 8px;height: 28px;"
                         >
                           选择设备
                         </el-button>
@@ -381,7 +383,7 @@
                   执行
                 </el-button>
               </div>
-              
+
               <el-form size="small" label-width="80px" :model="pathForm">
                 <el-form-item label="数据路径" prop="dataPath">
                   <el-input
@@ -433,7 +435,7 @@
       </div>
     </el-dialog>
 
-    <DeviceSelectDialog 
+    <DeviceSelectDialog
       ref="deviceSelectDialog"
       @select="handleDeviceSelect"
     />
@@ -669,7 +671,7 @@ export default {
         // 自定义时间范围的处理
         const [start, end] = this.customTimeRange
         const diffHours = (end - start) / (1000 * 60 * 60)
-        
+
         if (diffHours >= 3 && diffHours < 6) {
           minWindowIndex = 1 // 从30s开始
         } else if (diffHours >= 6 && diffHours < 12) {
@@ -687,7 +689,7 @@ export default {
       }))
     },
     groupDisplayName() {
-      return this.dataForm.config.typeId && this.groupNameMap[this.dataForm.config.typeId] 
+      return this.dataForm.config.typeId && this.groupNameMap[this.dataForm.config.typeId]
         ? this.groupNameMap[this.dataForm.config.typeId]
         : this.dataForm.config.typeId || ''
     }
@@ -744,11 +746,11 @@ export default {
       // 获取分类树数据
       try {
         this.categoryData = await getCategoryTree({ tableName: 'dataset', moduleCode: this.appCode })
-        
+
         // 如果只有分类ID，不是编辑模式，设置默认分类
         if (this.typeId && !this.datasetId) {
           this.dataForm.typeId = this.typeId
-          
+
           // 查找分类名称
           const findCategoryName = (nodes) => {
             for (const node of nodes) {
@@ -762,16 +764,16 @@ export default {
             }
             return null
           }
-          
+
           this.typeName = findCategoryName(this.categoryData) || ''
         }
-        
+
         // 如果在编辑模式，获取数据集详情
         if (this.datasetId) {
           try {
             const response = await getDataset(this.datasetId)
             console.log('获取到数据集详情:', response)
-            
+
             // 检查返回的数据结构
             if (response && response.id) {
               // 直接使用response作为结果，不需要result字段
@@ -789,7 +791,7 @@ export default {
                 updateBy,
                 config = {}
               } = response
-              
+
               // 设置表单数据
               this.dataForm = {
                 id, // 保存ID，用于判断是新增还是更新
@@ -805,7 +807,7 @@ export default {
                 updateBy,
                 config: { ...config } // 复制config以避免引用问题
               }
-              
+
               // 设置分组名称
               if (this.dataForm.typeId) {
                 this.$nextTick(() => {
@@ -824,12 +826,12 @@ export default {
                   this.typeName = findCategoryName(this.categoryData) || ''
                 })
               }
-              
+
               // 设置自动命名状态
               if (this.isEdit) {
                 this.autoNaming = false // 编辑模式下默认关闭自动命名
               }
-              
+
               // 处理配置数据
               if (config) {
                 // 设置数据类型和数据模式
@@ -837,23 +839,23 @@ export default {
                   this.queryParams.data_type = config.data_type
                   // 移除: this.dataForm.data_type = config.data_type
                 }
-                
+
                 if (config.data_mode) {
                   this.queryParams.data_mode = config.data_mode
                   // 移除: this.dataForm.data_mode = config.data_mode
                 }
-                
+
                 // 直接设置设备ID和数据标识
                 if (config.device_id) {
                   this.queryParams.device_id = config.device_id
                   // 移除: this.dataForm.device_id = config.device_id
                 }
-                
+
                 if (config.key) {
                   this.queryParams.key = config.key
                   // 移除: this.dataForm.key = config.key
                 }
-                
+
                 // 处理params，查找device_id和设备名称
                 if (config.params && Array.isArray(config.params)) {
                   // 移除重复的参数，保留最后一个
@@ -861,49 +863,49 @@ export default {
                   config.params.forEach(param => {
                     uniqueParams[param.key] = param.value
                   })
-                  
+
                   // 优先从params中获取device_name
                   if (uniqueParams.device_name) {
                     this.selectedDeviceName = uniqueParams.device_name
                     this.queryParams.device_name = uniqueParams.device_name
                     // 移除: this.dataForm.device_name = uniqueParams.device_name
                   }
-                  
+
                   // 如果没有设置device_id，从params中获取
                   if (!this.queryParams.device_id && uniqueParams.device_id) {
                     this.queryParams.device_id = uniqueParams.device_id
                     // 移除: this.dataForm.device_id = uniqueParams.device_id
                   }
-                  
+
                   // 如果没有设置key，从params中获取
                   if (!this.queryParams.key && uniqueParams.key) {
                     this.queryParams.key = uniqueParams.key
                     // 移除: this.dataForm.key = uniqueParams.key
                   }
-                  
+
                   // 回显聚合选项
                   if (uniqueParams.aggregate_window) {
                     this.queryParams.aggregate_window = uniqueParams.aggregate_window
                     // 移除: this.dataForm.aggregate_window = uniqueParams.aggregate_window
                   }
-                  
+
                   if (uniqueParams.aggregate_function) {
                     this.queryParams.aggregate_function = uniqueParams.aggregate_function
                     // 移除: this.dataForm.aggregate_function = uniqueParams.aggregate_function
                   }
-                  
+
                   // 回显时间范围
                   if (uniqueParams.time_range) {
                     this.queryParams.time_range = uniqueParams.time_range
                     // 移除: this.dataForm.time_range = uniqueParams.time_range
                   }
                 }
-                
+
                 // 设置字段描述和输出字段列表
                 this.dataForm.config.fieldDesc = config.fieldDesc || {}
                 this.outputFieldList = config.fieldList || []
               }
-              
+
               // 确保数据路径设置正确
               this.setDataPath()
             } else {
@@ -943,12 +945,12 @@ export default {
               responseScript: 'return resp.data'
             }
           }
-          
+
           // 初始化数据路径表单
           this.pathForm = {
             dataPath: 'data'
           }
-          
+
           // 默认查询参数
           this.queryParams = {
             device_id: null,
@@ -962,22 +964,22 @@ export default {
             start_ts: null,
             end_ts: null
           }
-          
+
           // 初始化数据路径
           this.setDataPath()
         }
-        
+
         // 初始化完成后获取设备列表
         await this.fetchDeviceList()
-        
+
         // 如果有设备ID，尝试获取设备数据标识
         if (this.queryParams.device_id) {
           await this.handleDeviceChange(this.queryParams.device_id)
         }
-        
+
         // 初始化完成后更新params
         this.updateParams()
-        
+
       } catch (error) {
         console.error('初始化表单数据失败:', error)
       }
@@ -987,21 +989,21 @@ export default {
     updateParams() {
       // 清空现有params
       this.dataForm.config.params = []
-      
+
       console.log('开始更新params数组，selectedMetric:', this.selectedMetric)
       console.log('当前queryParams:', this.queryParams)
-      
+
       // 将queryParams中的所有字段添加到params数组
       Object.keys(this.queryParams).forEach(key => {
         // 只添加有值的参数
         if (this.queryParams[key] !== null && this.queryParams[key] !== undefined && this.queryParams[key] !== '') {
           // 当data_mode为latest时，跳过历史数据相关参数
-          if (this.queryParams.data_mode === 'latest' && 
+          if (this.queryParams.data_mode === 'latest' &&
               ['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(key)) {
             console.log(`跳过历史数据参数 ${key}，因为当前模式是最新数据`)
             return
           }
-          
+
           // 对于数据标识key，优先使用selectedMetric中的完整信息
           if (key === 'key') {
             if (this.selectedMetric) {
@@ -1011,7 +1013,7 @@ export default {
                 key: 'key',
                 value: this.selectedMetric.key || this.queryParams.key
               })
-              
+
               // 添加数据标识的额外信息
               if (this.selectedMetric.name && this.selectedMetric.name !== this.selectedMetric.key) {
                 this.dataForm.config.params.push({
@@ -1019,22 +1021,22 @@ export default {
                   value: this.selectedMetric.name
                 })
               }
-              
+
               if (this.selectedMetric.type || this.selectedMetric.data_type) {
                 this.dataForm.config.params.push({
                   key: 'key_type',
                   value: this.selectedMetric.type || this.selectedMetric.data_type
                 })
               }
-            } 
+            }
             // 如果没有selectedMetric，尝试从allMetrics中查找
             else if (this.allMetrics && this.allMetrics.length > 0) {
-              const metricInfo = this.allMetrics.find(metric => 
-                metric.key === this.queryParams.key || 
-                metric.name === this.queryParams.key || 
+              const metricInfo = this.allMetrics.find(metric =>
+                metric.key === this.queryParams.key ||
+                metric.name === this.queryParams.key ||
                 metric.id === this.queryParams.key
               )
-              
+
               if (metricInfo) {
                 console.log('从allMetrics找到匹配的数据标识:', metricInfo)
                 // 添加数据标识的基本信息
@@ -1042,7 +1044,7 @@ export default {
                   key: 'key',
                   value: metricInfo.key || metricInfo.name || this.queryParams.key
                 })
-                
+
                 // 添加数据标识的额外信息
                 if (metricInfo.name && metricInfo.name !== metricInfo.key) {
                   this.dataForm.config.params.push({
@@ -1050,7 +1052,7 @@ export default {
                     value: metricInfo.name
                   })
                 }
-                
+
                 if (metricInfo.type || metricInfo.data_type) {
                   this.dataForm.config.params.push({
                     key: 'key_type',
@@ -1089,25 +1091,25 @@ export default {
         return false
       }
       console.log('表单验证通过，可以保存了')
-      
+
       // 确保字段列表保存到config中
       if (this.dataForm && this.dataForm.config) {
         // 构建字段描述信息
         this.buildFieldDesc()
-        
+
         // 确保config中含有字段列表
         this.dataForm.config.fieldList = this.outputFieldList
         console.log('保存前的字段列表:', this.outputFieldList)
-        
+
         // 确保当data_mode为latest时，移除所有历史数据相关参数
         if (this.queryParams.data_mode === 'latest' && this.dataForm.config.params) {
-          this.dataForm.config.params = this.dataForm.config.params.filter(param => 
+          this.dataForm.config.params = this.dataForm.config.params.filter(param =>
             !['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(param.key)
           )
           console.log('过滤后的参数列表:', this.dataForm.config.params)
         }
       }
-      
+
       // 开始保存流程
       this.saveloading = true
       this.saveText = '正在保存...'
@@ -1124,10 +1126,10 @@ export default {
         labelIds: dataForm.labelIds,
         config: dataForm.config
       }
-      
+
       // 确保数据传递正确
       console.log('最终的保存数据:', form)
-      
+
       // 判断是新增还是更新
       const datasetSave = this.dataForm.id === '' ? datasetAdd : datasetUpdate
       datasetSave(form).then(() => {
@@ -1170,22 +1172,22 @@ export default {
         this.queryParams.end_time = null
         return
       }
-      
+
       this.queryParams.start_time = timeRange[0].toISOString()
       this.queryParams.end_time = timeRange[1].toISOString()
-      
+
       // 计算时间区间小时差
       const diffHours = (timeRange[1] - timeRange[0]) / (1000 * 60 * 60)
-      
+
       // 当前选择的聚合窗口
       const currentWindow = this.queryParams.aggregate_window
-      
+
       // 获取当前选择的聚合窗口在选项中的索引
       const currentWindowIndex = this.aggregateWindowOptions.findIndex(option => option.value === currentWindow)
-      
+
       // 根据时间区间长度确定最小可用聚合间隔索引
       let minWindowIndex = 0
-      
+
       if (diffHours >= 3 && diffHours < 6) {
         minWindowIndex = 1 // 从30s开始
       } else if (diffHours >= 6 && diffHours < 12) {
@@ -1207,7 +1209,7 @@ export default {
       } else if (diffHours >= 4320) {
         minWindowIndex = 10 // 从1d开始
       }
-      
+
       // 如果当前选择的聚合窗口不可用，则自动选择第一个可用选项
       if (currentWindowIndex < minWindowIndex) {
         this.queryParams.aggregate_window = this.aggregateWindowOptions[minWindowIndex].value
@@ -1219,10 +1221,10 @@ export default {
     // 更新输出字段列表
     updateOutputFieldList(dataList) {
       if (!dataList) return
-      
+
       // 确保dataList是数组
       const dataArray = Array.isArray(dataList) ? dataList : [dataList]
-      
+
       if (dataArray.length > 0) {
         // 提取第一个对象的所有键作为字段列表
         const newList = Object.keys(dataArray[0]).map(key => {
@@ -1231,10 +1233,10 @@ export default {
             fieldDesc: ''
           }
         })
-        
+
         // 使用compareArr方法确保保留已有的字段描述
         this.outputFieldList = this.compareArr(newList, this.outputFieldList)
-        
+
         // 将输出字段列表保存到config中，确保保存时能正确包含字段信息
         if (this.dataForm && this.dataForm.config) {
           this.dataForm.config.fieldList = this.outputFieldList
@@ -1244,7 +1246,7 @@ export default {
         }
       } else {
         this.outputFieldList = []
-        
+
         // 当没有数据时，清空config中的字段列表
         if (this.dataForm && this.dataForm.config) {
           this.dataForm.config.fieldList = []
@@ -1310,7 +1312,7 @@ export default {
       // 直接返回原始值，不翻译
       return type
     },
-    
+
     // 刷新设备列表
     resetDeviceSearch() {
       this.deviceSearchKeyword = ''
@@ -1336,14 +1338,14 @@ export default {
       })
       this.$refs.fieldFillDialog.close()
     },
-    
+
     // 继续保存
     toSave() {
       // 方法已移除，保存逻辑已删除
       console.log('保存方法已被禁用')
       this.$refs.fieldFillDialog.close()
     },
-    
+
     // 进入编辑
     fieldDescEdit() {
       this.$refs.fieldFillDialog.close()
@@ -1359,50 +1361,50 @@ export default {
 
     handleDeviceSelect(device) {
       if (!device) return
-      
+
       this.queryParams.device_id = device.id
       this.queryParams.device_name = device.name
       this.selectedDeviceName = device.name
       this.selectedDevice = device
-      
+
       // 清空数据标识，因为设备变更后需要重新选择
       this.queryParams.key = ''
-      
+
       // 获取设备的数据标识
       this.handleDeviceChange(device.id)
-      
+
       if (this.autoNaming) {
         this.updateAutoName()
       }
-      
+
       // 更新params
       this.updateParams()
     },
-    
+
     // 处理MetricsSelect组件的选择事件
     handleMetricsSelect(key) {
       console.log('收到数据标识选择:', key)
-      
+
       // 设置selectedMetric
       if (typeof key === 'object' && key !== null) {
         // 如果接收到的是对象，直接设置
         this.selectedMetric = key
         console.log('使用数据标识对象:', key)
-        
+
         // 设置queryParams.key为对象中的key属性，只是为了字符串显示
         this.queryParams.key = key.key || key.name || key.id || ''
       } else if (key) {
         // 处理字符串类型的数据标识
         this.queryParams.key = key
-        
+
         // 尝试在allMetrics中查找完整对象
         if (this.allMetrics && this.allMetrics.length > 0) {
-          const foundMetric = this.allMetrics.find(metric => 
-            metric.key === key || 
-            metric.name === key || 
+          const foundMetric = this.allMetrics.find(metric =>
+            metric.key === key ||
+            metric.name === key ||
             metric.id === key
           )
-          
+
           if (foundMetric) {
             this.selectedMetric = foundMetric
             console.log('根据key找到数据标识对象:', foundMetric)
@@ -1419,14 +1421,14 @@ export default {
         this.queryParams.key = ''
         this.selectedMetric = null
       }
-      
+
       if (this.autoNaming) {
         this.updateAutoName()
       }
-      
+
       // 更新params
       this.updateParams()
-      
+
       console.log('更新后的数据标识:', this.queryParams.key)
       console.log('选中的数据标识对象:', this.selectedMetric)
       console.log('更新后的params:', this.dataForm.config.params)
@@ -1444,7 +1446,7 @@ export default {
       this.queryParams.data_mode = value
       // 更新数据路径
       this.setDataPath()
-      
+
       if (this.autoNaming) {
         this.updateAutoName()
       }
@@ -1473,7 +1475,7 @@ export default {
       // 移除: this.dataForm.aggregate_function = value
       this.updateParams()
     },
-    
+
     // 返回上一页
     goBack() {
       this.$emit('back')
@@ -1485,26 +1487,26 @@ export default {
       if (!this.validateExecuteParams()) {
         return
       }
-      
+
       this.executeLoading = true
-      
+
       // 执行前构建字段描述信息，确保它保存在config中
       this.buildFieldDesc()
-      
+
       // 执行前对参数进行处理，最新数据模式不需要传递历史数据参数
       if (this.queryParams.data_mode === 'latest') {
         // 清理历史相关参数
         const configCopy = { ...this.dataForm.config }
-        configCopy.params = this.dataForm.config.params.filter(param => 
+        configCopy.params = this.dataForm.config.params.filter(param =>
           !['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(param.key)
         )
-        
+
         // 如果是前端代理，使用axios自行调用
         if (this.dataForm.config.requestType === 'frontend') {
           axiosFormatting({ ...configCopy }).then((res) => {
             this.responseData = res
             this.parseResponseData()
-            
+
             // 获取数据后更新输出字段
             this.updateOutputFieldList(this.responseData)
             Message.success('执行成功')
@@ -1523,11 +1525,11 @@ export default {
             params: [],
             dataSetType: 'iot'
           }
-          
+
           datasetExecuteTest(executeParams).then(res => {
             this.responseData = res.data || res
             this.parseResponseData()
-            
+
             // 获取数据后更新输出字段
             this.updateOutputFieldList(this.responseData)
             Message.success('执行成功')
@@ -1541,13 +1543,13 @@ export default {
         }
       } else {
         // 如果是历史数据模式，使用完整参数
-        
+
         // 如果是前端代理，使用axios自行调用
         if (this.dataForm.config.requestType === 'frontend') {
           axiosFormatting({ ...this.dataForm.config }).then((res) => {
             this.responseData = res
             this.parseResponseData()
-            
+
             // 获取数据后更新输出字段
             this.updateOutputFieldList(this.responseData)
             Message.success('执行成功')
@@ -1566,11 +1568,11 @@ export default {
             params: [],
             dataSetType: 'iot'
           }
-          
+
           datasetExecuteTest(executeParams).then(res => {
             this.responseData = res.data || res
             this.parseResponseData()
-            
+
             // 获取数据后更新输出字段
             this.updateOutputFieldList(this.responseData)
             Message.success('执行成功')
@@ -1584,23 +1586,23 @@ export default {
         }
       }
     },
-    
+
     // 验证执行所需的参数
     validateExecuteParams() {
       return this.validateQueryParams()
     },
-    
+
     // 解析响应数据，处理数据路径
     parseResponseData() {
       try {
         if (!this.responseData || !this.pathForm.dataPath) {
           return
         }
-        
+
         // 根据数据路径获取数据
         const pathParts = this.pathForm.dataPath.split('.')
         let result = this.responseData
-        
+
         for (const part of pathParts) {
           if (result && typeof result === 'object' && part in result) {
             result = result[part]
@@ -1610,7 +1612,7 @@ export default {
             break
           }
         }
-        
+
         this.parsedResponseData = result
       } catch (error) {
         console.error('解析响应数据失败:', error)
@@ -1625,11 +1627,11 @@ export default {
         if (this.deviceList && this.deviceList.length > 0) {
           return
         }
-        
+
         // 获取设备列表
         const response = await getDeviceList({})
         console.log('设备列表API响应:', response)
-        
+
         // 处理不同格式的API响应
         let deviceListData = []
         if (response) {
@@ -1640,11 +1642,11 @@ export default {
             } else {
               deviceListData = response.data.list || response.data || []
             }
-          } 
+          }
           // 如果response直接包含code字段(直接响应)
           else if (response.code === 0 || response.code === 200) {
             deviceListData = response.result || response.list || response.data || []
-          } 
+          }
           // 如果response本身就是数组
           else if (Array.isArray(response)) {
             deviceListData = response
@@ -1653,7 +1655,7 @@ export default {
           else {
             deviceListData = response.list || response.result || response || []
           }
-          
+
           // 转换设备列表格式
           this.deviceList = Array.isArray(deviceListData) ? deviceListData.map(device => {
             return {
@@ -1665,14 +1667,14 @@ export default {
               description: device.description || device.desc || ''
             }
           }) : []
-          
+
           this.filteredDeviceList = [...this.deviceList]
-          
+
           // 如果有设备ID，查找对应的设备设置为selectedDevice
           if (this.queryParams.device_id) {
             this.selectedDevice = this.deviceList.find(d => d.id === this.queryParams.device_id) || null
           }
-          
+
           console.log('处理后的设备列表:', this.deviceList)
         } else {
           console.error('获取设备列表响应为空')
@@ -1692,18 +1694,18 @@ export default {
       if (typeof key === 'object' && key !== null) {
         return key
       }
-      
+
       // 找到对应的metrics对象
       let selectedMetric = null
-      
+
       if (this.allMetrics && this.allMetrics.length > 0) {
-        selectedMetric = this.allMetrics.find(metric => 
-          metric.key === key || 
-          metric.name === key || 
+        selectedMetric = this.allMetrics.find(metric =>
+          metric.key === key ||
+          metric.name === key ||
           metric.id === key
         )
       }
-      
+
       // 如果找到metrics对象，使用它的属性
       if (selectedMetric) {
         return {
@@ -1713,10 +1715,10 @@ export default {
           description: selectedMetric.description || ''
         }
       }
-      
+
       // 如果没找到，构造一个基础对象
       const groupKey = this.queryParams.typeId || this.queryParams.data_type || 'telemetry'
-      
+
       return {
         key: key,
         name: key,
@@ -1728,37 +1730,37 @@ export default {
     // 修改handleDeviceChange方法，优化分组数据回显
     async handleDeviceChange(deviceId) {
       if (!deviceId) return
-      
+
       try {
         this.loading = true
-        
+
         // 获取设备的数据标识
         const response = await getDeviceMetrics(deviceId)
         console.log('设备数据标识API响应:', response)
-        
+
         // 处理不同格式的API响应
         if (response) {
           let metricsData = null
-          
+
           // 如果response包含data字段(标准响应)
           if (response.data) {
             if (response.data.code === 0 || response.data.code === 200) {
               metricsData = response.data.result || response.data.data || response.data
             }
-          } 
+          }
           // 如果response直接包含code字段(直接响应)
           else if (response.code === 0 || response.code === 200) {
             metricsData = response.result || response.data || response
-          } 
+          }
           // 其他情况，尝试各种可能的字段
           else {
             metricsData = response
           }
-          
+
           // 设置数据标识分组
           this.metricsGroups = metricsData || {}
           console.log('处理后的数据标识分组:', this.metricsGroups)
-          
+
           // 构建分组名称映射
           this.groupNameMap = {}
           Object.keys(this.metricsGroups).forEach(groupKey => {
@@ -1784,44 +1786,44 @@ export default {
                 break
             }
           })
-          
+
           // 处理所有指标数据
           this.processMetricsData(this.metricsGroups)
-          
+
           // 如果有queryParams.key，找到对应的标识进行回显
           if (this.queryParams.key) {
             // 检查是否有匹配的数据标识
             let found = false
-            
+
             // 在各个分组中查找
             Object.keys(this.metricsGroups).forEach(groupKey => {
               const group = this.metricsGroups[groupKey]
               if (Array.isArray(group)) {
-                const foundMetric = group.find(metric => 
-                  metric.key === this.queryParams.key || 
+                const foundMetric = group.find(metric =>
+                  metric.key === this.queryParams.key ||
                   metric.name === this.queryParams.key ||
                   metric.id === this.queryParams.key
                 )
-                
+
                 if (foundMetric && !found) {
                   found = true
-                  
+
                   // 更新typeId以匹配分组
                   this.queryParams.typeId = groupKey
-                  
+
                   // 同时更新表单中的typeId，确保表单提交时包含正确的分组信息
                   if (this.queryParams.typeId && !this.dataForm.typeId) {
                     this.dataForm.typeId = this.queryParams.typeId
-                    
+
                     // 设置分组名称
                     if (this.groupNameMap[groupKey]) {
                       this.typeName = this.groupNameMap[groupKey]
                     }
                   }
-                  
+
                   // 设置selectedMetric
                   this.selectedMetric = foundMetric
-                  
+
                   console.log(`找到匹配的数据标识，分组: ${groupKey}`, foundMetric)
                 }
               }
@@ -1840,7 +1842,7 @@ export default {
     validateForm() {
       // 检查表单验证状态
       let valid = true
-      
+
       console.log('==== 表单验证信息 ====')
       console.log('设备ID:', this.queryParams.device_id)
       console.log('设备名称:', this.queryParams.device_name)
@@ -1850,18 +1852,18 @@ export default {
       console.log('选中的数据标识对象类型:', this.selectedMetric ? typeof this.selectedMetric : 'null')
       console.log('数据类型:', this.queryParams.data_type)
       console.log('数据来源:', this.queryParams.data_mode)
-      
+
       // 检查基础信息字段 (dataForm)
       if (!this.dataForm.name) {
         Message.warning('数据集名称不能为空')
         valid = false
       }
-      
+
       // 校验查询参数
       if (!this.validateQueryParams()) {
         valid = false
       }
-      
+
       return valid
     },
 
@@ -1869,9 +1871,9 @@ export default {
     processMetricsData(metricsData) {
       // 重置全部指标数组
       this.allMetrics = []
-      
+
       if (!metricsData) return
-      
+
       // 处理分组格式的指标数据
       Object.keys(metricsData).forEach(groupKey => {
         const group = metricsData[groupKey]
@@ -1882,31 +1884,31 @@ export default {
             data_source_type: groupKey,
             uniqueId: metric.uniqueId || `${groupKey}_${metric.key || metric.name || metric.id}`
           }))
-          
+
           // 添加到全部指标数组
           this.allMetrics = [...this.allMetrics, ...metricsWithGroup]
         }
       })
-      
+
       console.log('处理后的所有指标数据:', this.allMetrics)
-      
+
       // 如果已经有选中的key但没有完整对象信息，尝试找到匹配的对象
       if (this.queryParams.key && !this.selectedMetric) {
         this.findAndSetSelectedMetric(this.queryParams.key)
       }
     },
-    
+
     // 根据key查找并设置selectedMetric
     findAndSetSelectedMetric(key) {
       if (!key) return
-      
+
       // 在allMetrics中查找匹配的指标
-      const foundMetric = this.allMetrics.find(metric => 
-        metric.key === key || 
-        metric.name === key || 
+      const foundMetric = this.allMetrics.find(metric =>
+        metric.key === key ||
+        metric.name === key ||
         metric.id === key
       )
-      
+
       if (foundMetric) {
         console.log('找到匹配的数据标识:', foundMetric)
         this.selectedMetric = foundMetric
@@ -1938,26 +1940,26 @@ export default {
     // 更新自动名称方法
     updateAutoName() {
       if (!this.autoNaming) return
-      
+
       let newName = ''
-      
+
       // 设备名称部分
       if (this.selectedDeviceName) {
         newName += this.selectedDeviceName
       }
-      
+
       // 数据标识部分
       if (this.queryParams.key) {
         if (newName) newName += ' - '
         newName += this.queryParams.key
       }
-      
+
       // 数据类型部分
       if (this.queryParams.data_type) {
         if (newName) newName += ' - '
         newName += this.getDataTypeLabel(this.queryParams.data_type)
       }
-      
+
       // 数据模式部分
       if (this.queryParams.data_mode === 'history') {
         if (newName) newName += ' - '
@@ -1966,7 +1968,7 @@ export default {
         if (newName) newName += ' - '
         newName += '最新数据'
       }
-      
+
       // 设置新名称
       if (newName) {
         this.dataForm.name = newName.trim()
@@ -1991,7 +1993,7 @@ export default {
       const option = this.aggregateWindowOptions.find(opt => opt.value === value)
       return option ? option.label : value
     },
-    
+
     // 获取聚合函数值的label
     getAggregateFunctionLabel(value) {
       switch(value) {
@@ -2007,51 +2009,51 @@ export default {
     // 校验查询参数
     validateQueryParams() {
       let valid = true
-      
+
       // 检查设备ID
       if (!this.queryParams.device_id) {
         Message.warning('请选择设备')
         valid = false
       }
-      
+
       // 检查数据标识
       if (!this.queryParams.key) {
         Message.warning('请选择数据标识')
         valid = false
       }
-      
+
       // 检查数据类型
       if (!this.queryParams.data_type) {
         Message.warning('请选择数据类型')
         valid = false
       }
-      
+
       // 检查数据模式
       if (!this.queryParams.data_mode) {
         Message.warning('请选择数据来源')
         valid = false
       }
-      
+
       // 如果是历史数据模式，需要检查时间范围
       if (this.queryParams.data_mode === 'history' && this.queryParams.data_type === 'telemetry') {
         if (!this.queryParams.time_range) {
           Message.warning('请选择时间范围')
           valid = false
         }
-        
-        if (this.queryParams.time_range === 'custom' && 
+
+        if (this.queryParams.time_range === 'custom' &&
             (!this.customTimeRange || this.customTimeRange.length !== 2)) {
           Message.warning('请选择自定义时间范围')
           valid = false
         }
-        
+
         // 检查聚合选项
         if (this.queryParams.aggregate_window !== 'no_aggregate' && !this.queryParams.aggregate_function) {
           Message.warning('请选择聚合方式')
           valid = false
         }
       }
-      
+
       return valid
     }
   }
@@ -2105,7 +2107,7 @@ export default {
     background: var(--bs-background-3);
     border-radius: 4px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    
+
     .card-title {
       font-size: 14px;
       margin-bottom: 16px;
@@ -2126,7 +2128,7 @@ export default {
     margin-bottom: 16px;
     text-align: right;
   }
-  
+
   .result-container {
     flex: 1;
     min-height: 300px;
@@ -2213,7 +2215,7 @@ export default {
         }
       }
     }
-    
+
     .bs-table-box {
       background-color: var(--bs-background-2);
       border-radius: 4px;
@@ -2247,7 +2249,7 @@ export default {
         line-height: 1.2;
         padding-right: 8px;
       }
-      
+
       :deep(.el-select) {
         width: 100%;
       }
@@ -2257,11 +2259,11 @@ export default {
   .name-with-checkbox {
     display: flex;
     align-items: center;
-    
+
     .bs-el-input {
       flex: 1;
     }
-    
+
     .auto-naming-checkbox {
       margin-left: 10px;
   color: var(--bs-el-text);
@@ -2307,13 +2309,13 @@ export default {
     flex-wrap: wrap;
     margin-bottom: 16px;
     align-items: center;
-    
+
     .filter-item {
       display: flex;
       align-items: center;
       margin-right: 20px;
       margin-bottom: 8px;
-      
+
       .filter-label {
     color: var(--bs-el-text);
         margin-right: 8px;
@@ -2321,13 +2323,13 @@ export default {
         white-space: nowrap;
       }
     }
-    
+
     .online-option {
       display: flex;
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      
+
       .device-status-dot {
         margin-left: 8px;
       }
@@ -2344,17 +2346,17 @@ export default {
     background-color: var(--bs-background-2) !important;
     border-color: var(--bs-border-color) !important;
     color: var(--bs-el-text) !important;
-    
+
     &:focus {
       border-color: var(--bs-el-color-primary) !important;
     }
   }
-  
+
   .el-input-group__append {
     background-color: var(--bs-background-3) !important;
     border-color: var(--bs-border-color) !important;
     color: var(--bs-el-text) !important;
-    
+
     &:hover {
       background-color: var(--bs-background-4) !important;
     }
@@ -2363,12 +2365,12 @@ export default {
 
 :deep(.bs-el-select) {
   width: 100% !important;
-  
+
   .el-input__inner {
     background-color: var(--bs-background-2) !important;
     border-color: var(--bs-border-color) !important;
     color: var(--bs-el-text) !important;
-    
+
     &:focus {
       border-color: var(--bs-el-color-primary) !important;
     }
@@ -2423,7 +2425,7 @@ export default {
 
   .popper__arrow {
     border-bottom-color: var(--bs-border-color) !important;
-    
+
     &::after {
       border-bottom-color: var(--bs-background-1) !important;
     }
@@ -2437,10 +2439,10 @@ export default {
 
 .el-select-dropdown.el-popper[x-placement^="bottom"] {
   margin-top: 12px !important;
-  
+
   .popper__arrow {
     border-bottom-color: var(--bs-border-color) !important;
-    
+
     &::after {
       border-bottom-color: var(--bs-background-1) !important;
     }
@@ -2449,10 +2451,10 @@ export default {
 
 .el-select-dropdown.el-popper[x-placement^="top"] {
   margin-bottom: 12px !important;
-  
+
   .popper__arrow {
     border-top-color: var(--bs-border-color) !important;
-    
+
     &::after {
       border-top-color: var(--bs-background-1) !important;
     }
@@ -2464,12 +2466,12 @@ export default {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  
+
   .metrics-info {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .metrics-name {
   color: var(--bs-el-text);
 }
@@ -2479,7 +2481,7 @@ export default {
       font-size: 12px;
     }
   }
-  
+
   .metrics-data-type {
     color: var(--bs-el-text-secondary);
     font-size: 12px;
@@ -2537,7 +2539,7 @@ export default {
 
     .popper__arrow {
       border-bottom-color: var(--bs-border-color) !important;
-      
+
       &::after {
         border-bottom-color: var(--bs-background-1) !important;
       }
@@ -2556,14 +2558,20 @@ export default {
   align-items: center;
   justify-content: center;
   color: var(--bs-el-text-secondary);
-  
+
   i {
     margin-right: 8px;
     font-size: 16px;
   }
-  
+
   span {
     font-size: 13px;
   }
+}
+.device-select-input{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
 }
 </style>
