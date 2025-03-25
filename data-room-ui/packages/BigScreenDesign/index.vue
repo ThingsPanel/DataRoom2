@@ -336,7 +336,8 @@ export default {
       'changePageInfo',
       'changeActiveItemConfig',
       'emptyDataset',
-      'emptyComputedDatas'
+      'emptyComputedDatas',
+      'CLEAR_POLLING_TIMER'
     ]),
     // 控制小地图显示与隐藏
     showMinimap () {
@@ -480,6 +481,10 @@ export default {
         customClass: 'bs-el-message-box'
       })
         .then(() => {
+          // 清除所有组件的定时器
+          this.pageInfo.chartList.forEach(chart => {
+            this.CLEAR_POLLING_TIMER(chart.code)
+          })
           this.changeLayout([])
           // 清空缓存的数据库的内容
           this.emptyDataset()

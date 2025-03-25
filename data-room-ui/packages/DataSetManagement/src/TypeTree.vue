@@ -131,8 +131,10 @@
             <li
               v-for="(_type,index) in datasetTypeList"
               :key="index"
-              :class="{ 'tab-style': true, 'tab-active': _type.datasetType == curType }"
+              :class="{ 'tab-style': true, 'tab-active': _type.datasetType === curType }"
               @click="getTypeData(_type.datasetType)"
+              role="tab"
+              :aria-selected="_type.datasetType === curType"
             >
               <span>{{ _type.name }}</span>
             </li>

@@ -170,6 +170,13 @@ export default {
   beforeDestroy() {
     // 移除事件监听
     EventBus.$off('disable-parent-drag', this.setDraggableDisabled)
+    // 清除所有组件的定时器
+    this.pageInfo.chartList.forEach(chart => {
+      this.CLEAR_POLLING_TIMER(chart.code)
+    })
+    // 清空缓存的数据库的内容
+    this.emptyDataset()
+    this.emptyComputedDatas()
   },
   methods: {
     ...mapMutations('bigScreen', [
@@ -184,7 +191,12 @@ export default {
       'changeGridShow',
       'setPresetLine',
       'saveTimeLine',
-      'changeActiveCodes'
+      'changeActiveCodes',
+      'changePageLoading',
+      'changePageInfo',
+      'emptyDataset',
+      'emptyComputedDatas',
+      'CLEAR_POLLING_TIMER'
     ]),
     // 判断鼠标点击的是画布中的高亮元素（被框选的）还是非高亮元素或者空白区域
     // 如果是高亮元素则不会取消高亮状态，如果不是则取消高亮状态

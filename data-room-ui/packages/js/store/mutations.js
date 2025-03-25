@@ -160,12 +160,24 @@ export default {
       const delCharts = state.pageInfo.chartList.filter(chart => codes.includes(chart.code))
       // 如果删除的组件中有跑马灯，需要删除将跑马灯组件的音频实例销毁
       delCharts.some(item => { item.type === 'marquee' && EventBus.$emit('deleteComponent', item.code) })
+      // 清理轮询定时器
+      delCharts.forEach(item => {
+        if (window._pollingTimers && window._pollingTimers[item.code]) {
+          clearInterval(window._pollingTimers[item.code])
+          delete window._pollingTimers[item.code]
+        }
+      })
       state.pageInfo.chartList = state.pageInfo.chartList.filter(chart => !codes.includes(chart.code))
     } else {
       // 如果删除的组件是跑马灯，需要删除将跑马灯组件的音频实例销毁
       const delChart = state.pageInfo.chartList.find(chart => codes === chart.code)
       if (delChart && delChart.type === 'marquee') {
         EventBus.$emit('deleteComponent', codes)
+      }
+      // 清理轮询定时器
+      if (window._pollingTimers && window._pollingTimers[codes]) {
+        clearInterval(window._pollingTimers[codes])
+        delete window._pollingTimers[codes]
       }
       state.pageInfo.chartList = state.pageInfo.chartList.filter(chart => codes !== chart.code)
       // 删除组件时，将该组件的缓存数据库中的数据也删除
@@ -428,6 +440,17 @@ export default {
   // 修改磁吸状态
   snapChange (state, snap) {
     state.snapTolerance = snap
+  },
+  // 添加定时器
+  ADD_POLLING_TIMER (state, { code, timerId }) {
+    state.pollingTimers[code] = timerId
+  },
+  // 清除定时器
+  CLEAR_POLLING_TIMER (state, code) {
+    if (state.pollingTimers[code]) {
+      clearInterval(state.pollingTimers[code])
+      delete state.pollingTimers[code]
+    }
   }
 }
 function deldataset (state, type, codes) {

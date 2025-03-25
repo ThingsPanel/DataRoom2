@@ -28,6 +28,16 @@ export const settingConfig = {
       label: '展示字段', // 维度/查询字段
       enable: true,
       multiple: false // 是否多选
+    },
+    dynamicData: {
+      enable: true,
+      slots: [
+        {
+          field: 'value',
+          label: '指标值',
+          required: true
+        }
+      ]
     }
   }
 }

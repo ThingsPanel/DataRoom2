@@ -179,7 +179,13 @@ export default {
     }
   },
   beforeDestroy () {
-    this.stopTimer()
+    // 清除所有组件的定时器
+    this.pageInfo.chartList.forEach(chart => {
+      this.CLEAR_POLLING_TIMER(chart.code)
+    })
+    // 清空缓存的数据库的内容
+    this.emptyDataset()
+    this.emptyComputedDatas()
   },
   methods: {
     ...mapActions('bigScreen', [
@@ -189,7 +195,11 @@ export default {
       'changeLayout',
       'changePageLoading',
       'changePageConfig',
-      'changeChartConfig'
+      'changeChartConfig',
+      'changePageInfo',
+      'emptyDataset',
+      'emptyComputedDatas',
+      'CLEAR_POLLING_TIMER'
     ]),
     getStyle (chart) {
       if (chart.perspective > 0) {

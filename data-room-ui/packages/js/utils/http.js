@@ -47,11 +47,9 @@ http.interceptors.request.use(config => {
       config.headers = {}
     }
     config.headers['x-api-key'] = ticket
-    console.log('已添加x-api-key到请求头:', ticket)
   }
   // 修复配置合并问题，确保不会覆盖原始配置
   const mergedConfig = merge({}, config, merge(httpConfig, window.BS_CONFIG?.httpConfigs))
-  console.log('请求拦截器配置后:', mergedConfig.headers)
   return mergedConfig
 }, error => {
   return Promise.reject(error)

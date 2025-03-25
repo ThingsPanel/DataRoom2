@@ -13,7 +13,7 @@
     >
       <div class="data-setting-box">
         <div
-          v-if="config.option.displayOption.dataSourceType.enable"
+          v-if="config.option && config.option.displayOption && config.option.displayOption.dataSourceType && config.option.displayOption.dataSourceType.enable"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -52,18 +52,13 @@
               v-if="config.dataSource.source === 'dataset'"
               label="数据集"
             >
-              <data-set-select
+              <DataSetSetting
+                ref="dataSetSetting"
+                :config="config"
                 :dataset-name="datasetName"
-                :ds-id="config.dataSource.businessKey"
-                @getDsId="changeDsid"
-              >
-                <template #dataSetSelect="{value}">
-                  <slot
-                    name="dataSetSelect"
-                    :value="value"
-                  />
-                </template>
-              </data-set-select>
+                @getDsId="getDsId"
+                @getSelectDs="getSelectDs"
+              />
             </el-form-item>
             <el-form-item
               v-if="config.dataSource.source === 'expression' && config.option.displayOption.expression && config.option.displayOption.expression.enable"
@@ -163,6 +158,7 @@
                 popper-class="bs-el-select"
                 filterable
                 clearable
+                @change="dimensionFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -194,6 +190,7 @@
                 popper-class="bs-el-select"
                 filterable
                 clearable
+                @change="metricFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -216,7 +213,7 @@
             <el-form-item
               v-if="config.option.displayOption.seriesField.enable"
               :label="config.option.displayOption.seriesField.label"
-              prop="dataSource.metricField"
+              prop="dataSource.seriesField"
               class="data-form-item"
             >
               <el-select
@@ -224,6 +221,7 @@
                 class="bs-el-select"
                 popper-class="bs-el-select"
                 clearable
+                @change="seriesFieldChange"
               >
                 <el-option
                   v-for="(field, index) in dataSourceDataList"
@@ -859,62 +857,43 @@
             </el-table>
           </div>
         </div>
-        <!-- <div
-          v-if="config.option.displayOption.serverPagination.enable"
+        <!-- 添加轮询配置区域 -->
+        <div
+          v-if="config.dataSource && config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
           class="data-setting-data-box"
-          name="分页配置"
         >
           <div class="lc-field-head">
             <div class="lc-field-title">
-              分页配置
+              轮询配置
             </div>
           </div>
-          <div class="form">
+          <div class="lc-field-body">
             <el-form-item
-              v-if="config.option.displayOption.serverPagination.enable"
-              label="服务端分页"
-              prop="dataSource.serverPagination"
+              v-if="config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
+              label="轮询"
             >
-              <el-radio-group
-                v-model="config.dataSource.serverPagination"
-                class="bs-el-radio-group"
-                size="mini"
-                @change="serverPaginationChange"
-              >
-                <el-radio-button :label="true">
-                  开启
-                </el-radio-button>
-                <el-radio-button :label="false">
-                  关闭
-                </el-radio-button>
-              </el-radio-group>
+              <el-switch
+                v-model="config.dataSource.polling"
+                class="bs-el-switch"
+                @change="handlePollingChange"
+              />
             </el-form-item>
             <el-form-item
-              v-if="
-                config.dataSource.serverPagination &&
-                  config.option.displayOption.pageSize.enable
-              "
-              label="分页长度"
-              prop="dataSource.pageSize"
+              v-if="config.dataSource.polling"
+              label="轮询间隔"
             >
-              <el-select
-                v-model="config.dataSource.pageSize"
-                class="bs-el-select"
-                popper-class="bs-el-select"
-                filterable
-                allow-create
-                default-first-option
-              >
-                <el-option
-                  v-for="size in pageSizeList"
-                  :key="size"
-                  :label="size"
-                  :value="size"
-                />
-              </el-select>
+              <el-input-number
+                v-model="config.dataSource.pollingInterval"
+                class="bs-el-input-number"
+                :min="1000"
+                :max="3600000"
+                :step="1000"
+                @change="handlePollingIntervalChange"
+              />
+              <span class="unit">毫秒</span>
             </el-form-item>
           </div>
-        </div> -->
+        </div>
         <ComponentBinding
           v-if="['button'].includes(config.type)"
           :config="config"
@@ -935,23 +914,23 @@
 </template>
 <script>
 import ElDragSelect from './ElDragSelect.vue'
-// import { isEmpty, cloneDeep } from 'lodash'
 import isEmpty from 'lodash/isEmpty'
 import cloneDeep from 'lodash/cloneDeep'
 import ComponentRelation from 'data-room-ui/BigScreenDesign/RightSetting/ComponentRelation/index.vue'
 import ComponentBinding from 'data-room-ui/BigScreenDesign/RightSetting/ComponentBinding/index.vue'
-import dataSetSelect from 'data-room-ui/DataSetSetting/index.vue'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 import { getDataSetDetails } from 'data-room-ui/js/api/bigScreenApi'
 import ExpressionDialog from 'data-room-ui/BigScreenDesign/RightSetting/ExpressionDialog.vue'
+import DataSetSetting from 'data-room-ui/DataSetSetting/index.vue'
+
 export default {
   name: 'DataSetting',
   components: {
     ComponentRelation,
     ComponentBinding,
-    dataSetSelect,
     ElDragSelect,
-    ExpressionDialog
+    ExpressionDialog,
+    DataSetSetting
   },
   data () {
     return {
@@ -1028,10 +1007,10 @@ export default {
       // cacheDataSets: state => state.bigScreen.pageInfo.pageConfig.cacheDataSets
     }),
     dataSourceDataList () {
-      return this.fieldsList?.map(item => ({
+      return this.fieldsList && this.fieldsList.map(item => ({
         ...item,
-        comment: item?.fieldDesc || item?.fieldName,
-        name: item?.fieldName
+        comment: item && (item.fieldDesc || item.fieldName),
+        name: item && item.fieldName
       }))
     },
     appCode: {
@@ -1051,11 +1030,20 @@ export default {
     },
     // 映射字段
     sourceFieldList () {
-      const list = this?.config?.customize?.bindComponents || this.fieldsList
-      const modifiedList = list?.map(field => ({
-        label: field.comment || field.fieldDesc,
-        value: field.name || field.fieldName
-      })) || []
+      let list = null
+      if (this.config && this.config.customize && this.config.customize.bindComponents) {
+        list = this.config.customize.bindComponents
+      } else {
+        list = this.fieldsList
+      }
+      
+      let modifiedList = []
+      if (list) {
+        modifiedList = list.map(field => ({
+          label: field.comment || field.fieldDesc,
+          value: field.name || field.fieldName
+        }))
+      }
 
       if (['input', 'timePicker', 'dateTimePicker'].includes(this.config.type)) {
         modifiedList.push({ label: '当前组件值', value: this.config.code })
@@ -1094,7 +1082,7 @@ export default {
     },
     'config.dataSource.dimensionField' (val) {
       if (['select'].includes(this.config.type)) {
-        if (this.config.customize?.placeholder) {
+        if (this.config.customize && this.config.customize.placeholder) {
           this.config.customize.placeholder = '请选择' + this.dataSourceDataList.find(item => item.fieldName === val).comment
         }
       }
@@ -1126,13 +1114,50 @@ export default {
       }
     }
   },
+  beforeDestroy () {
+    // 清理轮询定时器
+    if (this.config?.code && window._pollingTimers?.[this.config.code]) {
+      clearInterval(window._pollingTimers[this.config.code])
+      delete window._pollingTimers[this.config.code]
+    }
+  },
   methods: {
+    ...mapMutations({
+      clearPollingTimer: 'bigScreen/CLEAR_POLLING_TIMER'
+    }),
+    // 指标字段变更时触发更新
+    metricFieldChange () {
+      // 特别处理IOT类型数据集，确保指标选择后触发请求
+      console.log('metricFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集指标变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
+    // 维度字段变更时触发更新
+    dimensionFieldChange () {
+      // 特别处理IOT类型数据集，确保维度选择后触发请求
+      console.log('dimensionFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集维度变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
+    // 分组字段变更时触发更新
+    seriesFieldChange () {
+      // 特别处理IOT类型数据集，确保分组选择后触发请求
+      console.log('seriesFieldChange 触发:', this.config.dataSource.datasetType)
+      if (this.config.dataSource.datasetType === 'iot') {
+        console.log('IOT数据集分组变更，触发更新请求')
+        this.$emit('updateDataSetting', this.config)
+      }
+    },
     // 切换数据源的时候将文字和数字组件的相关配置清空
     sourceChange (val) {
       this.config.expression = 'return '
       this.config.expressionCodes = []
     },
-    changeDsid (dsId) {
+    getDsId (dsId) {
       this.clearVerify()
       if (this.config.customize && this.config.customize.columnConfig) {
         this.config.customize.columnConfig = []
@@ -1288,6 +1313,45 @@ export default {
         }
         return item
       })
+    },
+    handlePollingChange (val) {
+      // 更新轮询状态
+      this.config.dataSource.polling = val
+      
+      // 如果关闭轮询，清理定时器
+      if (!val && window._pollingTimers?.[this.config.code]) {
+        clearInterval(window._pollingTimers[this.config.code])
+        delete window._pollingTimers[this.config.code]
+      }
+      
+      // 如果开启轮询，创建定时器
+      if (val) {
+        // 确保有轮询间隔
+        if (!this.config.dataSource.pollingInterval) {
+          this.config.dataSource.pollingInterval = 5000 // 默认5秒
+        }
+        
+        // 创建定时器
+        window._pollingTimers = window._pollingTimers || {}
+        window._pollingTimers[this.config.code] = setInterval(() => {
+          // 触发数据更新
+          this.$emit('updateDataSetting', this.config)
+        }, this.config.dataSource.pollingInterval)
+      }
+      
+      // 更新配置
+      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
+    },
+    handlePollingIntervalChange (val) {
+      // 只更新间隔值
+      this.config.dataSource.pollingInterval = val
+      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
+    },
+    getSelectDs (selectDs) {
+      this.datasetName = selectDs.name
+      this.config.dataSource.businessKey = selectDs.id
+      this.config.dataSource.datasetType = selectDs.datasetType
+      this.getDataSetDetailsById(selectDs.id, 'initial')
     }
     // 改变缓存数据集key
     // changeCacheBusinessKey (id) {

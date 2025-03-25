@@ -370,6 +370,7 @@ import DatasetTypeDialog from './DatasetTypeDialog.vue'
 import StoredProcedureEditForm from './StoredProcedureEditForm.vue'
 import { datasetPage, datasetRemove, datasetCheck } from 'data-room-ui/js/utils/datasetConfigService'
 import { getLabelList } from 'data-room-ui/js/utils/LabelConfigService'
+import IotEditForm from './IotEditForm.vue'
 export default {
   name: 'DataSetManagement',
   directives: {
@@ -385,7 +386,8 @@ export default {
     ScriptEditForm,
     JsEditForm,
     checkDatasource,
-    HttpEditForm
+    HttpEditForm,
+    IotEditForm
   },
   mixins: [pageMixins],
   props: {
@@ -545,13 +547,16 @@ export default {
     },
     // 获取选中数据集信息
     getSelectDs () {
-      if (!this.isDialog) return
+      if (!this.isDialog) {
+        console.warn('当前不在对话框模式')
+        return null
+      }
       if (this.multiple) {
         // 多选返回
-        return this.multipleSelection
+        return this.multipleSelection && this.multipleSelection.length > 0 ? this.multipleSelection : null
       } else {
         // 单选返回
-        return this.curRow ? this.curRow : null
+        return this.curRow || null
       }
     },
     // 单选数据集
@@ -647,8 +652,8 @@ export default {
         { name: 'JSON数据集', datasetType: 'json', componentName: 'JsonEditForm', description: '直接定义静态数据' },
         { name: 'JS数据集', datasetType: 'js', componentName: 'JsEditForm', description: '编写JS代码进行动态模拟数据创建' },
         { name: 'HTTP数据集', datasetType: 'http', componentName: 'HttpEditForm', description: '接入第三方HTTP服务查询' },
-        { name: '脚本数据集', datasetType: 'script', componentName: 'ScriptEditForm', description: '支持ES、Mongodb、国产化数据库、自定义Java代码查询' }
-
+        { name: '脚本数据集', datasetType: 'script', componentName: 'ScriptEditForm', description: '支持ES、Mongodb、国产化数据库、自定义Java代码查询' },
+        { name: 'IoT数据集', datasetType: 'iot', componentName: 'IotEditForm', description: '接入IoT平台数据' }
       ]
       if (window.BS_CONFIG?.datasetTypeList && window.BS_CONFIG?.datasetTypeList?.length !== 0) {
         this.datasetTypeList = [{ name: '全部', datasetType: '' }, ...list.filter(item => window.BS_CONFIG?.datasetTypeList.findIndex(x => x === item.datasetType) !== -1)]
