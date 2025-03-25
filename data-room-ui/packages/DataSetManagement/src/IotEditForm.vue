@@ -702,6 +702,8 @@ export default {
     'queryParams.key': function(newVal) {
       if (this.autoNaming) this.updateAutoName();
       this.updateParams();
+      
+      
     },
     'queryParams.data_type': function(newVal) {
       if (this.autoNaming) this.updateAutoName();
@@ -1125,6 +1127,16 @@ export default {
           )
           console.log('过滤后的参数列表:', this.dataForm.config.params)
         }
+
+        // 将数据查询参数配置转换为对象并存储到userDefinedJson
+        this.dataForm.config.userDefinedJson = {
+          url: this.dataForm.config.url,
+          headers: this.dataForm.config.headers,
+          queryParams: this.queryParams,
+          method: this.dataForm.config.method,
+          responseScript: this.dataForm.config.responseScript
+        }
+        console.log('已保存数据查询参数配置到userDefinedJson:', this.dataForm.config.userDefinedJson)
       }
 
       // 开始保存流程

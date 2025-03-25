@@ -109,11 +109,29 @@ export const sendRequest = async (config) => {
   const requestFn = async () => {
     try {
       const instance = createAxiosInstance(config)
+      
+      // 如果是 IoT 数据集，使用固定参数
+      let requestParams = config.params
+      if (config.datasetType === 'iot') {
+        requestParams = {
+          device_id: 'db2b6a1a-00e4-5c0d-8154-44edeb441bb4',
+          device_name: '虚拟温湿度传感器',
+          key: 'humidity',
+          data_type: 'telemetry',
+          data_mode: 'latest',
+          time_range: 'last_1_hour',
+          aggregate_window: '1m',
+          aggregate_function: 'avg',
+          start_ts: null,
+          end_ts: null
+        }
+      }
+      
       const response = await instance({
         method: config.method,
         url: config.url,
-        params: config.method.toLowerCase() === 'get' ? config.params : undefined,
-        data: config.method.toLowerCase() === 'post' ? config.params : undefined,
+        params: config.method.toLowerCase() === 'get' ? requestParams : undefined,
+        data: config.method.toLowerCase() === 'post' ? requestParams : undefined,
         signal: controller.signal,
         timeout: config.timeout || 30000
       })

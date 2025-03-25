@@ -859,16 +859,16 @@
         </div>
         <!-- 移除轮询配置区域 -->
         <div
-          v-if="config.dataSource && config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http'"
+          v-if="config.dataSource && config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot')"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
             <div class="lc-field-title">
-              HTTP配置
+              {{ config.dataSource.datasetType === 'http' ? 'HTTP配置' : 'IoT配置' }}
             </div>
           </div>
           <div class="lc-field-body">
-            <!-- HTTP数据集的相关配置可以在这里添加 -->
+            <!-- 配置项可以在这里添加 -->
           </div>
         </div>
         <ComponentBinding
@@ -1278,12 +1278,6 @@ export default {
       this.config.dataSource.datasetType = selectDs.datasetType
       this.getDataSetDetailsById(selectDs.id, 'initial')
     }
-    // 改变缓存数据集key
-    // changeCacheBusinessKey (id) {
-    //   // 根据id在缓存中获取fields
-    //   this.fieldsList = this.cacheDataSets?.find(cache => cache.dataSetId === id)?.fields
-    //   this.params = this.cacheDataSets?.find(cache => cache.dataSetId === id)?.params
-    // }
   }
 }
 </script>

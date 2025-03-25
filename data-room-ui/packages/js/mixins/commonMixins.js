@@ -10,6 +10,7 @@ import { getChatInfo, getUpdateChartInfo } from '../api/bigScreenApi'
 import axiosFormatting from '../../js/utils/httpParamsFormatting'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
 import cloneDeep from 'lodash/cloneDeep'
+import { sendRequest, startPolling, stopPolling } from '../../js/utils/httpRequest'
 
 export default {
   data () {
@@ -105,6 +106,12 @@ export default {
     }
     this.watchCacheData()
   },
+  beforeDestroy() {
+    // 停止轮询
+    if (this.config && this.config.code) {
+      stopPolling(this.config.code)
+    }
+  },
   methods: {
     ...mapMutations({
       changeChartConfig: 'bigScreen/changeChartConfig',
@@ -153,10 +160,124 @@ export default {
         }).then(async res => {
           config.loading = false
           let _res = cloneDeep(res)
-          // 如果是http数据集的前端代理，则需要调封装的axios请求
+          // 如果是http数据集或iot数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
-            if (res.data.datasetType === 'http') {
-              _res = await axiosFormatting(res.data)
+            if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
+              console.log('9999999', res.data)
+              if (res.data.datasetType === 'iot') {
+                // 使用 httpRequest.js 中的 sendRequest 方法
+                const userConfig = res.data.userDefinedJson || {}
+                console.log('IoT数据集配置:', userConfig)
+                const requestConfig = {
+                  url: userConfig.url,
+                  method: userConfig.method,
+                  headers: {},
+                  params: { ...userConfig.queryParams },
+                  componentId: config.code,
+                  pollingInterval: 6000 // 设置轮询间隔为6秒
+                }
+                console.log('请求配置:', requestConfig)
+
+                // 如果是最新数据模式，删除历史数据相关参数
+                if (requestConfig.params && requestConfig.params.data_mode === 'latest') {
+                  delete requestConfig.params.time_range
+                  delete requestConfig.params.aggregate_window
+                  delete requestConfig.params.aggregate_function
+                  console.log('最新数据模式，删除历史参数后:', requestConfig.params)
+                }
+
+                // 转换headers格式
+                if (userConfig.headers && Array.isArray(userConfig.headers)) {
+                  const headerObj = {}
+                  userConfig.headers.forEach(h => {
+                    if (h.key && h.value) {
+                      headerObj[h.key] = h.value
+                    }
+                  })
+                  requestConfig.headers = headerObj
+                } else {
+                  // 确保至少有 x-api-key
+                  requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                }
+                console.log('设置headers后:', requestConfig.headers)
+
+                // 在预览模式下使用轮询
+                if (this.isPreview) {
+                  // 先停止之前的轮询
+                  stopPolling(config.code)
+                  console.log('开始轮询, 组件ID:', config.code)
+                  
+                  // 启动新的轮询
+                  startPolling(requestConfig, 
+                    (result) => {
+                      console.log('轮询收到数据:', result)
+                      if (!result || !result.data) {
+                        console.error('IoT数据返回格式错误:', result)
+                        return
+                      }
+
+                      // 使用与普通请求相同的数据处理流程
+                      let responseData = result.data
+                      if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
+                        responseData = responseData.points
+                      }
+                      
+                      // 使用与普通请求相同的数据格式化方法
+                      const formattedData = this.apiDataFormatting({ success: true, columnData: res.columnData }, responseData)
+                      console.log('轮询数据处理后:', formattedData)
+
+                      // 更新到vuex
+                      this.updateDataset({ 
+                        code: config.code, 
+                        title: config.title, 
+                        data: formattedData.data 
+                      })
+
+                      // 使用 nextTick 确保在 Vuex 更新后再处理数据
+                      this.$nextTick(() => {
+                        console.log('已更新到Vuex, 组件码:', config.code)
+                        console.log('轮询更新后的Vuex数据:', {
+                          当前组件数据: this.dataset[config.code],
+                          所有数据: this.dataset
+                        })
+
+                        // 使用最新的 Vuex 数据更新组件配置
+                        const newConfig = cloneDeep(config)
+                        const updatedConfig = this.dataFormatting(newConfig, formattedData)
+                        this.changeChartConfig(updatedConfig)
+                      })
+                    },
+                    (error) => {
+                      console.error('IoT数据轮询出错:', error)
+                      console.log('出错时的请求配置:', {
+                        url: requestConfig.url,
+                        method: requestConfig.method,
+                        params: requestConfig.params,
+                        headers: requestConfig.headers
+                      })
+                      // 如果是认证错误，尝试更新token
+                      if (error.response && error.response.status === 401) {
+                        requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                      }
+                    }
+                  )
+                }
+
+                // 发送请求获取初始数据
+                console.log('发送初始请求...')
+                _res = await sendRequest(requestConfig)
+                console.log('初始请求返回:', _res)
+
+                // 根据responseScript处理返回数据
+                if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
+                  _res = _res.data.points
+                } else {
+                  _res = _res.data
+                }
+                console.log('初始数据处理后:', _res)
+              } else {
+                _res = await axiosFormatting(res.data)
+              }
               _res = this.apiDataFormatting(res, _res)
             }
             if (res.data.datasetType === 'js') {
@@ -183,6 +304,11 @@ export default {
           // 将后端返回的数据保存
           if (_res.success) {
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
+            console.log('数据已更新到Vuex, 组件码:', config.code, '数据:', _res?.data)
+            console.log('更新后的Vuex数据:', {
+              当前组件数据: this.dataset[config.code],
+              所有数据: this.dataset
+            })
           }
           config = this.dataFormatting(config, _res)
 
@@ -201,6 +327,7 @@ export default {
      * @param {Array} filterList
      */
     changeData (config, filterList) {
+      console.log('changeData 开始执行, 配置:', config)
       const list = config?.paramsList?.map((item) => {
         if (item.value === '$' + '{level}') {
           return { ...item, value: config.customize?.level }
@@ -211,9 +338,8 @@ export default {
         }
       })
 
-      // Add a check to ensure dataSource exists before creating the params object
       if (!config.dataSource) {
-        config.dataSource = {} // Initialize dataSource if it doesn't exist
+        config.dataSource = {}
       }
 
       const params = {
@@ -231,46 +357,107 @@ export default {
       return new Promise((resolve) => {
         config.loading = true
         getUpdateChartInfo(params).then(async res => {
+          console.log('getUpdateChartInfo 返回数据:', res)
           config.loading = false
           let _res = cloneDeep(res)
-          // 如果是http数据集的前端代理，则需要调封装的axios请求
+          
           if (res.executionByFrontend) {
-            if (res.data.datasetType === 'http') {
-              _res = await axiosFormatting(res.data)
-              _res = this.apiDataFormatting(res, _res)
-            }
-            if (res.data.datasetType === 'js') {
-              try {
-                params.filterList.forEach(item => {
-                  config.dataSource.params[item.column] = item.value
-                })
-                const scriptAfterReplacement = res.data.script.replace(/\${(.*?)}/g, (match, p) => {
-                  const value = config.dataSource?.params[p]
-                  if (value === null || value === undefined || value === '') {
-                    return "''"
-                  } else if (!isNaN(value)) {
-                    return value || p
-                  } else {
-                    return "'" + value + "' || '" + p + "'"
-                  }
-                })
-                // eslint-disable-next-line no-new-func
-                const scriptMethod = new Function(scriptAfterReplacement)
-                _res.data = scriptMethod()
-              } catch (error) {
-                console.info('JS数据集脚本执行失败', error)
+            if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
+              console.log('9999999', res.data)
+              if (res.data.datasetType === 'iot') {
+                // 使用 httpRequest.js 中的 sendRequest 方法
+                const userConfig = res.data.userDefinedJson || {}
+                const requestConfig = {
+                  url: userConfig.url,
+                  method: userConfig.method,
+                  headers: {},
+                  params: { ...userConfig.queryParams },
+                  componentId: config.code,
+                  pollingInterval: 6000 // 设置轮询间隔为6秒
+                }
+
+                // 如果是最新数据模式，删除历史数据相关参数
+                if (requestConfig.params && requestConfig.params.data_mode === 'latest') {
+                  delete requestConfig.params.time_range
+                  delete requestConfig.params.aggregate_window
+                  delete requestConfig.params.aggregate_function
+                }
+
+                // 转换headers格式
+                if (userConfig.headers && Array.isArray(userConfig.headers)) {
+                  const headerObj = {}
+                  userConfig.headers.forEach(h => {
+                    if (h.key && h.value) {
+                      headerObj[h.key] = h.value
+                    }
+                  })
+                  requestConfig.headers = headerObj
+                } else {
+                  // 确保至少有 x-api-key
+                  requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                }
+
+                // 在预览模式下使用轮询
+                if (0) {
+                  // 先停止之前的轮询
+                  stopPolling(config.code)
+                  
+                  // 启动新的轮询
+                  startPolling(requestConfig, 
+                    (result) => {
+                      if (!result || !result.data) {
+                        console.error('IoT数据返回格式错误:', result)
+                        return
+                      }
+                      // 处理返回数据
+                      const responseData = userConfig.responseScript?.includes('points') ? 
+                        result.data.points : result.data
+                      // 更新到vuex
+                      this.updateDataset({ 
+                        code: config.code, 
+                        title: config.title, 
+                        data: responseData 
+                      })
+                      // 更新组件配置
+                      config = this.dataFormatting(config, responseData)
+                      this.changeChartConfig(config)
+                    },
+                    (error) => {
+                      console.error('IoT数据轮询出错:', error)
+                      // 如果是认证错误，尝试更新token
+                      if (error.response && error.response.status === 401) {
+                        requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                      }
+                    }
+                  )
+                }
+
+                // 发送请求获取初始数据
+                _res = await sendRequest(requestConfig)
+                // 根据responseScript处理返回数据
+                if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
+                  _res = _res.data.points
+                } else {
+                  _res = _res.data
+                }
+              } else {
+                _res = await axiosFormatting(res.data)
               }
+              _res = this.apiDataFormatting(res, _res)
             }
           }
 
-          // 将后端返回的数据保存
           if (_res.success) {
+            console.log('更新到Vuex的数据:', _res?.data)
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
           }
+          
           config = this.dataFormatting(config, _res)
+          console.log('dataFormatting 处理后的配置:', config)
+          
           resolve(config)
         }).catch(err => {
-          console.info(err)
+          console.error('getUpdateChartInfo 错误:', err)
           config.loading = false
           resolve(config)
         })
@@ -282,15 +469,19 @@ export default {
     },
     // http前台代理需要对返回的数据进行重新组装
     apiDataFormatting (chartRes, apiRes) {
-      return {
+      console.log('apiDataFormatting 输入数据:', { chartRes, apiRes })
+      // 确保返回的数据是数组格式
+      const formattedData = Array.isArray(apiRes) ? apiRes : [apiRes]
+      const result = {
         columnData: chartRes.columnData,
-        data: apiRes,
+        data: formattedData,
         success: chartRes.success
       }
+      console.log('apiDataFormatting 输出数据:', result)
+      return result
     },
     dataFormatting (config, data) {
-      // 各子组件自己实现
-      return config
+      // 覆盖
     },
     newChart (option) {
       // 各子组件自己实现
