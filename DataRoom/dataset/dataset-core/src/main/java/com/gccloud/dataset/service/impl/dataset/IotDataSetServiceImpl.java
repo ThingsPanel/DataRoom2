@@ -2,7 +2,6 @@ package com.gccloud.dataset.service.impl.dataset;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.gccloud.common.exception.GlobalException;
-import com.gccloud.common.utils.BeanConvertUtils;
 import com.gccloud.common.utils.JSON;
 import com.gccloud.dataset.constant.DatasetConstant;
 import com.gccloud.dataset.dao.DatasetDao;
@@ -22,6 +21,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -132,98 +132,25 @@ public class IotDataSetServiceImpl extends ServiceImpl<DatasetDao, DatasetEntity
             return config;
         }
         
-        // 处理请求头中的参数
-        List<Map<String, Object>> headers = config.getHeaders();
-        if (headers != null && headers.size() > 0) {
-            for (Map<String, Object> header : headers) {
-                String value = (String) header.get("value");
-                if (StringUtils.isBlank(value)) {
-                    continue;
-                }
-                // 检查是否包含${}格式的参数
-                if (!value.contains("${")) {
-                    continue;
-                }
-                for (DatasetParamDTO param : datasetParamList) {
-                    if (value.contains("${" + param.getName() + "}")) {
-                        String replaceValue = this.parameterReplace(param, value);
-                        header.put("value", replaceValue);
-                    }
-                }
-            }
-        }
-        
-        // 处理params中的参数
-        List<Map<String, Object>> iotParams = config.getParams();
-        if (iotParams != null && iotParams.size() > 0) {
-            for (Map<String, Object> param : iotParams) {
-                String value = (String) param.get("value");
-                if (StringUtils.isBlank(value)) {
-                    continue;
-                }
-                // 检查是否包含${}格式的参数
-                if (!value.contains("${")) {
-                    continue;
-                }
-                for (DatasetParamDTO paramDTO : datasetParamList) {
-                    if (value.contains("${" + paramDTO.getName() + "}")) {
-                        String replaceValue = this.parameterReplace(paramDTO, (String) param.get("value"));
-                        param.put("value", replaceValue);
-                    }
-                }
-            }
-        }
-
-        // 处理URL中的参数
-        String url = config.getUrl();
-        if (StringUtils.isNotBlank(url)) {
+        // 处理userDefinedJson中的参数
+        Map<String, Object> userDefinedJson = config.getUserDefinedJson();
+        if (userDefinedJson != null && !userDefinedJson.isEmpty()) {
+            // 将Map转换为JSON字符串，进行参数替换
+            String jsonStr = JSON.toJSONString(userDefinedJson);
+            boolean needReplace = false;
+            
             for (DatasetParamDTO param : datasetParamList) {
-                if (url.contains("${" + param.getName() + "}")) {
-                    url = this.parameterReplace(param, url);
+                if (jsonStr.contains("${" + param.getName() + "}")) {
+                    jsonStr = this.parameterReplace(param, jsonStr);
+                    needReplace = true;
                 }
             }
-            config.setUrl(url);
-        }
-        
-        // 处理设备ID、数据类型、数据模式、属性键名的参数替换
-        String deviceId = config.getDevice_id();
-        if (StringUtils.isNotBlank(deviceId)) {
-            for (DatasetParamDTO param : datasetParamList) {
-                if (deviceId.contains("${" + param.getName() + "}")) {
-                    deviceId = this.parameterReplace(param, deviceId);
-                }
+            
+            // 如果进行了参数替换，则需要将JSON字符串转回Map
+            if (needReplace) {
+                userDefinedJson = JSON.parseObject(jsonStr, Map.class);
+                config.setUserDefinedJson(userDefinedJson);
             }
-            config.setDevice_id(deviceId);
-        }
-        
-        String dataType = config.getData_type();
-        if (StringUtils.isNotBlank(dataType)) {
-            for (DatasetParamDTO param : datasetParamList) {
-                if (dataType.contains("${" + param.getName() + "}")) {
-                    dataType = this.parameterReplace(param, dataType);
-                }
-            }
-            config.setData_type(dataType);
-        }
-        
-        String dataMode = config.getData_mode();
-        if (StringUtils.isNotBlank(dataMode)) {
-            for (DatasetParamDTO param : datasetParamList) {
-                if (dataMode.contains("${" + param.getName() + "}")) {
-                    dataMode = this.parameterReplace(param, dataMode);
-                }
-            }
-            config.setData_mode(dataMode);
-        }
-        
-        String key = config.getKey();
-        if (StringUtils.isNotBlank(key)) {
-            for (DatasetParamDTO param : datasetParamList) {
-                if (key.contains("${" + param.getName() + "}")) {
-                    key = this.parameterReplace(param, key);
-                }
-            }
-            config.setKey(key);
         }
         
         return config;
