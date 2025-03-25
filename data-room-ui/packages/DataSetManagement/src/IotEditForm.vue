@@ -906,6 +906,23 @@ export default {
                 this.outputFieldList = config.fieldList || []
               }
 
+              // 根据responseScript设置dataPath
+              if (this.dataForm.config.responseScript) {
+                const scriptText = this.dataForm.config.responseScript;
+                if (scriptText.includes('resp.data.points')) {
+                  this.pathForm.dataPath = 'data.points';
+                  this.queryParams.data_mode = 'history';
+                } else {
+                  this.pathForm.dataPath = 'data';
+                  this.queryParams.data_mode = 'latest';
+                }
+                console.log(`根据responseScript回显数据路径: ${this.pathForm.dataPath}, data_mode: ${this.queryParams.data_mode}`);
+              } else {
+                // 设置默认responseScript
+                this.dataForm.config.responseScript = 'return resp.data';
+                this.pathForm.dataPath = 'data';
+              }
+
               // 确保数据路径设置正确
               this.setDataPath()
             } else {
@@ -1446,11 +1463,18 @@ export default {
       this.queryParams.data_mode = value
       // 更新数据路径
       this.setDataPath()
-
+      
+      // 如果是历史数据模式，确保已选择时间范围
+      if (value === 'history') {
+        if (!this.queryParams.time_range) {
+          this.queryParams.time_range = 'last_1_hour'
+        }
+      }
+      
+      this.updateParams()
       if (this.autoNaming) {
         this.updateAutoName()
       }
-      this.updateParams()
     },
 
     handleTimeRangeChange(value) {
@@ -1492,6 +1516,9 @@ export default {
 
       // 执行前构建字段描述信息，确保它保存在config中
       this.buildFieldDesc()
+      
+      // 确保responseScript与当前数据模式一致
+      this.setDataPath()
 
       // 执行前对参数进行处理，最新数据模式不需要传递历史数据参数
       if (this.queryParams.data_mode === 'latest') {
@@ -1925,10 +1952,12 @@ export default {
         // 更新responseScript，与HTTP保持一致
         this.dataForm.config.responseScript = 'return resp.data'
       } else {
-        this.pathForm.dataPath = 'data'
-        // 历史查询涉及到分页等逻辑，直接返回数据
-        this.dataForm.config.responseScript = 'return resp.data'
+        this.pathForm.dataPath = 'data.points'
+        // 历史查询返回数据中嵌套了points数组
+        this.dataForm.config.responseScript = 'return resp.data.points'
       }
+      
+      console.log(`数据路径已更新: ${this.pathForm.dataPath}, responseScript: ${this.dataForm.config.responseScript}`)
     },
 
     // 打开设备选择弹窗
