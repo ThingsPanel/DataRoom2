@@ -857,41 +857,18 @@
             </el-table>
           </div>
         </div>
-        <!-- 添加轮询配置区域 -->
+        <!-- 移除轮询配置区域 -->
         <div
-          v-if="config.dataSource && config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
+          v-if="config.dataSource && config.dataSource.source === 'dataset' && config.dataSource.datasetType === 'http'"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
             <div class="lc-field-title">
-              轮询配置
+              HTTP配置
             </div>
           </div>
           <div class="lc-field-body">
-            <el-form-item
-              v-if="config.dataSource.source === 'dataset' && (config.dataSource.datasetType === 'http' || config.dataSource.datasetType === 'iot' || config.dataSource.polling)"
-              label="轮询"
-            >
-              <el-switch
-                v-model="config.dataSource.polling"
-                class="bs-el-switch"
-                @change="handlePollingChange"
-              />
-            </el-form-item>
-            <el-form-item
-              v-if="config.dataSource.polling"
-              label="轮询间隔"
-            >
-              <el-input-number
-                v-model="config.dataSource.pollingInterval"
-                class="bs-el-input-number"
-                :min="1000"
-                :max="3600000"
-                :step="1000"
-                @change="handlePollingIntervalChange"
-              />
-              <span class="unit">毫秒</span>
-            </el-form-item>
+            <!-- HTTP数据集的相关配置可以在这里添加 -->
           </div>
         </div>
         <ComponentBinding
@@ -1036,7 +1013,7 @@ export default {
       } else {
         list = this.fieldsList
       }
-      
+
       let modifiedList = []
       if (list) {
         modifiedList = list.map(field => ({
@@ -1115,42 +1092,23 @@ export default {
     }
   },
   beforeDestroy () {
-    // 清理轮询定时器
-    if (this.config?.code && window._pollingTimers?.[this.config.code]) {
-      clearInterval(window._pollingTimers[this.config.code])
-      delete window._pollingTimers[this.config.code]
-    }
+    // 不再需要清理轮询定时器
   },
   methods: {
     ...mapMutations({
-      clearPollingTimer: 'bigScreen/CLEAR_POLLING_TIMER'
+      // 留空，不再引用clearPollingTimer
     }),
     // 指标字段变更时触发更新
     metricFieldChange () {
-      // 特别处理IOT类型数据集，确保指标选择后触发请求
-      console.log('metricFieldChange 触发:', this.config.dataSource.datasetType)
-      if (this.config.dataSource.datasetType === 'iot') {
-        console.log('IOT数据集指标变更，触发更新请求')
-        this.$emit('updateDataSetting', this.config)
-      }
+      // 移除IoT特殊处理，保持基本功能
     },
     // 维度字段变更时触发更新
     dimensionFieldChange () {
-      // 特别处理IOT类型数据集，确保维度选择后触发请求
-      console.log('dimensionFieldChange 触发:', this.config.dataSource.datasetType)
-      if (this.config.dataSource.datasetType === 'iot') {
-        console.log('IOT数据集维度变更，触发更新请求')
-        this.$emit('updateDataSetting', this.config)
-      }
+      // 移除IoT特殊处理，保持基本功能
     },
     // 分组字段变更时触发更新
     seriesFieldChange () {
-      // 特别处理IOT类型数据集，确保分组选择后触发请求
-      console.log('seriesFieldChange 触发:', this.config.dataSource.datasetType)
-      if (this.config.dataSource.datasetType === 'iot') {
-        console.log('IOT数据集分组变更，触发更新请求')
-        this.$emit('updateDataSetting', this.config)
-      }
+      // 移除IoT特殊处理，保持基本功能
     },
     // 切换数据源的时候将文字和数字组件的相关配置清空
     sourceChange (val) {
@@ -1313,39 +1271,6 @@ export default {
         }
         return item
       })
-    },
-    handlePollingChange (val) {
-      // 更新轮询状态
-      this.config.dataSource.polling = val
-      
-      // 如果关闭轮询，清理定时器
-      if (!val && window._pollingTimers?.[this.config.code]) {
-        clearInterval(window._pollingTimers[this.config.code])
-        delete window._pollingTimers[this.config.code]
-      }
-      
-      // 如果开启轮询，创建定时器
-      if (val) {
-        // 确保有轮询间隔
-        if (!this.config.dataSource.pollingInterval) {
-          this.config.dataSource.pollingInterval = 5000 // 默认5秒
-        }
-        
-        // 创建定时器
-        window._pollingTimers = window._pollingTimers || {}
-        window._pollingTimers[this.config.code] = setInterval(() => {
-          // 触发数据更新
-          this.$emit('updateDataSetting', this.config)
-        }, this.config.dataSource.pollingInterval)
-      }
-      
-      // 更新配置
-      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
-    },
-    handlePollingIntervalChange (val) {
-      // 只更新间隔值
-      this.config.dataSource.pollingInterval = val
-      this.$store.commit('bigScreen/changeActiveItemConfig', this.config)
     },
     getSelectDs (selectDs) {
       this.datasetName = selectDs.name
