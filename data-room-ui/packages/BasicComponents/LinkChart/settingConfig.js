@@ -30,7 +30,7 @@ const customConfig = {
   type: 'linkChart',
   root: {
     version: '2023071001',
-    url: 'https://www.runoob.com/',
+    url: 'http://ThingsPanel.cn',
     // 绕x轴旋转角度
     rotateX: 0,
     // 绕y轴旋转角度
@@ -47,7 +47,7 @@ const customConfig = {
     fontSize: 20,
     fontWeight: 700,
     color: 'left,#007aff,#007aff',
-    url: 'http://ThingsPanel.cn, // 链接地址
+    url: 'http://ThingsPanel.cn', // 链接地址
     openType: '_blank', // 打开方式
     dialogW: 1000, // 弹窗宽度
     dialogH: 500// 弹窗高度
