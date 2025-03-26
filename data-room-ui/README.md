@@ -26,7 +26,7 @@
 
 ## 演示DEMO
 
-<a href="http://gcpaas.gccloud.com/bigScreen"> http://gcpaas.gccloud.com/bigScreen </a>
+<a href="http://ThingsPanel.cn/bigScreen"> http://ThingsPanel.cn/bigScreen </a>
 
 ## 联系我们
 <img alt="Email" src="https://img.shields.io/badge/Email-tech@ustcinfo.com-blue.svg">
