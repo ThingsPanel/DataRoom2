@@ -150,6 +150,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import basicComponents from 'data-room-ui/js/config/basicComponentsConfig'
 import g2PlotComponents, { getCustomPlots } from '../G2Plots/plotList'
 import echartsComponents from '../Echarts/echartList'
+import threeComponents from '../ThreeComponents/echartList'
 import borderComponents from 'data-room-ui/js/config/borderComponentsConfig'
 import decorationComponents from 'data-room-ui/js/config/decorationComponentsConfig'
 import LayerList from './LayerList/index.vue'
@@ -176,6 +177,7 @@ export default {
     return {
       echartsComponents,
       g2PlotComponents,
+      threeComponents,
       activeName: 'chart', // 设置左侧tab栏的默认值
       fold: false, // 控制左侧菜单栏伸缩
       currentTab: 'basic',
@@ -197,9 +199,16 @@ export default {
         {
           id: 7,
           name: 'echart',
-          title: '3D',
+          title: '3D图表',
           icon: 'icon-jichushuju',
           components: this.echartsComponents
+        },
+        {
+          id: 9,
+          name: 'three',
+          title: '3D模型',
+          icon: 'icon-kongjian',
+          components: this.threeComponents
         },
         {
           id: 3,
@@ -261,6 +270,7 @@ export default {
     this.g2PlotComponents = [...this.g2PlotComponents, ...getCustomPlots()]
     this.menuList[1].components = this.g2PlotComponents
     this.menuList[2].components = this.echartsComponents
+    this.menuList[3].components = this.threeComponents
   },
   mounted () {
     this.nodeDrag()

@@ -1,4 +1,3 @@
-
 import 'data-room-ui/assets/style/common/index.scss'
 import 'data-room-ui/assets/style/bsTheme.scss'
 
@@ -25,6 +24,8 @@ const DataSetManagement = () => import('./DataSetManagement')
 const DataSourceManagement = () => import('./DataSourceManagement')
 // 地图数据管理页面
 const MapDataManagement = () => import('./MapDataManagement')
+// Three.js渲染组件
+const ThreeRender = () => import('./ThreeRender/index.vue')
 
 // 存储组件列表
 const components = [
@@ -36,7 +37,8 @@ const components = [
   BigScreenDesign,
   DataSetManagement,
   DataSourceManagement,
-  MapDataManagement
+  MapDataManagement,
+  ThreeRender
 ]
 
 function install (Vue) {
@@ -56,6 +58,7 @@ export {
   DataSetManagement,
   DataSourceManagement,
   MapDataManagement,
+  ThreeRender,
   $dataRoomStore,
   $dataRoomAxios,
   registerConfig,
@@ -73,6 +76,7 @@ export default {
   DataSetManagement,
   DataSourceManagement,
   MapDataManagement,
+  ThreeRender,
   $dataRoomStore,
   $dataRoomAxios,
   registerConfig,

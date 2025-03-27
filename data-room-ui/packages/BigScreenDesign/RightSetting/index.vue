@@ -46,6 +46,7 @@
           :key="config.code"
           :config="config"
           @closeRightPanel="close"
+          @update="handleThreeComponentUpdate"
         />
       </el-tab-pane>
     </el-tabs>
@@ -59,6 +60,7 @@
         :key="config.code"
         :config="config"
         @closeRightPanel="close"
+        @update="handleThreeComponentUpdate"
       />
     </el-scrollbar>
   </div>
@@ -70,6 +72,7 @@ import DataSetting from './DataSetting.vue'
 import rightSetting from 'data-room-ui/js/utils/rightSettingImport'
 import CustomComponent from './G2CustomSetting.vue'
 import EchartsCustomSetting from './EchartsCustomSetting.vue'
+import ThreeComponent from './ThreeComponent.vue'
 import Svgs from 'data-room-ui/Svgs/setting.vue'
 import DynamicDataConfig from './DynamicDataConfig/index.vue'
 import { mapState, mapMutations } from 'vuex'
@@ -94,7 +97,8 @@ export default {
     Svgs,
     DynamicDataConfig,
     RemoteComponent: CustomComponent,
-    EchartsComponent: EchartsCustomSetting
+    EchartsComponent: EchartsCustomSetting,
+    ThreeComponent: ThreeComponent
   },
   data () {
     return {
@@ -268,6 +272,13 @@ export default {
         ...this.config,
         dynamicData: data
       })
+    },
+    handleThreeComponentUpdate (config) {
+      console.log('RightSetting收到ThreeComponent更新事件:', config.name)
+      this.$emit('updateSetting', {
+        ...config,
+        _timestamp: Date.now()
+      })
     }
   }
 }
@@ -286,3 +297,5 @@ export default {
   }
 }
 </style> 
+ 
+ 

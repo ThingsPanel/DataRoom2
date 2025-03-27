@@ -7,27 +7,38 @@
  * @LastEditTime: 2023-05-17 12:40:25
  */
 
+// 动态导入组件
+import EchartsComponent from 'data-room-ui/EchartsRender/index.vue'
+import ThreeComponent from 'data-room-ui/ThreeRender/index.vue'
+
 const modules = {}
-// 组件名称替换
-const replaceName = {}
 // 排除的组件
 const excludeCommponents = []
-function importComponents (files) {
-  files.keys().forEach(key => {
+
+/**
+ * 导入组件
+ * @param {*} r 组件上下文
+ */
+function importComponents (r) {
+  r.keys().forEach(key => {
     // 正则，取到./和/之间的字符串
     const reg = new RegExp('(.\\/)(.*)(\\/)')
-    let moduleName = key.match(reg)[0].replace(/(\.\/)|(\/)|(src)/g, '')
-    // 替换组件名称
-    if (replaceName[moduleName]) {
-      moduleName = replaceName[moduleName]
-    }
+    const moduleName = key.match(reg) ? key.match(reg)[0].replace(/(\.\/)|(\/)|(src)/g, '') : key.replace(/^\.\/(.*)\.(vue|js)$/, '$1')
+    // 如果不在排除列表中，则导入组件
     if (!excludeCommponents.includes(moduleName)) {
-      modules[moduleName] = files(key).default
+      modules[moduleName] = r(key).default
     }
   })
 }
+
+// 导入所有组件
 importComponents(require.context('data-room-ui/BasicComponents', true, /\index.vue$/))
 importComponents(require.context('data-room-ui/Borders', true, /\index.vue$/))
 importComponents(require.context('data-room-ui/Decorations', true, /\index.vue$/))
 importComponents(require.context('data-room-ui/BorderComponents', true, /\index.vue$/))
+
+// 手动添加额外组件
+modules.EchartsComponent = EchartsComponent
+modules.ThreeComponent = ThreeComponent
+
 export default modules

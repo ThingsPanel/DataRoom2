@@ -10,6 +10,16 @@ export const randomString = e => {
 }
 
 export const resolveComponentType = type => {
+  // 特殊类型映射
+  const specialTypeMap = {
+    threeComponent: 'ThreeComponent',
+    ThreeComponent: 'ThreeComponent'
+  }
+  // 检查是否有特殊映射
+  if (specialTypeMap[type]) {
+    return specialTypeMap[type]
+  }
+  // 默认处理方式
   return `${upperFirst(type)}`
 }
 export function deepCompare (obj1, obj2, excludeKeys = []) {
