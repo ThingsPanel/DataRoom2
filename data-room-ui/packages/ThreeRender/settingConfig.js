@@ -44,4 +44,4 @@ const customConfig = {
 
 export const dataConfig = {
   ...commonConfig(customConfig)
-} 
+}
