@@ -1,221 +1,287 @@
 <template>
-  <div class="three-setting">
+  <div class="bs-setting-wrap">
     <el-form
       ref="form"
-      label-position="top"
-      size="small"
+      :model="config"
+      :rules="customRules"
+      label-width="120px"
+      label-position="left"
+      class="setting-body bs-el-form"
     >
-      <div v-if="config.setting">
-        <el-collapse v-model="activeNames" accordion>
-          <!-- 模型设置 -->
-          <el-collapse-item title="模型设置" name="model">
-            <div v-for="(item, index) in modelSettings" :key="index" class="setting-item">
-              <el-form-item :label="item.label">
-                <component
-                  :is="getComponentType(item)"
-                  :value="getConfigValue(item)"
-                  @input="updateConfigValue(item, $event)"
-                  v-bind="getComponentProps(item)"
+      <SettingTitle>基础</SettingTitle>
+      <div class="lc-field-body">
+        <el-form-item
+          label="标题"
+          label-width="120px"
+        >
+          <el-input
+            v-model="config.title"
+            placeholder="请输入标题"
+            clearable
+          />
+        </el-form-item>
+      </div>
+      
+      <SettingTitle>边框</SettingTitle>
+      <div class="lc-field-body">
+        <BorderSetting
+          v-if="config.border"
+          label-width="120px"
+          :config="config.border"
+          :big-title="config.title"
+        />
+      </div>
+      
+      <SettingTitle>位置</SettingTitle>
+      <div class="lc-field-body">
+        <PosWhSetting
+          label-width="120px"
+          :config="config"
+        />
+      </div>
+      
+      <SettingTitle>旋转</SettingTitle>
+      <div class="lc-field-body">
+        <RotateSetting
+          :config="config"
+        />
+      </div>
+      
+      <!-- 3D个性化配置 -->
+      <template v-for="group in groupList">
+        <div :key="group.groupName">
+          <SettingTitle>{{ group.groupName | filterGroupName }}</SettingTitle>
+          <div class="lc-field-body">
+            <div
+              v-for="(setting, settingIndex) in group.list"
+              :key="settingIndex+1"
+            >
+              <el-form-item
+                :label="setting.label"
+                :label-width="'120px'"
+              >
+                <el-input
+                  v-if="setting.type === 'input'"
+                  v-model="setting.value"
+                  :placeholder="`请输入${setting.label}`"
+                  clearable
                 />
+                <el-input-number
+                  v-else-if="setting.type === 'inputNumber'"
+                  v-model="setting.value"
+                  :min="setting.min"
+                  :max="setting.max"
+                  :step="setting.step || 1"
+                  :placeholder="`请输入${setting.label}`"
+                />
+                <el-select
+                  v-else-if="setting.type === 'select'"
+                  v-model="setting.value"
+                  popper-class="bs-el-select"
+                  class="bs-el-select"
+                  :placeholder="`请选择${setting.label}`"
+                  :multiple="setting.multiple"
+                  clearable
+                >
+                  <el-option
+                    v-for="(opt, optIndex) in setting.options"
+                    :key="optIndex"
+                    :label="opt.label"
+                    :value="opt.value"
+                  />
+                </el-select>
+                <el-color-picker
+                  v-else-if="setting.type === 'colorPicker'"
+                  v-model="setting.value"
+                  show-alpha
+                />
+                <template v-else-if="setting.type === 'colorSelect'">
+                  <el-color-picker
+                    v-model="setting.value"
+                    show-alpha
+                    @change="updateColorScheme"
+                  />
+                </template>
+                <el-switch
+                  v-else-if="setting.type === 'switch'"
+                  v-model="setting.value"
+                  :active-value="setting.active"
+                  :inactive-value="setting.inactive"
+                />
+                <el-slider
+                  v-else-if="setting.type === 'slider'"
+                  v-model="setting.value"
+                  :min="setting.min"
+                  :max="setting.max"
+                  :step="setting.step"
+                />
+                <div
+                  v-else-if="setting.type === 'padding'"
+                >
+                  <PaddingSetting v-model="setting.value" />
+                </div>
+                <div
+                  v-else-if="setting.type === 'appendPadding'"
+                >
+                  <PaddingSetting v-model="setting.value" />
+                </div>
+                <div
+                  v-else-if="setting.type === 'gradual'"
+                >
+                  <GradualSetting v-model="setting.value" />
+                </div>
+                <div
+                  v-else-if="setting.type === 'textGradient'"
+                >
+                  <TextGradient v-model="setting.value" />
+                </div>
+                <div
+                  v-else-if="setting.type === 'borderColor'"
+                >
+                  <BorderColorSetting v-model="setting.value" />
+                </div>
               </el-form-item>
             </div>
-          </el-collapse-item>
-          <!-- 相机设置 -->
-          <el-collapse-item title="相机设置" name="camera">
-            <div v-for="(item, index) in cameraSettings" :key="index" class="setting-item">
-              <el-form-item :label="item.label">
-                <component
-                  :is="getComponentType(item)"
-                  :value="getConfigValue(item)"
-                  @input="updateConfigValue(item, $event)"
-                  :min="item.min"
-                  :max="item.max"
-                  :step="item.step"
-                />
-              </el-form-item>
-            </div>
-          </el-collapse-item>
-          <!-- 背景设置 -->
-          <el-collapse-item title="背景设置" name="background">
-            <div v-for="(item, index) in backgroundSettings" :key="index" class="setting-item">
-              <el-form-item :label="item.label">
-                <component
-                  :is="getComponentType(item)"
-                  :value="getConfigValue(item)"
-                  @input="updateConfigValue(item, $event)"
-                  :min="item.min"
-                  :max="item.max"
-                  :step="item.step"
-                />
-              </el-form-item>
-            </div>
-          </el-collapse-item>
-          <!-- 光照设置 -->
-          <el-collapse-item title="光照设置" name="light">
-            <div v-for="(item, index) in lightSettings" :key="index" class="setting-item">
-              <el-form-item :label="item.label">
-                <component
-                  :is="getComponentType(item)"
-                  :value="getConfigValue(item)"
-                  @input="updateConfigValue(item, $event)"
-                  :min="item.min"
-                  :max="item.max"
-                  :step="item.step"
-                />
-              </el-form-item>
-            </div>
-          </el-collapse-item>
-        </el-collapse>
-        
-        <!-- 应用按钮 -->
-        <div class="apply-button-container">
-          <el-button type="primary" @click="applyChanges">应用样式</el-button>
+          </div>
         </div>
+      </template>
+      
+      <!-- 应用按钮 -->
+      <div class="apply-button-container">
+        <el-button type="primary" @click="applyChanges">应用</el-button>
       </div>
     </el-form>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
+import SettingTitle from 'data-room-ui/BigScreenDesign/RightSetting/SettingTitle'
+import PaddingSetting from './PaddingSetting'
+import GradualSetting from './GradualSetting'
+import TextGradient from './TextGradient'
+import BorderColorSetting from './BorderColorSetting'
+import BorderSetting from './BorderSetting'
+import PosWhSetting from './PosWhSetting'
+import RotateSetting from './RotateSetting'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
 import _ from 'lodash'
-import { getLocalEngineList } from 'data-room-ui/js/utils/threeEngineLoader'
 
 export default {
   name: 'ThreeComponent',
+  components: {
+    SettingTitle,
+    PaddingSetting,
+    GradualSetting,
+    TextGradient,
+    BorderColorSetting,
+    BorderSetting,
+    PosWhSetting,
+    RotateSetting
+  },
   props: {
     config: {
       type: Object,
       default: () => ({})
     }
   },
-  data () {
+  data() {
     return {
-      activeNames: ['model', 'camera', 'background', 'light']
-    }
-  },
-  created () {
-    // 确保customize对象存在
-    if (!this.config.option) {
-      this.$set(this.config, 'option', {})
-    }
-    if (!this.config.option.customize) {
-      this.$set(this.config.option, 'customize', {})
+      customRules: {},
+      groupList: []
     }
   },
   computed: {
-    // 模型设置相关的配置项
-    modelSettings () {
-      return this.config.setting ? this.config.setting.filter(item =>
-        item.tabName === 'custom' && item.groupName === 'model'
-      ) : []
-    },
-    // 相机设置相关的配置项
-    cameraSettings () {
-      return this.config.setting ? this.config.setting.filter(item =>
-        item.tabName === 'custom' && item.groupName === 'camera'
-      ) : []
-    },
-    // 背景设置相关的配置项
-    backgroundSettings () {
-      return this.config.setting ? this.config.setting.filter(item =>
-        item.tabName === 'custom' && item.groupName === 'background'
-      ) : []
-    },
-    // 光照设置相关的配置项
-    lightSettings () {
-      return this.config.setting ? this.config.setting.filter(item =>
-        item.tabName === 'custom' && item.groupName === 'light'
-      ) : []
+    ...mapState('bigScreen', {
+      pageInfo: state => state.pageInfo,
+      customTheme: state => state.pageInfo.pageConfig.customTheme
+    })
+  },
+  filters: {
+    filterGroupName(val) {
+      if (val === 'other') {
+        return '其他'
+      } else if (val === '基础') {
+        return '基础设置'
+      } else if (val === '相机') {
+        return '相机设置'
+      } else if (val === '模型') {
+        return '模型设置'
+      } else if (val === '数据') {
+        return '数据设置'
+      } else {
+        return val
+      }
     }
   },
+  created() {
+    this.init()
+  },
   methods: {
-    // 获取表单控件类型
-    getComponentType (item) {
-      const typeMap = {
-        inputNumber: 'el-input-number',
-        colorPicker: 'el-color-picker',
-        input: 'el-input',
-        select: 'el-select'
+    init() {
+      this.config = this.$store.state.bigScreen.activeItemConfig || {}
+      if (!this.config.setting) {
+        this.config.setting = []
       }
-      return typeMap[item.type] || 'el-input'
+      
+      this.initGroupList()
     },
-    // 获取组件额外属性
-    getComponentProps (item) {
-      const props = {
-        min: item.min,
-        max: item.max,
-        step: item.step
+    
+    // 初始化分组列表
+    initGroupList() {
+      this.groupList = []
+      const groupNameList = []
+      
+      if (!this.config.setting || !Array.isArray(this.config.setting)) {
+        return
       }
       
-      // 处理下拉选择器
-      if (item.type === 'select') {
-        props.options = item.options || []
-        props.multiple = item.multiple || false
-      }
+      this.config.setting.filter(
+        (item) => item.tabName === 'custom'
+      ).forEach(item => {
+        if (item.tabName === 'custom' && item.groupName) {
+          if (!groupNameList.includes(item.groupName)) {
+            groupNameList.push(item.groupName)
+            this.groupList.push({
+              groupName: item.groupName,
+              list: [item]
+            })
+          } else {
+            this.groupList.find(group => group.groupName === item.groupName).list.push(item)
+          }
+        } else {
+          if (this.groupList.find(group => group.groupName === 'other')) {
+            this.groupList.find(group => group.groupName === 'other').list.push(item)
+          } else {
+            this.groupList.push({
+              groupName: 'other',
+              list: [item]
+            })
+          }
+        }
+      })
       
-      return props
+      // 将"其他"分组移到最后
+      for (let i = 0; i < this.groupList.length; i++) {
+        if (this.groupList[i].groupName === 'other') {
+          const otherObject = this.groupList.splice(i, 1)[0]
+          this.groupList.push(otherObject)
+          break
+        }
+      }
     },
-    // 获取配置值，并确保对象存在
-    getConfigValue (item) {
-      const fieldKey = this.getFieldKey(item)
-      // 确保customize对象存在
-      if (!this.config.option) {
-        this.$set(this.config, 'option', {})
-      }
-      if (!this.config.option.customize) {
-        this.$set(this.config.option, 'customize', {})
-      }
-      // 如果属性不存在，使用默认值初始化
-      if (this.config.option.customize[fieldKey] === undefined) {
-        this.$set(this.config.option.customize, fieldKey, item.value)
-      }
-      return this.config.option.customize[fieldKey]
+    
+    // 更新颜色方案
+    updateColorScheme() {
+      // 处理颜色方案更新
+      this.$emit('update', this.config)
     },
-    // 更新配置值
-    updateConfigValue (item, value) {
-      const fieldKey = this.getFieldKey(item)
-      // 确保customize对象存在
-      if (!this.config.option) {
-        this.$set(this.config, 'option', {})
-      }
-      if (!this.config.option.customize) {
-        this.$set(this.config.option, 'customize', {})
-      }
-      
-      // 记录原值和新值，用于调试
-      console.log(`更新样式: ${fieldKey}, 原值: ${this.config.option.customize[fieldKey]}, 新值: ${value}`)
-      
-      // 更新值
-      this.$set(this.config.option.customize, fieldKey, value)
-      
-      // 如果更改了引擎类型，需要更新本地引擎列表
-      if (fieldKey === 'engineType' && value === 'local') {
-        this.loadLocalEngines()
-      }
-      
-      // 强制更新主题，确保触发ThreeRender的watch
-      if (this.config.option.theme) {
-        const currentTheme = this.config.option.theme
-        this.$set(this.config.option, 'theme', currentTheme === 'light' ? 'dark' : 'light')
-        setTimeout(() => {
-          this.$set(this.config.option, 'theme', currentTheme)
-        }, 0)
-      }
-      
-      // 触发配置更新
-      this.updateConfig()
-    },
-    // 获取字段对应的配置键名
-    getFieldKey (item) {
-      const fieldName = item.optionField || ''
-      return fieldName.replace('customize.', '')
-    },
-    // 更新配置
-    updateConfig () {
+    
+    // 应用配置变更
+    applyChanges() {
       // 处理主题跟随
       if (this.config.option) {
-        this.config.theme = settingToTheme(this.config.option)
+        this.config.theme = settingToTheme(this.config, this.customTheme)
       }
       
       console.log('ThreeComponent触发更新事件，当前配置:', {
@@ -225,97 +291,71 @@ export default {
       
       // 确保配置更新被传递给父组件
       this.$emit('update', this.config)
-    },
-    // 应用更改
-    applyChanges () {
-      console.log('手动应用样式变更')
-      
-      // 使用父组件的特殊处理方法
-      this.$parent.handleThreeComponentUpdate(this.config)
       
       // 显示成功提示
-      this.$message.success('3D样式已更新')
-    },
-    /**
-     * 加载本地引擎列表并更新设置选项
-     */
-    async loadLocalEngines () {
-      try {
-        // 获取本地引擎列表
-        const engines = await getLocalEngineList()
-        console.log('获取到本地引擎列表:', engines)
-        
-        // 更新设置选项中的本地引擎选项
-        const setting = _.cloneDeep(this.config.setting)
-        const engineField = setting.findIndex(item => item.field === 'customize_localEngine')
-        
-        if (engineField !== -1) {
-          setting[engineField].options = engines
-          
-          // 如果有引擎文件且当前值为空，则设置默认值为第一个引擎
-          if (engines.length > 0 && !setting[engineField].value) {
-            setting[engineField].value = engines[0].value
-            
-            // 同时更新options中的值
-            this.updateConfigValue(setting[engineField], engines[0].value)
-          }
-          
-          this.config.setting = setting
-        }
-      } catch (error) {
-        console.error('加载本地引擎列表失败:', error)
-      }
-    },
-    
-    /**
-     * 保存设置时也更新引擎选项
-     */
-    saveConfig () {
-      // ... existing code ...
-      
-      // 如果是3D模型组件，重新加载本地引擎列表
-      if (this.config.setting && this.config.setting.find(item => item.field === 'customize_localEngine')) {
-        this.loadLocalEngines()
-      }
-    }
-  },
-  mounted () {
-    // ... existing code ...
-    
-    // 如果是3D模型组件，加载本地引擎列表
-    if (this.config.setting && this.config.setting.find(item => item.field === 'customize_localEngine')) {
-      this.loadLocalEngines()
+      this.$message.success('3D配置已更新')
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.three-setting {
-  height: 100%;
-  padding: 10px;
-  box-sizing: border-box;
-  overflow-y: auto;
+@import '../../assets/style/settingWrap.scss';
+@import '../../assets/style/bsTheme.scss';
+
+// 筛选条件的按钮样式
+.add-filter-box {
+  position: relative;
+
+  .add-filter {
+    margin-left: 90px;
+    margin-bottom: 10px;
+  }
+
+  .add-filter-btn {
+    position: absolute;
+    top: 0;
+  }
 }
 
-.setting-item {
-  margin-bottom: 15px;
+.lc-field-body {
+  padding: 12px 16px;
 }
 
-.el-collapse {
-  border: none;
+.el-form-item {
+  margin-bottom: 6px !important;
 }
 
-/deep/ .el-form-item__label {
-  padding-bottom: 2px;
+.lc-field-title {
+  position: relative;
+  padding-left: 12px;
+  line-height: 30px;
+  height: 30px;
+  margin-bottom: 12px;
+  &:after {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    content: '';
+    width: 4px;
+    height: 14px;
+    background-color: var(--bs-el-color-primary);
+  }
+}
+
+::v-deep .el-color-picker__trigger {
+  border-color: var(--bs-el-border);
+}
+
+.color-picker-box {
+  ::v-deep .el-color-picker__trigger {
+    width: 27px !important;
+  }
 }
 
 .apply-button-container {
   margin-top: 15px;
   text-align: right;
-}
-
-/deep/ .el-select {
-  width: 100%;
 }
 </style>

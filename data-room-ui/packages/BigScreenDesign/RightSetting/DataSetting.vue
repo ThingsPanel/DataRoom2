@@ -131,6 +131,7 @@
                 filterable
                 clearable
                 :multiple="config.option.displayOption.dimensionField.multiple"
+                :value="config.dataSource.dimensionFieldList || []"
                 @change="dimensionFieldListChange"
                 @valuePositionChange="valuePositionChange"
               >
@@ -1089,6 +1090,23 @@ export default {
           value: ''
         }
       }
+    }
+    // 确保 dimensionFieldList 始终是数组
+    if (this.config.dataSource && this.config.option.displayOption.dimensionField && this.config.option.displayOption.dimensionField.multiple) {
+      if (!this.config.dataSource.dimensionFieldList) {
+        this.$set(this.config.dataSource, 'dimensionFieldList', []);
+      }
+    }
+    
+    // 确保其他可能使用 ElDragSelect 的字段也有默认值
+    if (this.config.dataSource) {
+      if (!this.config.dataSource.valueFieldList) {
+        this.$set(this.config.dataSource, 'valueFieldList', []);
+      }
+      if (!this.config.dataSource.seriesFieldList) {
+        this.$set(this.config.dataSource, 'seriesFieldList', []);
+      }
+      // 添加其他可能的字段...
     }
   },
   beforeDestroy () {

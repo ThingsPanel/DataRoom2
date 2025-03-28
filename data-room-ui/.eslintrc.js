@@ -30,7 +30,11 @@ module.exports = {
     'multiline-ternary': 'off',
     'vue/order-in-components': 'off',
     'no-eval': 'off',
-    'vue/no-template-shadow': 'off'
+    'vue/no-template-shadow': 'off',
+    // 函数名后需要空格
+    'space-before-function-paren': ['error', 'always'],
+    // 文件末尾需要空行
+    'eol-last': ['error', 'always']
   },
   extends: [
     'plugin:vue/recommended',

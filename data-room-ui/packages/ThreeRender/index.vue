@@ -1,25 +1,31 @@
 <template>
   <div
-    style="width: 100%; height: 100%"
+    style="width: 100%; height: 100%; position: relative;"
     class="bs-design-wrap bs-custom-component"
-    :class="{
-      'light-theme': customTheme === 'light',
-      'auto-theme': customTheme !== 'light'
-    }"
+    :class="{'light-theme':customTheme === 'light','auto-theme':customTheme !=='light'}"
   >
-    <div :id="threeId" style="width: 100%; height: 100%" />
+    <div
+      :id="chartId"
+      ref="container"
+      style="width: 100%; height: 100%; position: relative;"
+    />
   </div>
 </template>
+
 <script>
 import 'insert-css'
+import cloneDeep from 'lodash/cloneDeep'
 import linkageMixins from 'data-room-ui/js/mixins/linkageMixins'
 import commonMixins from 'data-room-ui/js/mixins/commonMixins'
 import { mapState, mapMutations } from 'vuex'
+import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
+import _ from 'lodash'
 import * as THREE from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 
 export default {
-  name: 'ThreeCustomComponent',
+  name: 'ThreeRender',
   mixins: [commonMixins, linkageMixins],
   props: {
     config: {
@@ -27,23 +33,31 @@ export default {
       default: () => ({})
     }
   },
-  data () {
+  data() {
     return {
       scene: null,
       camera: null,
       renderer: null,
       controls: null,
+      model: null,
+      animationFrame: null,
+      pm25Value: 38, // 默认PM2.5值
+      pm25Canvas: null,
+      pm25Context: null,
+      pm25Plane: null,
       hasData: false,
-      externalEngine: null
+      loader: null,
+      textureLoader: null,
+      displayPanel: null
     }
   },
   computed: {
     ...mapState('bigScreen', {
-      pageInfo: (state) => state.pageInfo,
-      customTheme: (state) => state.pageInfo.pageConfig.customTheme,
-      activeCode: (state) => state.activeCode
+      pageInfo: state => state.pageInfo,
+      customTheme: state => state.pageInfo.pageConfig.customTheme,
+      activeCode: state => state.activeCode
     }),
-    threeId () {
+    chartId() {
       let prefix = 'three_'
       if (this.$route.path === window?.BS_CONFIG?.routers?.previewUrl) {
         prefix = 'preview_three_'
@@ -59,995 +73,709 @@ export default {
       return prefix + this.config.code
     }
   },
-  created () {},
   watch: {
-    // 监听整个配置的变化
-    config: {
-      handler (newConfig, oldConfig) {
-        if (newConfig && oldConfig) {
-          // 判断是否是样式变化
-          if (
-            JSON.stringify(newConfig.option?.customize) !==
-            JSON.stringify(oldConfig.option?.customize)
-          ) {
-            console.log('检测到ThreeRender config整体变化，应用新样式')
-            this.applyStyleChanges(newConfig)
-          }
-        }
-      },
-      deep: true
-    },
     // 监听主题变化手动触发组件配置更新
     'config.option.theme': {
-      handler (val) {
+      handler(val) {
         if (val) {
-          console.log('监测到主题变化:', val)
           this.changeStyle(this.config, true)
         }
       }
     },
-    // 监听customize对象变化
-    'config.option.customize': {
-      handler (val) {
-        if (val) {
-          console.log('监测到样式配置变化:', val)
-          this.applyStyleChanges(this.config)
-        }
-      },
-      deep: true
+    // 监听 PM2.5 值变化
+    pm25Value: {
+      handler(val) {
+        this.updatePM25Display()
+      }
     }
   },
-  mounted () {
-    // 初始化Three.js场景
-    this.threeInit()
-
+  mounted() {
     // 监听容器大小变化
-    const dragSelect = document.querySelector('#' + this.threeId)
-    const resizeObserver = new ResizeObserver((entries) => {
-      if (this.renderer) {
-        const width = entries[0].contentRect.width
-        const height = entries[0].contentRect.height
-        this.renderer.setSize(width, height)
-        this.camera.aspect = width / height
-        this.camera.updateProjectionMatrix()
-      }
+    const container = this.$refs.container
+    this.resizeObserver = new ResizeObserver(() => {
+      this.onWindowResize()
     })
-    resizeObserver.observe(dragSelect)
+    this.resizeObserver.observe(container)
+    
+    this.chartInit()
   },
-  beforeDestroy () {
-    // 销毁外部引擎
-    if (this.externalEngine) {
-      try {
-        if (typeof this.externalEngine.destroy === 'function') {
-          console.log('销毁外部引擎')
-          this.externalEngine.destroy()
-        }
-      } catch (e) {
-        console.warn('销毁外部引擎时出错:', e)
-      }
-      this.externalEngine = null
-    }
-    // 销毁Three.js场景
-    if (this.renderer) {
-      this.renderer.dispose()
-      this.scene = null
-      this.camera = null
-      this.renderer = null
-      this.controls = null
-    }
-    // 清除动画
+  beforeDestroy() {
+    // 停止动画循环
     if (this.animationFrame) {
       cancelAnimationFrame(this.animationFrame)
       this.animationFrame = null
     }
+    
+    // 断开 ResizeObserver 连接
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect()
+      this.resizeObserver = null
+    }
+    
+    // 清理资源
+    this.cleanupScene()
   },
   methods: {
-    ...mapMutations('bigScreen', [
-      'changeChartConfig',
-      'changeActiveItemConfig',
-      'changeChartLoading'
-    ]),
-    threeInit() {
-      console.log(
-        'threeInit方法被调用，组件ID:',
-        this.threeId,
-        '配置:',
-        this.config
+    ...mapMutations('bigScreen', ['changeChartConfig', 'changeActiveItemConfig', 'changeChartLoading']),
+    
+    // 初始化Three.js场景
+    initThreeJS(config) {
+      // 清理现有场景
+      this.cleanupScene()
+      
+      // 创建场景
+      this.scene = new THREE.Scene()
+      
+      // 设置背景颜色
+      const backgroundColor = config.option.customize.backgroundColor || '#111111'
+      this.scene.background = new THREE.Color(backgroundColor)
+      
+      // 创建相机
+      const container = this.$refs.container
+      const width = container.clientWidth
+      const height = container.clientHeight
+      this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
+      
+      // 设置相机位置
+      const cameraPosition = config.option.customize.cameraPosition || { x: 0, y: 3, z: 7 }
+      this.camera.position.set(cameraPosition.x, cameraPosition.y, cameraPosition.z)
+      
+      // 创建渲染器
+      this.renderer = new THREE.WebGLRenderer({ antialias: true })
+      this.renderer.setSize(width, height)
+      this.renderer.shadowMap.enabled = true
+      container.appendChild(this.renderer.domElement)
+      
+      // 创建控制器
+      this.controls = new OrbitControls(this.camera, this.renderer.domElement)
+      this.controls.target.set(0, 2, 0)
+      this.controls.update()
+      
+      // 添加灯光
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.4)
+      this.scene.add(ambientLight)
+      
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6)
+      directionalLight.position.set(5, 10, 7.5)
+      directionalLight.castShadow = true
+      this.scene.add(directionalLight)
+      
+      // 添加地面
+      const ground = new THREE.Mesh(
+        new THREE.PlaneGeometry(20, 20),
+        new THREE.MeshStandardMaterial({ color: 0x222222 })
       )
-
-      // 检查容器是否存在
-      const container = document.getElementById(this.threeId)
-      if (!container) {
-        console.error('找不到容器元素:', this.threeId)
+      ground.rotation.x = -Math.PI / 2
+      ground.receiveShadow = true
+      this.scene.add(ground)
+      
+      // 创建PM2.5监测器模型
+      this.createPM25Monitor(config)
+      
+      // 开始动画循环
+      this.animate()
+    },
+    
+    // 创建PM2.5监测器模型
+    createPM25Monitor(config) {
+      // 创建一个组来包含所有部件
+      const monitorGroup = new THREE.Group()
+      
+      // 创建底座
+      const baseGeometry = new THREE.BoxGeometry(3, 0.3, 2)
+      const baseMaterial = new THREE.MeshStandardMaterial({ color: 0x333333 })
+      const base = new THREE.Mesh(baseGeometry, baseMaterial)
+      base.position.y = 0.15
+      base.receiveShadow = true
+      base.castShadow = true
+      monitorGroup.add(base)
+      
+      // 创建主体
+      const bodyGeometry = new THREE.BoxGeometry(2.5, 3, 1.5)
+      const bodyMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x3366cc,
+        metalness: 0.5,
+        roughness: 0.2
+      })
+      const body = new THREE.Mesh(bodyGeometry, bodyMaterial)
+      body.position.y = 1.8
+      body.receiveShadow = true
+      body.castShadow = true
+      monitorGroup.add(body)
+      
+      // 创建显示屏
+      const screenGeometry = new THREE.PlaneGeometry(2, 1.5)
+      const screenMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x000000,
+        emissive: 0x222222,
+        metalness: 0.8,
+        roughness: 0.2
+      })
+      const screen = new THREE.Mesh(screenGeometry, screenMaterial)
+      screen.position.set(0, 2, 0.76)
+      screen.receiveShadow = false
+      screen.castShadow = false
+      monitorGroup.add(screen)
+      
+      // 创建PM2.5值显示
+      this.pm25Canvas = document.createElement('canvas')
+      this.pm25Canvas.width = 256
+      this.pm25Canvas.height = 128
+      this.pm25Context = this.pm25Canvas.getContext('2d')
+      
+      // 绘制PM2.5值
+      this.updatePM25Display()
+      
+      const pm25Texture = new THREE.CanvasTexture(this.pm25Canvas)
+      const pm25Material = new THREE.MeshBasicMaterial({
+        map: pm25Texture,
+        transparent: true
+      })
+      
+      this.pm25Plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.8, 1.3),
+        pm25Material
+      )
+      this.pm25Plane.position.set(0, 2, 0.77)
+      monitorGroup.add(this.pm25Plane)
+      
+      // 创建传感器进气口
+      const intakeGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.5, 16)
+      const intakeMaterial = new THREE.MeshStandardMaterial({ color: 0x666666 })
+      const intake = new THREE.Mesh(intakeGeometry, intakeMaterial)
+      intake.rotation.x = Math.PI / 2
+      intake.position.set(0, 3.2, 0.5)
+      intake.receiveShadow = true
+      intake.castShadow = true
+      monitorGroup.add(intake)
+      
+      // 创建按钮
+      const buttonGeometry = new THREE.CylinderGeometry(0.1, 0.1, 0.05, 16)
+      const buttonMaterial = new THREE.MeshStandardMaterial({ color: 0xff0000 })
+      const button = new THREE.Mesh(buttonGeometry, buttonMaterial)
+      button.rotation.x = Math.PI / 2
+      button.position.set(0.8, 1, 0.8)
+      button.receiveShadow = true
+      button.castShadow = true
+      monitorGroup.add(button)
+      
+      // 添加到场景
+      this.scene.add(monitorGroup)
+      this.model = monitorGroup
+      
+      // 设置模型位置和缩放
+      const modelScale = config.option.customize.modelScale || 1
+      const modelPositionY = config.option.customize.modelPositionY || 0
+      
+      monitorGroup.position.y = modelPositionY
+      monitorGroup.scale.set(modelScale, modelScale, modelScale)
+      
+      console.log('PM2.5监测器模型创建成功')
+      
+      // 尝试加载GLB模型
+      this.loadGLBModel(config)
+    },
+    
+    // 加载GLB模型
+    loadGLBModel(config) {
+      // 创建加载器
+      if (!this.loader) {
+        this.loader = new GLTFLoader()
+      }
+      
+      // 获取模型路径 - 从组件配置中获取
+      // 注意：config.option.customize 中应该已经包含了从 PM25监测器.js 合并过来的配置
+      const modelPath = config.option.customize.modelPath
+      
+      // 如果没有指定模型路径，则使用内置的简单模型
+      if (!modelPath || modelPath === '') {
+        console.log('未指定模型路径，使用内置简单模型')
         return
       }
-
-      // 立即使用默认配置创建场景
-      const defaultConfig = {
-        name: this.config.name, // 确保传递组件名称
-        option: {
-          customize: {
-            fov: 75,
-            near: 0.1,
-            far: 1000,
-            cameraPositionZ: 5,
-            backgroundColor: '#000000',
-            ambientLightIntensity: 0.5,
-            ambientLightColor: '#ffffff',
-            directionalLightIntensity: 0.8,
-            directionalLightColor: '#ffffff'
-          },
-          threeData: []
+      
+      console.log('尝试加载模型:', modelPath)
+      
+      // 加载模型
+      this.loader.load(
+        modelPath,
+        (gltf) => {
+          // 模型加载成功
+          console.log('GLB模型加载成功:', gltf)
+          
+          // 移除之前的模型
+          if (this.model) {
+            this.scene.remove(this.model)
+          }
+          
+          // 设置新模型
+          this.model = gltf.scene
+          
+          // 设置模型位置和缩放
+          const modelScale = config.option.customize.modelScale || 1
+          const modelPositionY = config.option.customize.modelPositionY || 0
+          
+          this.model.position.y = modelPositionY
+          this.model.scale.set(modelScale, modelScale, modelScale)
+          
+          // 添加到场景
+          this.scene.add(this.model)
+          
+          // 创建PM2.5显示面板
+          this.createDisplayPanel()
+        },
+        (xhr) => {
+          // 加载进度
+          console.log((xhr.loaded / xhr.total * 100) + '% 已加载')
+        },
+        (error) => {
+          // 加载失败
+          console.error('加载GLB模型失败:', error)
         }
-      }
-
-      console.log('使用默认配置创建场景，组件名称:', defaultConfig.name)
-
-      // 先以默认配置渲染，保证有内容显示
-      this.newThreeScene(defaultConfig)
-
-      // 确保config存在并且有基础结构
-      if (!this.config) {
-        console.warn('配置对象不存在，只使用默认配置渲染')
-        return
-      }
-
-      let config = this.config
-      // key和code相等，说明是一进来刷新，调用list接口
-      if (this.config.code === this.config.key || this.isPreview) {
-        try {
-          // 改变样式
-          config = this.changeStyle(config)
-          // 改变数据
-          if (config) {
-            config.loading = true
-            this.changeChartLoading(config)
-            this.changeDataByCode(config)
-              .then((res) => {
-                // 初始化图表
-                if (config) {
-                  config.loading = false
-                  this.changeChartLoading(config)
-                }
-                this.newThreeScene(res)
-              })
-              .catch((err) => {
-                console.error('加载数据失败:', err)
-                if (config) {
-                  config.loading = false
-                  this.changeChartLoading(config)
-                }
-              })
-          }
-        } catch (err) {
-          console.error('初始化3D场景时出错:', err)
-          if (config) {
-            config.loading = false
-            this.changeChartLoading(config)
-          }
-        }
-      } else {
-        try {
-          if (config) {
-            config.loading = true
-            this.changeChartLoading(config)
-            // 否则说明是更新，这里的更新只指更新数据（改变样式时是直接调取changeStyle方法），因为更新数据会改变key,调用chart接口
-            this.changeData(config)
-              .then((res) => {
-                if (config) {
-                  config.loading = false
-                  this.changeChartLoading(config)
-                }
-                // 初始化图表
-                this.newThreeScene(res)
-              })
-              .catch((err) => {
-                console.error('更新数据失败:', err)
-                if (config) {
-                  config.loading = false
-                  this.changeChartLoading(config)
-                }
-              })
-          }
-        } catch (err) {
-          console.error('更新3D场景时出错:', err)
-          if (config) {
-            config.loading = false
-            this.changeChartLoading(config)
-          }
-        }
+      )
+    },
+    
+    // 创建PM2.5显示面板
+    createDisplayPanel() {
+      // 创建画布
+      const canvas = document.createElement('canvas')
+      canvas.width = 256
+      canvas.height = 128
+      const context = canvas.getContext('2d')
+      
+      // 绘制背景
+      context.fillStyle = '#000000'
+      context.fillRect(0, 0, 256, 128)
+      
+      // 绘制PM2.5文本
+      context.fillStyle = '#33cc33'
+      context.font = 'Bold 36px Arial'
+      context.textAlign = 'center'
+      context.fillText('PM2.5', 128, 50)
+      context.fillText(this.pm25Value.toString(), 128, 100)
+      
+      // 创建纹理
+      const texture = new THREE.CanvasTexture(canvas)
+      
+      // 创建材质
+      const material = new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true
+      })
+      
+      // 创建平面
+      const geometry = new THREE.PlaneGeometry(1, 0.5)
+      const plane = new THREE.Mesh(geometry, material)
+      
+      // 设置位置
+      plane.position.set(0, 2, 0.77)
+      
+      // 添加到模型
+      this.model.add(plane)
+      
+      // 保存引用
+      this.pm25Canvas = canvas
+      this.pm25Context = context
+      this.pm25Plane = plane
+    },
+    
+    // 更新PM2.5显示
+    updatePM25Display() {
+      if (!this.pm25Context) return
+      
+      // 清除画布
+      this.pm25Context.fillStyle = '#000000'
+      this.pm25Context.fillRect(0, 0, 256, 128)
+      
+      // 根据PM2.5值确定颜色
+      let color = '#33cc33' // 绿色 - 优
+      if (this.pm25Value > 35) color = '#ffff00' // 黄色 - 良
+      if (this.pm25Value > 75) color = '#ff9900' // 橙色 - 轻度污染
+      if (this.pm25Value > 115) color = '#ff0000' // 红色 - 中度污染
+      if (this.pm25Value > 150) color = '#800080' // 紫色 - 重度污染
+      if (this.pm25Value > 250) color = '#8b0000' // 深红 - 严重污染
+      
+      // 绘制PM2.5值
+      this.pm25Context.font = 'Bold 36px Arial'
+      this.pm25Context.fillStyle = color
+      this.pm25Context.textAlign = 'center'
+      this.pm25Context.fillText('PM2.5', 128, 50)
+      this.pm25Context.fillText(this.pm25Value.toString(), 128, 100)
+      
+      // 如果有纹理，更新它
+      if (this.pm25Plane && this.pm25Plane.material && this.pm25Plane.material.map) {
+        this.pm25Plane.material.map.needsUpdate = true
       }
     },
-    /**
-     * 初始化三维场景
-     */
-    newThreeScene(config) {
-      console.log(
-        'newThreeScene被调用，配置:',
-        config ? config.name : 'undefined'
-      )
-      const container = document.getElementById(this.threeId)
-      if (!container) {
-        console.error('找不到容器元素:', this.threeId)
+    
+    // 动画循环
+    animate() {
+      // 取消之前的动画循环
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame)
+      }
+      
+      // 创建新的动画循环
+      this.animationFrame = requestAnimationFrame(() => this.animate())
+      
+      // 更新控制器
+      if (this.controls) {
+        this.controls.update()
+      }
+      
+      // 旋转模型
+      if (this.model && this.config.option.customize) {
+        const rotationSpeed = this.config.option.customize.rotationSpeed || 0.005
+        this.model.rotation.y += rotationSpeed
+      }
+      
+      // 渲染场景
+      if (this.renderer && this.scene && this.camera) {
+        this.renderer.render(this.scene, this.camera)
+      }
+    },
+    
+    // 窗口大小调整
+    onWindowResize() {
+      if (!this.camera || !this.renderer) return
+      
+      const container = this.$refs.container
+      const width = container.clientWidth
+      const height = container.clientHeight
+      
+      // 更新相机
+      this.camera.aspect = width / height
+      this.camera.updateProjectionMatrix()
+      
+      // 更新渲染器
+      this.renderer.setSize(width, height)
+    },
+    
+    // 初始化图表
+    chartInit() {
+      // 确保 config 有值
+      if (!this.config) {
+        console.warn('配置对象为空，无法初始化图表')
         return
       }
-      console.log(
-        '初始化Three.js场景，容器尺寸:',
-        container.clientWidth,
-        'x',
-        container.clientHeight
-      )
-
-      // 确保config.option和config.option.customize存在
-      if (!config) {
-        console.error('配置对象不存在')
+      
+      // 确保 config 有 code 属性
+      if (!this.config.code) {
+        console.warn('配置对象缺少 code 属性，无法初始化图表')
         return
       }
-
-      // 记录组件类型
-      console.log('组件类型:', config.name)
-
+      
+      // 创建一个深拷贝，避免直接修改 this.config
+      let config = _.cloneDeep(this.config)
+      
+      // 确保 config.option 存在
       if (!config.option) {
         config.option = {}
       }
-
+      
+      // 确保 config.option.customize 存在
       if (!config.option.customize) {
         config.option.customize = {}
       }
-
-      // 记录配置信息
-      if (config && config.option && config.option.customize) {
-        console.log('样式配置信息:', {
-          背景颜色: config.option.customize.backgroundColor || '#000000',
-          环境光颜色: config.option.customize.ambientLightColor || '#ffffff',
-          环境光强度: config.option.customize.ambientLightIntensity || 0.5,
-          平行光颜色:
-            config.option.customize.directionalLightColor || '#ffffff',
-          平行光强度: config.option.customize.directionalLightIntensity || 0.8,
-          相机位置: [
-            config.option.customize.cameraPositionX || 0,
-            config.option.customize.cameraPositionY || 0,
-            config.option.customize.cameraPositionZ || 5
-          ]
-        })
+      
+      // key和code相等，说明是一进来刷新，调用list接口
+      if (config.code === config.key || this.isPreview) {
+        try {
+          // 改变样式
+          config = this.changeStyle(config)
+          
+          // 确保 config 有值
+          if (!config) {
+            console.warn('样式更新后配置对象为空，无法初始化图表')
+            return
+          }
+          
+          // 改变数据
+          config.loading = true
+          this.changeChartLoading(config)
+          
+          this.changeDataByCode(config).then((res) => {
+            // 初始化图表
+            if (res) {
+              res.loading = false
+              this.changeChartLoading(res)
+              this.initChart(res)
+            } else if (config) {
+              config.loading = false
+              this.changeChartLoading(config)
+              this.initChart(config)
+            }
+          }).catch((error) => {
+            console.error('加载数据失败:', error)
+            if (config) {
+              config.loading = false
+              this.changeChartLoading(config)
+              this.initChart(config)
+            }
+          })
+        } catch (error) {
+          console.error('初始化图表失败:', error)
+          this.initChart(config)
+        }
+      } else {
+        // 改变样式
+        try {
+          config = this.changeStyle(config)
+          this.initChart(config)
+        } catch (error) {
+          console.error('更新样式失败:', error)
+          this.initChart(config)
+        }
       }
-
-      // 第一次创建场景
+    },
+    
+    // 初始化图表
+    initChart(config) {
+      // 设置 PM2.5 值
+      this.pm25Value = config.option.customize.pm25Value || config.option.customize.defaultPM25Value || 38
+      
+      // 初始化Three.js场景
+      this.initThreeJS(config)
+    },
+    
+    // 更新传感器数据
+    freshSensors(data) {
       if (!this.scene) {
-        this.scene = new THREE.Scene()
-
-        const width = container.clientWidth
-        const height = container.clientHeight
-
-        // 创建相机
-        this.camera = new THREE.PerspectiveCamera(
-          config.option.customize.fov || 75,
-          width / height,
-          config.option.customize.near || 0.1,
-          config.option.customize.far || 1000
-        )
-
-        // 设置相机位置
-        this.camera.position.set(
-          config.option.customize.cameraPositionX || 0,
-          config.option.customize.cameraPositionY || 0,
-          config.option.customize.cameraPositionZ || 5
-        )
-
-        // 创建渲染器
-        this.renderer = new THREE.WebGLRenderer({
-          antialias: true,
-          alpha: true
-        })
-        this.renderer.setSize(width, height)
-        this.renderer.setPixelRatio(window.devicePixelRatio)
-
-        // 清除容器内容并添加渲染器的DOM元素
-        container.innerHTML = ''
-        container.appendChild(this.renderer.domElement)
-
-        // 添加控制器
-        this.controls = new OrbitControls(this.camera, this.renderer.domElement)
-        this.controls.enableDamping = true
-
-        // 注册事件处理器
-        this.registerEvent()
-
-        // 设置动画循环
-        if (!this.animationFrame) {
-          const animate = () => {
-            this.animationFrame = requestAnimationFrame(animate)
-            if (this.controls) {
-              this.controls.update()
-            }
-
-            // 给场景中的所有网格添加旋转动画
-            if (this.scene) {
-              this.scene.traverse((object) => {
-                if (object instanceof THREE.Mesh && object.userData.isDefault) {
-                  object.rotation.x += 0.01
-                  object.rotation.y += 0.01
-                }
-              })
-            }
-
-            if (this.renderer && this.scene && this.camera) {
-              this.renderer.render(this.scene, this.camera)
-            }
-          }
-          animate()
-        }
-      } else {
-        // 如果场景已经存在，更新相机参数
-        const width = container.clientWidth
-        const height = container.clientHeight
-
-        this.camera.fov = config.option.customize.fov || 75
-        this.camera.aspect = width / height
-        this.camera.near = config.option.customize.near || 0.1
-        this.camera.far = config.option.customize.far || 1000
-        this.camera.position.set(
-          config.option.customize.cameraPositionX || 0,
-          config.option.customize.cameraPositionY || 0,
-          config.option.customize.cameraPositionZ || 5
-        )
-        this.camera.updateProjectionMatrix()
-      }
-
-      // 应用样式配置
-      this.applyStyleChanges(config)
-
-      // 根据配置添加3D对象
-      this.createObjects(config)
-    },
-
-    /**
-     * 创建3D对象
-     */
-    createObjects(config) {
-      // 检查配置是否有效
-      if (!config || !config.option) {
-        console.warn('无效的配置对象，创建默认对象')
-        this.createDefaultObject(config)
+        console.warn('场景未初始化，无法更新传感器数据')
         return
       }
-
-      console.log(
-        '创建3D对象，配置:',
-        config.name,
-        '数据:',
-        config.option?.threeData?.length || 0,
-        '个项目'
-      )
-
-      // 根据配置和数据创建对象
-      if (config.option?.threeData && config.option.threeData.length > 0) {
-        // 处理数据并创建对象
-        switch (config.name) {
-          case '3D基础立方体':
-            this.createCubes(config)
-            break
-          case '3D基础球体':
-            this.createSpheres(config)
-            break
-          default:
-            // 默认创建一个示例对象，根据名称判断类型
-            console.log('未知的3D类型:', config.name, '创建默认对象')
-            this.createDefaultObject(config)
+      
+      // 获取 PM2.5 值
+      if (data && Array.isArray(data)) {
+        const pm25Field = this.config.option.customize.pm25Field || 'pm25'
+        const pm25Data = data.find(item => item.key === pm25Field || item.name === pm25Field)
+        if (pm25Data && pm25Data.value !== undefined) {
+          this.pm25Value = pm25Data.value
+          this.updatePM25Display()
         }
-      } else {
-        console.log('没有3D数据，创建默认对象')
-        this.createDefaultObject(config)
       }
     },
-
-    /**
-     * 创建默认对象 - 根据配置类型决定创建球体还是立方体
-     */
-    createDefaultObject(config) {
-      console.log('创建默认对象，配置:', config ? config.name : '无')
-
-      // 判断是创建什么类型的默认对象
-      let createCube = false
-      if (config && config.name) {
-        // 检查组件名称，确定类型
-        console.log('根据组件名称决定创建的对象类型:', config.name)
-        if (config.name === '3D基础立方体') {
-          createCube = true
-          console.log('将创建立方体默认对象')
-        } else {
-          console.log('将创建球体默认对象')
+    
+    // 组件的样式改变，返回改变后的config
+    changeStyle(config, isUpdateTheme) {
+      // 确保 config 有值
+      if (!config) {
+        console.warn('配置对象为空，无法更新样式')
+        return this.config || {}
+      }
+      
+      // 确保 config 有 code 属性
+      if (!config.code && this.config && this.config.code) {
+        config.code = this.config.code
+      }
+      
+      config = { ...this.config, ...config }
+      
+      // 确保 config.setting 存在
+      if (!config.setting) {
+        config.setting = []
+      }
+      
+      config = this.transformSettingToOption(config, 'custom')
+      
+      // 这里定义了option和setting是为了保证在执行eval时,optionHandler、dataHandler里面可能会用到
+      const option = config.option || {}
+      const setting = config.setting || []
+      
+      if (this.config && this.config.optionHandler) {
+        try {
+          // 此处函数处理config
+          eval(this.config.optionHandler)
+        } catch (e) {
+          console.error('执行optionHandler失败:', e)
+        }
+      }
+      
+      // 只有样式改变时更新主题配置，切换主题时不需要保存
+      if (!isUpdateTheme) {
+        try {
+          config.theme = settingToTheme(_.cloneDeep(config), this.customTheme)
+        } catch (e) {
+          console.error('设置主题失败:', e)
+        }
+      }
+      
+      // 确保 config 有 code 属性再调用 changeChartConfig
+      if (config.code) {
+        try {
+          this.changeChartConfig(config)
+          if (config.code === this.activeCode) {
+            this.changeActiveItemConfig(config)
+          }
+        } catch (e) {
+          console.error('更新配置失败:', e)
         }
       } else {
-        console.warn('没有有效的config.name，默认创建球体')
+        console.warn('配置对象缺少 code 属性，无法更新图表配置')
       }
-
-      // 清除旧对象 - 只清除没有userData标记的对象，避免清除有数据的对象
+      
+      // 如果场景已经初始化，更新场景
       if (this.scene) {
-        const objectsToRemove = []
-        this.scene.traverse((object) => {
-          // 只移除没有用户数据的Mesh对象，有数据的对象代表是数据生成的，应该保留
-          if (object instanceof THREE.Mesh && !object.userData.data) {
-            objectsToRemove.push(object)
+        try {
+          // 更新背景颜色
+          if (option.customize && option.customize.backgroundColor) {
+            this.scene.background = new THREE.Color(option.customize.backgroundColor)
           }
-        })
-        objectsToRemove.forEach((obj) => this.scene.remove(obj))
-      }
-
-      if (createCube) {
-        // 创建一个立方体作为默认对象
-        const geometry = new THREE.BoxGeometry(1, 1, 1)
-        const material = new THREE.MeshStandardMaterial({
-          color: 0x0000ff, // 默认蓝色立方体
-          metalness: 0.3,
-          roughness: 0.4
-        })
-        const cube = new THREE.Mesh(geometry, material)
-
-        // 添加旋转动画以便更容易看到
-        cube.rotation.x = Math.PI / 4
-        cube.rotation.y = Math.PI / 4
-
-        // 标记为默认对象
-        cube.userData = {
-          isDefault: true,
-          objectType: 'defaultCube'
-        }
-
-        this.scene.add(cube)
-        console.log('创建默认立方体完成')
-      } else {
-        // 创建一个球体作为默认对象
-        const geometry = new THREE.SphereGeometry(1, 32, 32)
-        const material = new THREE.MeshStandardMaterial({
-          color: 0xff0000, // 默认红色球体
-          metalness: 0.3,
-          roughness: 0.4
-        })
-        const sphere = new THREE.Mesh(geometry, material)
-
-        // 添加旋转动画以便更容易看到
-        sphere.rotation.x = Math.PI / 4
-        sphere.rotation.y = Math.PI / 4
-
-        // 标记为默认对象
-        sphere.userData = {
-          isDefault: true,
-          objectType: 'defaultSphere'
-        }
-
-        this.scene.add(sphere)
-        console.log('创建默认球体完成')
-      }
-
-      // 添加后再次确认场景中的对象
-      console.log('场景中的对象数量：', this.scene.children.length)
-    },
-
-    /**
-     * 创建立方体
-     */
-    createCubes(config) {
-      if (!config || !config.option || !config.option.threeData) {
-        console.warn('createCubes: 无效的配置或数据')
-        this.createDefaultObject(config)
-        return
-      }
-
-      const data = config.option.threeData
-      console.log('创建立方体，数据:', JSON.stringify(data))
-
-      // 清除旧对象 - 确保只清除默认对象和立方体，保留其他对象
-      if (this.scene) {
-        const objectsToRemove = []
-        this.scene.traverse((object) => {
-          // 移除默认对象和立方体
-          if (
-            object instanceof THREE.Mesh &&
-            (object.userData.isDefault ||
-              object.geometry instanceof THREE.BoxGeometry)
-          ) {
-            objectsToRemove.push(object)
-          }
-        })
-        objectsToRemove.forEach((obj) => this.scene.remove(obj))
-      }
-
-      data.forEach((item, index) => {
-        // 计算立方体位置，确保多个立方体不重叠
-        const x =
-          item.x !== undefined ? Number(item.x) : index * 2 - (data.length - 1)
-        const y = item.y !== undefined ? Number(item.y) : 0
-        const z = item.z !== undefined ? Number(item.z) : 0
-
-        // 确定立方体尺寸
-        const width = item.width !== undefined ? Number(item.width) : 1
-        const height = item.height !== undefined ? Number(item.height) : 1
-        const depth = item.depth !== undefined ? Number(item.depth) : 1
-
-        // 确定颜色
-        let color = 0x0000ff // 默认蓝色
-        if (item.color !== undefined) {
-          color = item.color
-        } else if (item.value !== undefined) {
-          // 根据值的大小创建从蓝色到红色的渐变色
-          const value = Number(item.value)
-          const normalizedValue = Math.min(1, Math.max(0, value / 100)) // 归一化到0-1范围
-          // 从蓝色(0x0000ff)到红色(0xff0000)的渐变
-          const r = Math.floor(normalizedValue * 255)
-          const b = Math.floor((1 - normalizedValue) * 255)
-          color = (r << 16) | (0 << 8) | b
-        }
-
-        const geometry = new THREE.BoxGeometry(width, height, depth)
-        const material = new THREE.MeshStandardMaterial({
-          color: color,
-          metalness: 0.3,
-          roughness: 0.4
-        })
-        const cube = new THREE.Mesh(geometry, material)
-        cube.position.set(x, y, z)
-
-        // 保存原始数据用于交互
-        cube.userData = {
-          data: item,
-          index: index,
-          originalColor: color,
-          originalScale: { x: 1, y: 1, z: 1 },
-          originalPosition: { x, y, z },
-          objectType: 'cube'
-        }
-
-        this.scene.add(cube)
-        console.log(
-          '添加立方体，尺寸:',
-          width,
-          height,
-          depth,
-          '颜色:',
-          color.toString(16),
-          '位置:',
-          x,
-          y,
-          z
-        )
-      })
-
-      // 注册交互事件
-      this.registerEvent()
-    },
-
-    /**
-     * 创建球体
-     */
-    createSpheres(config) {
-      if (!config || !config.option || !config.option.threeData) {
-        console.warn('createSpheres: 无效的配置或数据')
-        this.createDefaultObject(config)
-        return
-      }
-
-      const data = config.option.threeData
-      console.log('创建球体，数据:', JSON.stringify(data))
-
-      // 清除旧对象 - 确保只清除默认对象和球体，保留其他对象
-      if (this.scene) {
-        const objectsToRemove = []
-        this.scene.traverse((object) => {
-          // 移除默认对象和球体
-          if (
-            object instanceof THREE.Mesh &&
-            (object.userData.isDefault ||
-              object.geometry instanceof THREE.SphereGeometry)
-          ) {
-            objectsToRemove.push(object)
-          }
-        })
-        objectsToRemove.forEach((obj) => this.scene.remove(obj))
-      }
-
-      data.forEach((item, index) => {
-        // 计算球体位置，确保多个球体不重叠
-        const x =
-          item.x !== undefined ? Number(item.x) : index * 2 - (data.length - 1)
-        const y = item.y !== undefined ? Number(item.y) : 0
-        const z = item.z !== undefined ? Number(item.z) : 0
-
-        // 从数值计算球体大小
-        let radius = 0.5
-        if (item.radius !== undefined) {
-          radius = Number(item.radius)
-        } else if (item.value !== undefined) {
-          // 根据数值调整大小，最小0.5，最大2
-          radius = Math.max(0.5, Math.min(2, Number(item.value) / 10))
-        }
-
-        // 从数值计算颜色
-        let color = 0xff0000 // 默认红色
-        if (item.color !== undefined) {
-          color = item.color
-        } else if (item.value !== undefined) {
-          // 根据值的大小创建从蓝色到红色的渐变色
-          const value = Number(item.value)
-          const normalizedValue = Math.min(1, Math.max(0, value / 100)) // 归一化到0-1范围
-          // 从蓝色(0x0000ff)到红色(0xff0000)的渐变
-          const r = Math.floor(normalizedValue * 255)
-          const b = Math.floor((1 - normalizedValue) * 255)
-          color = (r << 16) | (0 << 8) | b
-        }
-
-        // 使用SphereGeometry创建球体几何体
-        const geometry = new THREE.SphereGeometry(radius, 32, 32)
-        const material = new THREE.MeshStandardMaterial({
-          color: color,
-          metalness: 0.3,
-          roughness: 0.4
-        })
-        const sphere = new THREE.Mesh(geometry, material)
-        sphere.position.set(x, y, z)
-
-        // 保存原始数据用于交互
-        sphere.userData = {
-          data: item,
-          index: index,
-          originalColor: color,
-          originalScale: { x: 1, y: 1, z: 1 },
-          originalPosition: { x, y, z },
-          objectType: 'sphere'
-        }
-
-        this.scene.add(sphere)
-        console.log(
-          '添加球体，半径:',
-          radius,
-          '颜色:',
-          color.toString(16),
-          '位置:',
-          x,
-          y,
-          z
-        )
-      })
-
-      // 注册交互事件
-      this.registerEvent()
-    },
-
-    /**
-     * 注册事件处理
-     */
-    registerEvent() {
-      console.log('注册3D对象交互事件')
-
-      // 移除旧事件监听器，避免重复
-      if (this.renderer && this.renderer.domElement) {
-        this.renderer.domElement.removeEventListener(
-          'click',
-          this.onClickHandler
-        )
-        this.renderer.domElement.removeEventListener(
-          'mousemove',
-          this.onMouseMoveHandler
-        )
-
-        // 保存事件处理函数引用，以便之后可以删除
-        this.onClickHandler = this.onClick.bind(this)
-        this.onMouseMoveHandler = this.onMouseMove.bind(this)
-
-        // 添加新的事件监听器
-        this.renderer.domElement.addEventListener(
-          'click',
-          this.onClickHandler,
-          false
-        )
-        this.renderer.domElement.addEventListener(
-          'mousemove',
-          this.onMouseMoveHandler,
-          false
-        )
-
-        console.log('事件注册完成')
-      } else {
-        console.warn('渲染器未初始化，无法注册事件')
-      }
-    },
-
-    /**
-     * 鼠标移动事件处理
-     */
-    onMouseMove(event) {
-      // 计算鼠标位置的标准化坐标
-      const rect = this.renderer.domElement.getBoundingClientRect()
-      const pointer = new THREE.Vector2()
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-
-      // 从相机发射射线
-      const raycaster = new THREE.Raycaster()
-      raycaster.setFromCamera(pointer, this.camera)
-
-      // 检测射线与对象相交
-      const intersects = raycaster.intersectObjects(this.scene.children)
-
-      // 重置所有对象
-      this.scene.traverse((object) => {
-        if (object instanceof THREE.Mesh && object.userData.originalScale) {
-          // 恢复原始颜色和大小
-          object.material.color.setHex(object.userData.originalColor)
-          object.scale.set(1, 1, 1)
-        }
-      })
-
-      // 高亮悬停对象
-      if (intersects.length > 0) {
-        const object = intersects[0].object
-        if (object instanceof THREE.Mesh) {
-          // 高亮颜色 - 变亮
-          const color = new THREE.Color(object.userData.originalColor)
-          color.multiplyScalar(1.2) // 增加亮度
-          object.material.color.set(color)
-
-          // 稍微放大
-          object.scale.set(1.1, 1.1, 1.1)
-
-          // 显示提示信息（可以通过DOM元素实现）
-          if (object.userData.data) {
-            const data = object.userData.data
-            console.log('鼠标悬停数据:', data)
-            document.body.style.cursor = 'pointer'
-          }
-        }
-      } else {
-        document.body.style.cursor = 'default'
-      }
-    },
-
-    /**
-     * 点击事件处理
-     */
-    onClick(event) {
-      console.log('3D对象点击事件触发')
-
-      // 计算鼠标位置的标准化坐标
-      const rect = this.renderer.domElement.getBoundingClientRect()
-      const pointer = new THREE.Vector2()
-      pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1
-      pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1
-
-      // 从相机发射射线
-      const raycaster = new THREE.Raycaster()
-      raycaster.setFromCamera(pointer, this.camera)
-
-      // 检测射线与对象相交
-      const intersects = raycaster.intersectObjects(this.scene.children)
-
-      if (intersects.length > 0) {
-        const object = intersects[0].object
-        if (object.userData.data) {
-          console.log('点击了3D对象，数据:', object.userData.data)
-
-          // 提取数据并进行联动
-          const formData = object.userData.data
-          this.linkage(formData)
-
-          // 动画效果 - 跳动
-          const jumpAnimation = () => {
-            const time = Date.now() * 0.001 // 当前时间(秒)
-            const originalY = object.userData.originalPosition.y
-            object.position.y = originalY + Math.sin(time * 5) * 0.5 // 上下跳动
-
-            // 停止之前的动画
-            if (this.clickAnimationId) {
-              cancelAnimationFrame(this.clickAnimationId)
-            }
-
-            // 继续动画
-            this.clickAnimationId = requestAnimationFrame(jumpAnimation)
-
-            // 3秒后停止动画
-            setTimeout(() => {
-              if (this.clickAnimationId) {
-                cancelAnimationFrame(this.clickAnimationId)
-                this.clickAnimationId = null
-                object.position.y = originalY // 恢复原位置
-              }
-            }, 3000)
-          }
-
-          // 开始动画
-          jumpAnimation()
-        }
-      }
-    },
-
-    /**
-     * 链接数据
-     */
-    linkage(data) {
-      if (!data) {
-        console.warn('联动数据为空')
-        return
-      }
-      console.log('3D对象点击事件触发', data)
-
-      // 执行自定义联动逻辑
-      // 如果需要将联动事件传递给父组件，可以使用this.$emit
-      this.$emit('linkage', data)
-    },
-
-    /**
-     * 处理数据
-     */
-    dataFormatting(config, data) {
-      console.log(
-        'ThreeRender dataFormatting被调用，数据状态:',
-        data.success,
-        '组件类型:',
-        config.name
-      )
-
-      // 数据返回成功则赋值
-      if (data.success) {
-        // 保存原始数据用于调试
-        const originalData = JSON.parse(JSON.stringify(data.data || []))
-
-        // 处理数据
-        config.option.threeData = data.data || []
-        console.log('获取到数据:', config.option.threeData.length, '条记录')
-
-        // 执行自定义数据处理函数
-        if (config.dataHandler) {
-          try {
-            console.log('开始执行数据处理脚本')
-            // 确保必要的变量在执行eval前已定义
-            const setting = config.setting || []
-            const option = config.option || {}
-
-            // 检查维度和指标字段是否设置
-            const xField = setting.find(
-              (item) => item.optionField === 'xField'
-            )?.value
-            const yField = setting.find(
-              (item) => item.optionField === 'yField'
-            )?.value
-            console.log('维度字段:', xField, '指标字段:', yField)
-
-            // 执行处理脚本
-            eval(config.dataHandler)
-
-            // 验证处理后的数据
-            console.log(
-              '数据处理完成,处理后数据条数:',
-              option.threeData?.length || 0
+          
+          // 更新相机位置
+          if (option.customize && option.customize.cameraPosition) {
+            this.camera.position.set(
+              option.customize.cameraPosition.x,
+              option.customize.cameraPosition.y,
+              option.customize.cameraPosition.z
             )
-          } catch (e) {
-            console.error('数据处理脚本执行错误:', e)
           }
-        } else {
-          console.warn('无数据处理脚本')
+          
+          // 更新模型缩放和位置
+          if (this.model && option.customize) {
+            const modelScale = option.customize.modelScale || 1
+            const modelPositionY = option.customize.modelPositionY || 0
+            
+            this.model.position.y = modelPositionY
+            this.model.scale.set(modelScale, modelScale, modelScale)
+          }
+          
+          // 更新PM2.5值
+          this.pm25Value = option.customize.pm25Value || option.customize.defaultPM25Value || 38
+          this.updatePM25Display()
+        } catch (e) {
+          console.error('更新场景失败:', e)
         }
-      } else {
-        console.warn('数据获取失败, 使用空数据', data)
-        // 确保threeData存在，即使为空数组
-        if (!config.option) {
-          config.option = {}
-        }
-        config.option.threeData = []
       }
-
+      
       return config
     },
-
-    /**
-     * 应用样式变化
-     */
-    applyStyleChanges(config) {
-      // 检查配置是否有效
-      if (!config || !config.option || !config.option.customize) {
-        console.warn('无效的样式配置')
-        return
+    
+    // 数据格式化
+    dataFormatting(config, data) {
+      if (!config) {
+        console.warn('配置对象为空，无法格式化数据')
+        return this.config || {}
       }
-
-      const customize = config.option.customize
-
-      // 应用背景颜色
-      if (this.scene && this.renderer) {
-        if (customize.backgroundColor) {
-          this.scene.background = new THREE.Color(customize.backgroundColor)
-          console.log('更新背景颜色为:', customize.backgroundColor)
+      
+      // 确保 config.option 存在
+      if (!config.option) {
+        config.option = {}
+      }
+      
+      // 确保 config.option.customize 存在
+      if (!config.option.customize) {
+        config.option.customize = {}
+      }
+      
+      // 如果有数据，尝试提取 PM2.5 值
+      if (data && data.data && Array.isArray(data.data)) {
+        const pm25Field = config.option.customize.pm25Field || 'pm25'
+        const pm25Data = data.data.find(item => item.key === pm25Field || item.name === pm25Field)
+        if (pm25Data && pm25Data.value !== undefined) {
+          config.option.customize.pm25Value = pm25Data.value
         }
       }
-
-      // 更新相机参数
-      if (this.camera) {
-        // 更新视场角
-        if (customize.fov) {
-          this.camera.fov = customize.fov
-          console.log('更新相机视场角为:', customize.fov)
-        }
-
-        // 更新近裁剪面
-        if (customize.near) {
-          this.camera.near = customize.near
-          console.log('更新相机近裁剪面为:', customize.near)
-        }
-
-        // 更新远裁剪面
-        if (customize.far) {
-          this.camera.far = customize.far
-          console.log('更新相机远裁剪面为:', customize.far)
-        }
-
-        // 更新相机位置
-        if (
-          customize.cameraPositionX !== undefined ||
-          customize.cameraPositionY !== undefined ||
-          customize.cameraPositionZ !== undefined
-        ) {
-          const x = customize.cameraPositionX || 0
-          const y = customize.cameraPositionY || 0
-          const z = customize.cameraPositionZ || 5
-          this.camera.position.set(x, y, z)
-          console.log('更新相机位置为:', x, y, z)
-        }
-
-        this.camera.updateProjectionMatrix()
-      }
-
-      // 清除所有光源
-      if (this.scene) {
-        const lightsToRemove = []
-        this.scene.traverse((object) => {
-          if (object instanceof THREE.Light) {
-            lightsToRemove.push(object)
+      
+      return config
+    },
+    
+    // 转换设置到选项
+    transformSettingToOption(config, tabName) {
+      if (!config || !config.setting) return config
+      
+      const setting = config.setting.filter(item => item.tabName === tabName)
+      if (!setting.length) return config
+      
+      const newConfig = _.cloneDeep(config)
+      
+      setting.forEach(item => {
+        if (item.optionField) {
+          const fields = item.optionField.split('.')
+          let current = newConfig.option
+          
+          for (let i = 0; i < fields.length - 1; i++) {
+            if (!current[fields[i]]) {
+              current[fields[i]] = {}
+            }
+            current = current[fields[i]]
           }
-        })
-        lightsToRemove.forEach((light) => this.scene.remove(light))
+          
+          current[fields[fields.length - 1]] = item.value
+        }
+      })
+      
+      return newConfig
+    },
+    
+    // 清理场景
+    cleanupScene() {
+      // 停止动画循环
+      if (this.animationFrame) {
+        cancelAnimationFrame(this.animationFrame)
+        this.animationFrame = null
       }
-
-      // 添加环境光
+      
+      // 清理渲染器
+      if (this.renderer) {
+        if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+          this.renderer.domElement.parentNode.removeChild(this.renderer.domElement)
+        }
+        this.renderer.dispose()
+        this.renderer = null
+      }
+      
+      // 清理控制器
+      if (this.controls) {
+        this.controls.dispose()
+        this.controls = null
+      }
+      
+      // 清理场景中的所有对象
       if (this.scene) {
-        // 环境光
-        if (customize.ambientLightIntensity > 0) {
-          const ambientLight = new THREE.AmbientLight(
-            customize.ambientLightColor || 0xffffff,
-            customize.ambientLightIntensity || 0.5
-          )
-          this.scene.add(ambientLight)
-          console.log(
-            '更新环境光:',
-            customize.ambientLightColor,
-            '强度:',
-            customize.ambientLightIntensity
-          )
+        while (this.scene.children.length > 0) {
+          const object = this.scene.children[0]
+          if (object.geometry) {
+            object.geometry.dispose()
+          }
+          if (object.material) {
+            if (Array.isArray(object.material)) {
+              object.material.forEach(material => material.dispose())
+            } else {
+              object.material.dispose()
+            }
+          }
+          this.scene.remove(object)
         }
-
-        // 添加平行光
-        if (customize.directionalLightIntensity > 0) {
-          const directionalLight = new THREE.DirectionalLight(
-            customize.directionalLightColor || 0xffffff,
-            customize.directionalLightIntensity || 0.8
-          )
-          directionalLight.position.set(
-            customize.directionalLightPositionX || 1,
-            customize.directionalLightPositionY || 1,
-            customize.directionalLightPositionZ || 1
-          )
-          this.scene.add(directionalLight)
-          console.log(
-            '更新平行光:',
-            customize.directionalLightColor,
-            '强度:',
-            customize.directionalLightIntensity
-          )
-        }
-
-        // 重新渲染场景
-        if (this.renderer && this.scene && this.camera) {
-          this.renderer.render(this.scene, this.camera)
-        }
+        this.scene = null
+      }
+      
+      // 清理相机
+      this.camera = null
+      
+      // 清理模型
+      this.model = null
+      
+      // 清理画布
+      if (this.pm25Canvas) {
+        this.pm25Canvas = null
+        this.pm25Context = null
+        this.pm25Plane = null
       }
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.light-theme {
+  background-color: #ffffff;
+  color: #000000;
+}
+.auto-theme {
+  background-color: transparent;
+}
+.bs-design-wrap {
+  overflow: hidden;
+}
+</style>
+

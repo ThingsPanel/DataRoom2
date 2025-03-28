@@ -25,7 +25,7 @@ export default {
   props: {
     value: {
       type: [Array, String],
-      required: true
+      default: () => []
     }
   },
   computed: {
