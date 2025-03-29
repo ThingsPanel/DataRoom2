@@ -104,7 +104,7 @@
           </div>
         </div>
         <div
-          v-if="!['tree','multipleNumberChart','carousel'].includes(config.type) && config.option.displayOption.dataSourceType.enable && (!['expression','static'].includes(config.dataSource.source))"
+          v-if="!['tree','multipleNumberChart','carousel'].includes(config.type) && config.option && config.option.displayOption && config.option.displayOption.dataSourceType.enable && (!['expression','static'].includes(config.dataSource.source))"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -115,10 +115,10 @@
             </div>
           </div>
           <!--  基础组件数据配置  -->
-          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick'].includes(config.type)">
+          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick','threeComponent'].includes(config.type) && config.option && config.option.displayOption">
             <!--维度多选-->
             <el-form-item
-              v-if="config.option.displayOption.dimensionField.enable"
+              v-if="config.option.displayOption.dimensionField && config.option.displayOption.dimensionField.enable"
               :label="config.option.displayOption.dimensionField.label"
               :prop="config.option.displayOption.dimensionField.multiple? 'dataSource.dimensionFieldList' : 'dataSource.dimensionField'"
               class="data-form-item"
@@ -180,7 +180,7 @@
             </el-form-item>
             <!--指标-->
             <el-form-item
-              v-if="config.option.displayOption.metricField.enable"
+              v-if="config.option.displayOption.metricField && config.option.displayOption.metricField.enable"
               :label="config.option.displayOption.metricField.label"
               prop="dataSource.metricField"
               class="data-form-item"

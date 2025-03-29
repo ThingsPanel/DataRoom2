@@ -6,11 +6,15 @@ const path = require('path')
 const { ProvidePlugin } = require('webpack')
 const CompressionPlugin = require('compression-webpack-plugin')
 const webpack = require('webpack')
+const glbConfig = require('./vue.config.glb')
+const { merge } = require('webpack-merge')
+
 function resolve (dir) {
   return path.join(__dirname, dir)
 }
 
-module.exports = {
+// 获取原始配置
+const originalConfig = {
   lintOnSave: false,
   css: {
     extract: true
@@ -124,3 +128,6 @@ module.exports = {
       .end()
   }
 }
+
+// 合并配置
+module.exports = merge(originalConfig, glbConfig)

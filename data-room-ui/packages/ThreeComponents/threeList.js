@@ -59,6 +59,16 @@ function getThreeList(files) {
             ...cloneDeep(settingConfig.displayOption),
             dataAllocation: {
               enable: true
+            },
+            dimensionField: {
+              enable: false
+            },
+            metricField: {
+              enable: false
+            },
+            dataSourceType: {
+              enable: true,
+              default: 'static'
             }
           }
         },
@@ -114,6 +124,16 @@ function getThreeList(files) {
             ...cloneDeep(settingConfig.displayOption),
             dataAllocation: {
               enable: true
+            },
+            dimensionField: {
+              enable: false
+            },
+            metricField: {
+              enable: false
+            },
+            dataSourceType: {
+              enable: true,
+              default: 'static'
             }
           }
         },

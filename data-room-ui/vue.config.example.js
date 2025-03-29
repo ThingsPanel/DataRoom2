@@ -7,6 +7,9 @@ const path = require('path')
 const CompressionPlugin = require('compression-webpack-plugin')
 // const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 const webpack = require('webpack')
+const glbConfig = require('./vue.config.glb')
+const { merge } = require('webpack-merge')
+
 function resolve (dir) {
   return path.join(__dirname, dir)
 }
@@ -30,7 +33,9 @@ const plugins = [
     'window.jQuery': 'jquery'
   })
 ]
-module.exports = {
+
+// 获取原始配置
+const originalConfig = {
   parallel: require('os').cpus().length > 1,
   pages: {
     index: {
@@ -198,3 +203,6 @@ module.exports = {
   // 在这里配置需要对node_modules中需要进行语法转义的依赖
   transpileDependencies: ['@antv/*']
 }
+
+// 合并配置
+module.exports = merge(originalConfig, glbConfig)

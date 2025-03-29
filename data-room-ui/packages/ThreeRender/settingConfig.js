@@ -2,16 +2,22 @@ import { commonConfig, displayOption } from 'data-room-ui/js/config'
 
 export const settingConfig = {
   displayOption: {
-    ...displayOption
-  }}
-
-const customConfig = {
-  root: {
-    contribution: false
+    ...displayOption,
+    dataAllocation: {
+      enable: true
+    },
+    dataSourceType: {
+      enable: true,
+      default: 'static'
+    },
+    dimensionField: {
+      enable: false
+    },
+    metricField: {
+      enable: false
+    }
   },
   customize: {
-    theme: 'dark', // 'light'、'dark'
-    modelPath: './glbs/PM25_Monitor.glb',
     backgroundColor: '#111111',
     cameraPosition: {
       x: 0,
@@ -21,8 +27,16 @@ const customConfig = {
     rotationSpeed: 0.005,
     modelScale: 1,
     modelPositionY: 0,
-    pm25Field: 'pm25',
-    defaultPM25Value: 99
+    pm25Value: 99
+  }
+}
+
+const customConfig = {
+  root: {
+    contribution: false
+  },
+  customize: {
+    theme: 'dark'
   }
 }
 
