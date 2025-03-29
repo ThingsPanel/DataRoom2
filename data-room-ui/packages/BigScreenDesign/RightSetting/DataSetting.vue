@@ -115,7 +115,7 @@
             </div>
           </div>
           <!--  基础组件数据配置  -->
-          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick','threeComponent'].includes(config.type) && config.option && config.option.displayOption">
+          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick'].includes(config.type) && config.option && config.option.displayOption">
             <!--维度多选-->
             <el-form-item
               v-if="config.option.displayOption.dimensionField && config.option.displayOption.dimensionField.enable"

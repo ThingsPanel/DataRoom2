@@ -133,6 +133,7 @@ import {
   showSize,
   compressImage
 } from 'data-room-ui/js/utils/compressImg'
+import { log } from '@antv/g2plot/lib/utils'
 // import * as imageConversion from 'image-conversion'
 export default {
   name: 'PageTopSetting',
@@ -421,6 +422,9 @@ export default {
     // 保存
     async save (type, hasPageTemplateId = false) {
       const pageInfo = cloneDeep(this.handleSaveData())
+      console.log(pageInfo,type,"pageInfo1")
+
+
       // 保存时判断tabs组件里面的元素是否符合要求
       const flag = this.validateTabs(pageInfo?.chartList)
       if (!flag) {
@@ -434,6 +438,8 @@ export default {
         }
         if (type === 'preview') {
           pageInfo.isPreview = true
+          
+         
           const res = await saveScreen(pageInfo)
           return res
         } else {
@@ -479,6 +485,7 @@ export default {
             } else {
               pageInfo.coverPicture = dataUrl
             }
+         
             res = await saveScreen(pageInfo)
             this.$message.success('保存成功')
           }
@@ -543,6 +550,10 @@ export default {
         }
         return chart
       })
+      console.log(cloneDeep({
+        ...this.pageInfo,
+        chartList: newChartList
+      }),"pageInfo3")
       return cloneDeep({
         ...this.pageInfo,
         chartList: newChartList

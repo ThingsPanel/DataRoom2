@@ -1,11 +1,14 @@
 // 导入所有设置
 const files = require.context('./', true, /[\u4e00-\u9fa5]+.js$/)
-const threeSettings = new Map()
+const threeSettings = []
 
+// 获取three配置
 files.keys().forEach((key) => {
-  // 取到模型名称
-  const configName = key.split('/')[2].replace('.js', '')
-  threeSettings.set(configName, files(key).default)
+  const config = files(key).default
+  threeSettings.push({
+    setting: config.setting,
+    name: config.name
+  })
 })
 
 export default threeSettings 

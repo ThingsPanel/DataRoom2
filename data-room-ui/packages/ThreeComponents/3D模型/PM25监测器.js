@@ -7,6 +7,8 @@ const version = '2023091901'
 const title = 'PM2.5监测器'
 // 用于标识，唯一，和文件夹名称一致
 const name = 'PM25监测器'
+// 添加组件类型标识
+const type = 'threeJs'
 
 // 右侧配置项
 const setting = [
@@ -181,6 +183,7 @@ export default {
   version,
   title,
   name,
+  type,
   option,
   setting,
   optionHandler,

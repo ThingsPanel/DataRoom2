@@ -46,7 +46,7 @@ function getThreeList(files) {
         perspective: config.perspective || 0,
         skewX: config.skewX || 0,
         skewY: config.skewY || 0,
-        type: 'threeComponent',
+        type: 'customComponent',
         loading: false,
         // 把默认右侧配置与自定义右侧配置集合
         option: {
@@ -111,7 +111,7 @@ function getThreeList(files) {
         perspective: config.perspective || 0,
         skewX: config.skewX || 0,
         skewY: config.skewY || 0,
-        type: 'threeComponent',
+        type: 'customComponent',
         loading: false,
         // 把默认右侧配置与自定义右侧配置集合
         option: {

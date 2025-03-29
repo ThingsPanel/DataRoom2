@@ -2,26 +2,31 @@ import Vue from 'vue'
 
 // 大屏详情
 
-
-
-
 export function getScreenInfo (code) {
   return Vue.prototype.$dataRoomAxios.get(`/bigScreen/design/info/code/${code}`)
 }
 
 // 保存更新大屏
-export function saveScreen(data) {
+export function saveScreen (data) {
   data.chartList.forEach((item) => {
-    if (item.type == 'customComponent') {
+    if (item.type === 'customComponent') {
       const a = JSON.parse(item.option)
       if (a.data) {
         a.data = []
       }
-      item.option=JSON.stringify(a)
-      item.setting=item.setting.map((x) => {
-        const {field,value,...obj}=x
-	        return {field,value}
-      })
+      item.option = JSON.stringify(a)
+      
+      // 根据组件类型判断是否需要简化 setting
+      // 如果有 type 字段且值为 threeJs，或者是特定名称组件，则保留完整 setting
+      if ((item.type === 'threeJs') || (item.name === 'PM25监测器' || item.name === 'ThreeComponent')) {
+        // 保留完整 setting 结构
+      } else {
+        // 只保留 field 和 value
+        item.setting = item.setting.map((x) => {
+          const { field, value } = x
+          return { field, value }
+        })
+      }
     }
   })
   return Vue.prototype.$dataRoomAxios.post('/bigScreen/design/update', data)

@@ -12,6 +12,7 @@ export const randomString = e => {
 export const resolveComponentType = type => {
   // 特殊类型映射
   const specialTypeMap = {
+    customComponent: 'CustomComponent',
     threeComponent: 'ThreeComponent',
     ThreeComponent: 'ThreeComponent'
   }

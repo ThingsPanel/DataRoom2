@@ -3,7 +3,8 @@
     <div class="config-display">
       <div class="config-item">
         <span class="label">3D模型:</span>
-        <span class="value">{{ config.option.customize.modelPath}}</span>
+        <span class="value">{{ config.option.modelPath }}</span>
+        <span class="value">{{ getModelPath() }}</span>
       </div>
       <div class="config-item">
         <span class="label">配置代码:</span>
@@ -67,24 +68,24 @@ export default {
     
     // 获取模型路径
     getModelPath () {
-      if (this.config.option && this.config.option.modelPath) {
-        return this.config.option.modelPath
+      if (this.config.option && this.config.option.customize && this.config.option.customize.modelPath) {
+        return this.config.option.customize.modelPath
       }
       return '未指定'
     },
     
     // 获取背景颜色
     getBackgroundColor () {
-      if (this.config.option && this.config.option.backgroundColor) {
-        return this.config.option.backgroundColor
+      if (this.config.option && this.config.option.customize && this.config.option.customize.backgroundColor) {
+        return this.config.option.customize.backgroundColor
       }
       return '#111111'
     },
     
     // 获取PM2.5值
     getPM25Value () {
-      if (this.config.option && this.config.option.pm25Value) {
-        return this.config.option.pm25Value
+      if (this.config.option && this.config.option.customize && this.config.option.customize.pm25Value) {
+        return this.config.option.customize.pm25Value
       }
       return 38
     },
@@ -102,33 +103,25 @@ export default {
 
     // 初始化图表 - 简化版只显示配置
     chartInit () {
-      let config = this.config
-      // key和code相等，说明是一进来刷新，调用list接口
-      if (this.config.code === this.config.key || this.isPreview) {
-        // 改变样式
-        config = this.changeStyle(config)
-        // 改变数据
-        config.loading = true
-        this.changeChartLoading(config)
-        this.changeDataByCode(config).then((res) => {
-          // 初始化图表
-          config.loading = false
-          this.changeChartLoading(config)
-          this.newChart(res)
-        }).catch(() => {
-        })
-      } else {
-        config.loading = true
-        this.changeChartLoading(config)
-        // 否则说明是更新，这里的更新只指更新数据（改变样式时是直接调取changeStyle方法），因为更新数据会改变key,调用chart接口
-        this.changeData(config).then((res) => {
-          config.loading = false
-          this.changeChartLoading(config)
-          // 初始化图表
-          this.newChart(res)
-        })
+      this.changeChartLoading(true)
+      
+      try {
+        // 如果有数据，则格式化数据
+        if (this.config.dataSource && this.config.dataSource.data) {
+          this.config = this.dataFormatting(this.config, this.config.dataSource)
+        } else {
+          // 使用默认值
+          this.pm25Value = this.getPM25Value()
+        }
+        
+        this.hasData = true
+      } catch (e) {
+        console.error('初始化图表失败', e)
+      } finally {
+        this.changeChartLoading(false)
       }
     },
+
     // 数据格式化
     dataFormatting (config, data) {
       if (!config) {
@@ -140,11 +133,16 @@ export default {
         config.option = {}
       }
 
+      // 确保 config.option.customize 存在
+      if (!config.option.customize) {
+        config.option.customize = {}
+      }
+
       // 如果有数据，尝试提取 PM2.5 值
       if (data && data.data && Array.isArray(data.data)) {
         // 尝试直接获取第一个数据项的值
         if (data.data.length > 0 && data.data[0].value !== undefined) {
-          config.option.pm25Value = data.data[0].value
+          config.option.customize.pm25Value = data.data[0].value
           this.pm25Value = data.data[0].value
         }
       }
@@ -201,16 +199,16 @@ export default {
     transformSettingToOption (config, tabName) {
       if (!config || !config.setting) return config
 
-      // 直接在原始对象上操作，不创建新副本
-      config.setting.filter(item => item.tabName === tabName).forEach(item => {
+      const setting = config.setting.filter(item => item.tabName === tabName)
+      if (!setting.length) return config
+
+      const newConfig = _.cloneDeep(config)
+
+      setting.forEach(item => {
         if (item.optionField) {
           const fields = item.optionField.split('.')
-          let current = config.option || {}
-          
-          if (!config.option) {
-            config.option = current
-          }
-          
+          let current = newConfig.option
+
           for (let i = 0; i < fields.length - 1; i++) {
             if (!current[fields[i]]) {
               current[fields[i]] = {}
@@ -222,7 +220,7 @@ export default {
         }
       })
 
-      return config
+      return newConfig
     }
   }
 }

@@ -4,6 +4,8 @@ const version = '2023091901'
 const title = '3D基础柱状图'
 // 用于标识，唯一，和文件夹名称一致
 const name = '3D基础柱状图'
+// 组件类型标识
+const type = 'echartsComponent'
 // 右侧配置项
 const setting = [
   {
@@ -774,6 +776,7 @@ export default {
   version,
   title,
   name,
+  type,
   option,
   setting,
   optionHandler,

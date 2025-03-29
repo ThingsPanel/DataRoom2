@@ -253,12 +253,31 @@ export default {
       this.$emit('openDataViewDialog', config)
     },
     drop (e) {
-      e.preventDefault()
-      // 解决：火狐拖放后，总会默认打开百度搜索，如果是图片，则会打开图片的问题。
-      e.stopPropagation()
-      const transferData = e.dataTransfer.getData('dragComponent')
-      if (transferData) {
-        this.addChart(transferData, { x: e?.x, y: e?.y })
+      console.log('接收到拖放事件')
+      try {
+        const jsonData = e.dataTransfer.getData('dragComponent')
+        if (!jsonData) {
+          console.warn('未获取到拖放数据')
+          return
+        }
+        
+        console.log('拖放数据原始JSON:', jsonData)
+        
+        const component = customDeserialize(jsonData)
+        console.log('解析后的拖放数据:', {
+          type: component.type,
+          name: component.name,
+          category: component.category,
+          className: component.className,
+          title: component.title
+        })
+        
+        this.addChart(jsonData, {
+          x: e.clientX,
+          y: e.clientY
+        })
+      } catch (error) {
+        console.error('处理拖放事件时出错:', error)
       }
     },
     /**
@@ -372,15 +391,54 @@ export default {
     },
     // 新增元素
     addChart (chart, position, isComponent) {
+      console.log('添加新组件:', {
+        chartType: typeof chart,
+        position,
+        isComponent
+      })
+      
       const { left, top } = this.$el.getBoundingClientRect()
       const _chart = !chart.code ? customDeserialize(chart) : chart
+      
+      console.log('解析后的组件数据:', {
+        type: _chart.type,
+        name: _chart.name,
+        category: _chart.category,
+        className: _chart.className
+      })
+      
       let option = _chart.option
+      
+      // 处理customComponent的特殊情况
       if (_chart.type === 'customComponent') {
-        option = {
-          ...this.plotList?.find((plot) => plot.name === _chart.name)?.option,
-          theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
+        console.log('检测到customComponent类型组件')
+        
+        // 使用更多特征精确检测是否是3D模型组件
+        const is3DModelComponent = 
+          (_chart.category && _chart.category.includes('模型')) || 
+          (_chart.name && (_chart.name.includes('3D') || _chart.name.includes('模型') || _chart.name === 'PM25监测器')) ||
+          (_chart.title && _chart.title.includes('3D')) ||
+          (_chart.icon && _chart.icon === 'kongjian');
+        
+        if (is3DModelComponent) {
+          console.log('检测到3D模型组件，保留原有配置')
+          // 保留原有的option，不覆盖
+        } else {
+          // G2Plot处理逻辑
+          console.log('检测到普通自定义组件，查找Plot配置')
+          const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name)
+          console.log('找到的Plot配置:', plotConfig ? plotConfig.name : '未找到')
+          
+          // 只有找到对应的Plot配置时才应用
+          if (plotConfig) {
+            option = {
+              ...(plotConfig.option || {}),
+              theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
+            }
+          }
         }
       }
+      
       const config = {
         ..._chart,
         x: parseInt(!chart.code
@@ -394,6 +452,7 @@ export default {
         code: !chart.code ? randomString(8) : chart.code,
         option
       }
+      
       config.key = isComponent ? randomString(8) : config.code
       // isComponent = false 从左侧新增时需要初始化theme的内容
       // isComponent = true从组件库添加自定义组件时不用初始化
@@ -401,7 +460,15 @@ export default {
         config.theme = settingToTheme(config, 'dark')
         config.theme = settingToTheme(config, 'light')
       }
-      console.log('1', config)
+      
+      console.log('最终添加的组件配置:', {
+        type: config.type,
+        name: config.name,
+        category: config.category,
+        className: config.className,
+        code: config.code
+      })
+      
       this.addItem(config)
     },
     addSourceChart (chart, position) {

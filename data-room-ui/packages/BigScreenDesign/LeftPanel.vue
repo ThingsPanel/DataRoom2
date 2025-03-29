@@ -270,6 +270,23 @@ export default {
     this.g2PlotComponents = [...this.g2PlotComponents, ...getCustomPlots()]
     this.menuList[1].components = this.g2PlotComponents
     this.menuList[2].components = this.echartsComponents
+    
+    // 确保所有3D模型组件的类型都是customComponent
+    if (this.threeComponents && this.threeComponents.length > 0) {
+      // 打印3D模型组件列表，查看详细信息
+      console.log('3D模型组件原始数据:', JSON.parse(JSON.stringify(this.threeComponents)))
+      
+      this.threeComponents = this.threeComponents.map(item => {
+        if (item.type === 'threeComponent') {
+          return { ...item, type: 'customComponent' }
+        }
+        return item
+      })
+      
+      // 打印修改后的3D模型组件列表
+      console.log('3D模型组件修改后数据:', JSON.parse(JSON.stringify(this.threeComponents)))
+    }
+    
     this.menuList[3].components = this.threeComponents
   },
   mounted () {
@@ -284,21 +301,42 @@ export default {
           node.addEventListener('dragstart', (event) => {
             const type = node.getAttribute('data-type')
             const name = node.getAttribute('data-name')
+            
+            console.log('开始拖拽组件:', {type, name})
+            
             // 从menuList中获取当前拖拽的组件
-            const element = this.menuList
-              .find((item) => item.name === this.activeName)
-              ?.components.find(
-                (item) => item.type === type && item.name === name
-              )
+            const menuItem = this.menuList.find((item) => item.name === this.activeName)
+            console.log('当前活动菜单:', this.activeName, menuItem ? menuItem.title : '未找到')
+            
+            const element = menuItem?.components.find(
+              (item) => item.type === type && item.name === name
+            )
+            
+            if (element) {
+              console.log('找到拖拽组件详情:', {
+                type: element.type,
+                name: element.name,
+                category: element.category,
+                className: element.className,
+                title: element.title
+              })
+            } else {
+              console.warn('未找到拖拽组件详情')
+            }
+            
             /* 设置拖拽传输数据 */
+            const dragData = {
+              ...element,
+              offsetX: event.offsetX,
+              offsetY: event.offsetY
+            }
+            
             event.dataTransfer.setData(
               'dragComponent',
-              customSerialize({
-                ...element,
-                offsetX: event.offsetX,
-                offsetY: event.offsetY
-              })
+              customSerialize(dragData)
             )
+            
+            console.log('拖拽数据已设置:', dragData)
           })
         })
         // 阻止默认动作
