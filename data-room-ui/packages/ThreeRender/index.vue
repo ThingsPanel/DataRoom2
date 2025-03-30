@@ -1,31 +1,6 @@
 <template>
   <div class="three-render-simplified" :class="{'light-theme':customTheme === 'light','auto-theme':customTheme !=='light'}">
-    <div class="config-display">
-      <div class="config-item">
-        <span class="label">3D模型:</span>
-        <span class="value">{{ config.option.customize.modelPath}}</span>
-      </div>
-      <div class="config-item">
-        <span class="label">配置代码:</span>
-        <span class="value">{{ config.code || '未指定' }}</span>
-      </div>
-      <div class="config-item">
-        <span class="label">当前主题:</span>
-        <span class="value">{{ customTheme }}</span>
-      </div>
-      <div class="config-item">
-        <span class="label">背景颜色:</span>
-        <span class="value" :style="{backgroundColor: getBackgroundColor(), color: '#fff', padding: '2px 5px'}">
-          {{ getBackgroundColor() }}
-        </span>
-      </div>
-      <div class="config-item">
-        <span class="label">PM2.5值:</span>
-        <span class="value" :class="getPM25Class(getPM25Value())">
-          {{ getPM25Value() }}
-        </span>
-      </div>
-    </div>
+    <ThreeRenderCore :config="config" :theme="customTheme"/>
   </div>
 </template>
 
@@ -34,11 +9,15 @@ import { mapState, mapMutations } from 'vuex'
 import linkageMixins from 'data-room-ui/js/mixins/linkageMixins'
 import commonMixins from 'data-room-ui/js/mixins/commonMixins'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
+import ThreeRenderCore from './components/ThreeRenderCore.vue'
 import _ from 'lodash'
 
 export default {
   name: 'ThreeComponent',
   mixins: [commonMixins, linkageMixins],
+  components: {
+    ThreeRenderCore
+  },
   props: {
     config: {
       type: Object,
@@ -64,48 +43,15 @@ export default {
       'changeActiveItemConfig',
       'changeChartLoading'
     ]),
-    
-    // 获取模型路径
-    getModelPath () {
-      if (this.config.option && this.config.option.modelPath) {
-        return this.config.option.modelPath
-      }
-      return '未指定'
-    },
-    
-    // 获取背景颜色
-    getBackgroundColor () {
-      if (this.config.option && this.config.option.backgroundColor) {
-        return this.config.option.backgroundColor
-      }
-      return '#111111'
-    },
-    
-    // 获取PM2.5值
-    getPM25Value () {
-      if (this.config.option && this.config.option.pm25Value) {
-        return this.config.option.pm25Value
-      }
-      return 38
-    },
 
-    // 根据PM2.5值确定CSS类名
-    getPM25Class (value) {
-      value = Number(value)
-      if (value <= 35) return 'pm25-good'
-      if (value <= 75) return 'pm25-moderate'
-      if (value <= 115) return 'pm25-unhealthy-sensitive'
-      if (value <= 150) return 'pm25-unhealthy'
-      if (value <= 250) return 'pm25-very-unhealthy'
-      return 'pm25-hazardous'
-    },
-
-    // 初始化图表 - 简化版只显示配置
     chartInit () {
+
       let config = this.config
+      console.log('config1',config)
       // key和code相等，说明是一进来刷新，调用list接口
       if (this.config.code === this.config.key || this.isPreview) {
         // 改变样式
+        console.log('config2',config)
         config = this.changeStyle(config)
         // 改变数据
         config.loading = true
@@ -134,26 +80,58 @@ export default {
       if (!config) {
         return this.config || {}
       }
-      
       // 确保 config.option 存在
       if (!config.option) {
         config.option = {}
       }
-
-      // 如果有数据，尝试提取 PM2.5 值
-      if (data && data.data && Array.isArray(data.data)) {
-        // 尝试直接获取第一个数据项的值
-        if (data.data.length > 0 && data.data[0].value !== undefined) {
-          config.option.pm25Value = data.data[0].value
-          this.pm25Value = data.data[0].value
-        }
+      // 确保customize对象存在
+      if (!config.option.customize) {
+        config.option.customize = {}
       }
-
+      // 记录接收到的数据
+      console.log('ThreeRender接收到数据:', data)
+      // 处理数据更新PM2.5值
+      try {
+        // 如果有基本数据且有dataHandler
+        if (config.dataHandler && data) {
+          // 执行数据处理函数，类似进度环图
+          try {
+            // eslint-disable-next-line no-unused-vars
+            const option = config.option
+            // eslint-disable-next-line no-unused-vars
+            const setting = config.setting
+            // 创建处理环境
+            const dataHandlerFn = new Function('data', 'option', 'setting', config.dataHandler)
+            dataHandlerFn(data.data || data, option, setting)
+          } catch (e) {
+            console.error('执行dataHandler出错:', e)
+          }
+        } else if (data) {
+          // 没有dataHandler时进行简单数据提取
+          let pm25Value = null
+          // 尝试从不同格式的数据中提取PM2.5值
+          if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+            // 数据在data.data数组中
+            pm25Value = data.data[0].value || data.data[0].pm25Value
+          } else if (typeof data === 'object') {
+            // 数据可能直接在对象上
+            pm25Value = data.value || data.pm25Value
+          }
+          // 如果找到值，更新配置
+          if (pm25Value !== null && pm25Value !== undefined) {
+            config.option.customize.pm25Value = Number(pm25Value)
+          }
+        }
+      } catch (error) {
+        console.error('处理PM2.5数据失败:', error)
+      }
       return config
     },
     
     // 组件的样式改变，返回改变后的config
     changeStyle (config, isUpdateTheme) {
+    
+
       // 确保 config 有值
       if (!config) {
         return this.config || {}
@@ -171,7 +149,9 @@ export default {
         config.setting = []
       }
 
+
       config = this.transformSettingToOption(config, 'custom')
+  
 
       // 只有样式改变时更新主题配置，切换主题时不需要保存
       if (!isUpdateTheme) {
@@ -199,6 +179,8 @@ export default {
 
     // 转换设置到选项
     transformSettingToOption (config, tabName) {
+
+    
       if (!config || !config.setting) return config
 
       // 直接在原始对象上操作，不创建新副本
@@ -221,7 +203,6 @@ export default {
           current[fields[fields.length - 1]] = item.value
         }
       })
-
       return config
     }
   }

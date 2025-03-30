@@ -1,6 +1,5 @@
 import PM25Monitor from './glbs/PM25_Monitor.glb'
 
-
 // 配置版本号
 const version = '2023091901'
 // 标题
@@ -36,7 +35,7 @@ const setting = [
     step: 0.001,
     tabName: 'custom',
     groupName: '基础'
-  },
+  }
   // {
   //   label: '背景颜色',
   //   type: 'colorPicker', // 设置组件类型
@@ -115,13 +114,16 @@ const setting = [
 ]
 
 // 配置处理脚本
-const optionHandler = `
-  // 可以在这里对option进行额外的处理
-`
+const optionHandler =''
 
 // 数据处理脚本
 const dataHandler = `
   console.log('PM25监测器 dataHandler 接收到数据:', data);
+  console.log('PM25监测器 dataHandler 接收到数据:', option.customize);
+  // 确保customize对象存在
+  if (!option.customize) {
+    option.customize = {};
+  }
   
   // 从数据中获取PM2.5值
   if (data && Array.isArray(data) && data.length > 0) {
@@ -130,7 +132,7 @@ const dataHandler = `
     // 如果数据项直接有 value 属性，直接使用
     if (data[0].value !== undefined) {
       console.log('PM25监测器 直接找到值:', data[0].value);
-      option.customize.pm25Value = data[0].value;
+      option.customize.pm25Value = Number(data[0].value);
       return;
     }
     
@@ -143,7 +145,7 @@ const dataHandler = `
       const dataItem = data.find(item => item.key === fieldName || item.name === fieldName);
       if (dataItem && dataItem.value !== undefined) {
         console.log('PM25监测器 按字段名找到值:', dataItem.value);
-        option.customize.pm25Value = dataItem.value;
+        option.customize.pm25Value = Number(dataItem.value);
       } else {
         console.warn('PM25监测器 未找到指定字段的值');
       }
@@ -152,7 +154,7 @@ const dataHandler = `
       const dataItem = data.find(item => item.key === 'pm25' || item.name === 'pm25');
       if (dataItem && dataItem.value !== undefined) {
         console.log('PM25监测器 按默认字段名找到值:', dataItem.value);
-        option.customize.pm25Value = dataItem.value;
+        option.customize.pm25Value = Number(dataItem.value);
       } else {
         // 如果找不到数据，使用默认值
         console.warn('PM25监测器 未找到默认字段的值，使用默认值');
@@ -172,11 +174,13 @@ const option = {
     y: 3,
     z: 7
   },
-  rotationSpeed: 0, // 设置为0表示不旋转
-  modelScale: 1,
-  modelPositionY: 0,
-  pm25Value: 99,
-  modelPath: PM25Monitor
+  customize: {
+    rotationSpeed: 0, // 设置为0表示不旋转
+    modelScale: 1,
+    modelPositionY: 0,
+    pm25Value: 99, // 初始默认值
+    modelPath: PM25Monitor
+  }
 }
 
 export default {
