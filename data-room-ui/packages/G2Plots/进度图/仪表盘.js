@@ -208,13 +208,44 @@ const data = [
 // 配置处理脚本
 const optionHandler = 'option.range.color = [option.color1, option.color2]\n' +
   '  let fix = option.statisticFixed\n' +
-  '  option.statistic.title.formatter = ({ percent }) => `${(percent * 100).toFixed(fix)}%`'
+  '  option.statistic.title.formatter = function(params) {\n' +
+  '    console.log("格式化时的percent值:", params.percent)\n' +
+  '    return (params.percent * 100).toFixed(fix) + "%"\n' +
+  '  }'
 
 // 数据处理脚本
 const dataHandler = 'const fieldName = setting.filter(function(item) { return item.field === "percent"; })[0].value;\n' +
-  'let value = data[0][fieldName];\n' +
-  'if (value > 1) value = 1;\n' +
-  'if (value < 0) value = 0;\n' +
+  'console.log("原始数据:", data);\n' +
+  'console.log("字段名:", fieldName);\n' +
+  'let rawValue = data[0][fieldName];\n' +
+  'console.log("原始值:", rawValue);\n' +
+  '// 处理数据是对象的情况\n' +
+  'if (typeof rawValue === "object" && rawValue !== null) {\n' +
+  '  console.log("值是对象，使用value属性");\n' +
+  '  rawValue = rawValue.value;\n' +
+  '}\n' +
+  'let value = parseFloat(rawValue);\n' +
+  'console.log("转换后的值:", value);\n' +
+  '// 如果value是NaN，设为0\n' +
+  'if (isNaN(value)) {\n' +
+  '  console.log("值为NaN，设置为0");\n' +
+  '  value = 0;\n' +
+  '}\n' +
+  '// 将百分比转换为0-1之间的值\n' +
+  'if (value > 1) {\n' +
+  '  console.log("值大于1，尝试转换为百分比");\n' +
+  '  value = value / 100;\n' +
+  '  // 如果转换后仍然大于1，则设为1\n' +
+  '  if (value > 1) {\n' +
+  '    console.log("转换后仍大于1，设置为1");\n' +
+  '    value = 1;\n' +
+  '  }\n' +
+  '}\n' +
+  'if (value < 0) {\n' +
+  '  console.log("值小于0，设置为0");\n' +
+  '  value = 0;\n' +
+  '}\n' +
+  'console.log("最终值:", value);\n' +
   'option.percent = value;'
 
 // 图表配置 new Gauge('domName', option)

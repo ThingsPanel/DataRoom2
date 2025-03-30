@@ -35,7 +35,8 @@ export default {
     return {
       chart: null,
       hasData: false,
-      plotList
+      plotList,
+      isDataHandlerExecuted: false
     }
   },
   computed: {
@@ -114,6 +115,25 @@ export default {
      * 构造chart
      */
     newChart (config) {
+      console.log('newChart初始配置:', JSON.stringify(config.option))
+      // 确保在这里执行一次dataHandler
+      if (config.dataHandler && !this.isDataHandlerExecuted) {
+        try {
+          console.log('在newChart中执行dataHandler')
+          // 这些变量是为了dataHandler脚本使用
+          // eslint-disable-next-line no-unused-vars
+          const option = config.option
+          // eslint-disable-next-line no-unused-vars
+          const setting = config.setting
+          // eslint-disable-next-line no-unused-vars
+          const data = config.option.data || []
+          eval(config.dataHandler)
+          this.isDataHandlerExecuted = true
+          console.log('dataHandler执行后的配置:', JSON.stringify(config.option))
+        } catch (e) {
+          console.error('执行dataHandler失败:', e)
+        }
+      }
       this.chart = new g2Plot[config.chartType](this.chatId, {
         renderer: 'svg',
         // 仪表盘缩放状态下，点击准确
@@ -127,6 +147,8 @@ export default {
      * 注册事件
      */
     registerEvent () {
+      // 在事件注册后重置标志，以便改变数据时再次执行脚本
+      this.isDataHandlerExecuted = false
       // 图表添加事件进行数据联动
       let formData = {}
       // eslint-disable-next-line no-unused-vars
@@ -270,12 +292,27 @@ export default {
       // 这里定义了option和setting是为了保证在执行eval时,optionHandler、dataHandler里面可能会用到，
       const option = config.option
       const setting = config.setting
+      // 执行optionHandler
       if (this.config.optionHandler) {
         try {
           // 此处函数处理config
+          console.log('执行optionHandler')
           eval(this.config.optionHandler)
         } catch (e) {
-          console.error(e)
+          console.error('执行optionHandler失败:', e)
+        }
+      }
+      // 如果有dataHandler且有数据，确保执行一次
+      if (this.config.dataHandler && config.option.data && config.option.data.length && !this.isDataHandlerExecuted) {
+        try {
+          console.log('在changeStyle中执行dataHandler')
+          // eslint-disable-next-line no-unused-vars
+          const data = config.option.data
+          eval(this.config.dataHandler)
+          this.isDataHandlerExecuted = true
+          console.log('dataHandler执行后的配置:', config.option)
+        } catch (e) {
+          console.error('执行dataHandler失败:', e)
         }
       }
       // 只有样式改变时更新主题配置，切换主题时不需要保存
