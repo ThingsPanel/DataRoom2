@@ -12,56 +12,59 @@ import getComponentConfig from 'data-room-ui/js/utils/getComponentConfig'
 // 批量引入配置文件
 import { setModules, dataModules } from 'data-room-ui/js/utils/configImport'
 const typeList = [
-  // 1. 基础文本类
-  'texts',
-  'numbers',
-  'marquee',
-  'currentTime',
-  'timeCountDown',
-  'linkChart',
+  // 1. 基础文本类 - 数据展示类
+  'texts', // 文本组件
+  'numbers', // 数字组件
+  'marquee', // 跑马灯/文字滚动
+  'currentTime', // 当前时间
+  'timeCountDown', // 倒计时
+  'linkChart', // 链接图表
+  'digitalFlop', // 数字翻牌器
 
-  // 2. 输入控件类
-  'input',
-  'select',
-  'timePicker',
-  'dateTimePicker',
+  // 2. 输入控件类 - 交互组件
+  'input', // 输入框
+  'button', // 按钮
+  'select', // 选择器
+  'switchBtn', // 开关
+  'timePicker', // 时间选择器
+  'dateTimePicker', // 日期时间选择器
+  'chartTab', // 图表选项卡
 
+  // 3. 装饰边框类 - 装饰和布局元素
+  'horizontalLine', // 水平线
+  'verticalLine', // 垂直线
+  'rectangle', // 矩形
+  'svgLine', // SVG线条
+  'canvasLine', // Canvas线条
 
-  // 3. 装饰边框类
-  'horizontalLine',
-  'verticalLine',
-  'rectangle',
-  'svgLine',
-  // 'canvasLine',
-  // 4. 媒体展示类
-  'picture',
-  'video',
-  'iframeChart',
-  'customHtml',
+  // 4. 媒体展示类 - 媒体和嵌入元素
+  'picture', // 图片
+  'video', // 视频
+  'iframeChart', // Iframe嵌入图表
+  'customHtml', // 自定义HTML
 
-  // 5. 数据展示类
-  'tables',
-  'screenScrollBoard',
-  'screenScrollRanking',
-  'digitalFlop',
+  // 5. 数据展示类 - 表格和滚动列表
+  'tables', // 表格
+  'screenScrollBoard', // 滚动面板
+  'screenScrollRanking', // 滚动排行榜
 
-  // 6. 指标卡片类
-  'indicatorCard',
-  'indicatorCard2',
-  'indexCard',
-  'indexCard2',
+  // 6. 指标卡片类 - 数据展示类
+  'indicatorCard', // 指标卡
+  'indicatorCard2', // 指标卡2
+  'indexCard', // 指数卡
+  'indexCard2', // 指数卡2
 
   // 7. 图表类
-  'candlestick',
-  'sankey',
+  'candlestick', // K线图
+  'sankey', // 桑基图
 
   // 8. 地图类
-  'map',
-  'flyMap',
+  'map', // 地图
+  'flyMap', // 飞线地图
 
-  // 9. 其他
-  'chartTab',
-  'themeSelect'
+  // 9. 主题控制
+  'themeSelect', // 主题选择器
+  'themeSwitcher' // 主题切换器
 ]
 let basicConfigList = []
 basicConfigList = typeList.map((type) => {

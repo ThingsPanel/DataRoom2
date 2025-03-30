@@ -16,7 +16,7 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    case 'numbers':      // 数字
+    case 'numbers': // 数字
       return {
         name: '数字',
         title: '数字',
@@ -29,13 +29,13 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-    case 'marquee':      // 跑马灯
+    case 'marquee': // 跑马灯
       return {
         name: '跑马灯',
         title: '跑马灯',
         icon: Icon.getNameList()[16],
         className:
-            'com.gccloud.dataroom.core.module.chart.components.ScreenMarqueeChart',
+          'com.gccloud.dataroom.core.module.chart.components.ScreenMarqueeChart',
         w: 250,
         h: 150,
         x: 0,
@@ -95,6 +95,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+    case 'button': // 输入框
+      return {
+        name: '按钮',
+        title: '按钮 ',
+        icon: Icon.getNameList()[14],
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenButtonChart',
+        w: 450,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
     case 'select':       // 选择器
       return {
         name: '选择器',
@@ -102,6 +114,18 @@ export default function getComponentConfig (type) {
         icon: Icon.getNameList()[21],
         className: 'com.gccloud.dataroom.core.module.chart.components.ScreenSelectChart',
         w: 450,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
+    case 'switchBtn': // 开关
+      return {
+        name: '开关',
+        title: '开关',
+        icon: Icon.getNameList()[42], // 使用switch.svg
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
         h: 60,
         x: 0,
         y: 0,
@@ -185,18 +209,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
-      // case 'canvasLine':   // Canvas线条
-      //   return {
-      //     name: 'Canvas线条',
-      //     title: 'Canvas线条',
-      //     icon: Icon.getNameList()[39], // 暂时使用svgLine的图标
-      //     className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
-      //     w: 200,
-      //     h: 100,
-      //     x: 0,
-      //     y: 0,
-      //     type
-      //   }
+    case 'canvasLine': // Canvas线条
+      return {
+        name: 'Canvas线条',
+        title: 'Canvas线条',
+        icon: Icon.getNameList()[40], // 使用40canvasLine.svg
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
 
     // 4. 媒体展示类
     case 'picture': // 图片
@@ -434,6 +458,18 @@ export default function getComponentConfig (type) {
         title: '主题切换',
         icon: Icon.getNameList()[20],
         className: 'com.gccloud.dataroom.core.module.chart.components.ThemeSelectChart',
+        w: 200,
+        h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
+    case 'themeSwitcher': // 主题切换器
+      return {
+        name: '主题切换器',
+        title: '主题切换器',
+        icon: Icon.getNameList()[41], // 使用41themeSwitcher.svg
+        className: 'com.gccloud.dataroom.core.module.chart.components.ThemeSwitcherChart',
         w: 200,
         h: 100,
         x: 0,

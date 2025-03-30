@@ -1,0 +1,6 @@
+*.vue text=auto encoding=utf-8
+*.js text=auto encoding=utf-8
+*.jsx text=auto encoding=utf-8
+*.ts text=auto encoding=utf-8
+*.tsx text=auto encoding=utf-8
+*.json text=auto encoding=utf-8 

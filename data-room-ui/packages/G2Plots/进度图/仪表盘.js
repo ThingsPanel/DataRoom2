@@ -211,7 +211,11 @@ const optionHandler = 'option.range.color = [option.color1, option.color2]\n' +
   '  option.statistic.title.formatter = ({ percent }) => `${(percent * 100).toFixed(fix)}%`'
 
 // 数据处理脚本
-const dataHandler = '// 取返回数据列表的第一项指标值\noption.percent = data[0][setting.filter(settingItem=>settingItem.field === \'percent\')[0].value]'
+const dataHandler = 'const fieldName = setting.filter(function(item) { return item.field === "percent"; })[0].value;\n' +
+  'let value = data[0][fieldName];\n' +
+  'if (value > 1) value = 1;\n' +
+  'if (value < 0) value = 0;\n' +
+  'option.percent = value;'
 
 // 图表配置 new Gauge('domName', option)
 const option = {
