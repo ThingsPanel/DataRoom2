@@ -14,48 +14,6 @@
           </div>
           <SettingTitle>基础</SettingTitle>
           <div class="lc-field-body">
-            <!-- 开关宽度 -->
-            <el-form-item label="开关宽度">
-              <div class="slider-with-number">
-                <el-slider 
-                  v-model="config.customize.switchWidth" 
-                  :min="20" 
-                  :max="100" 
-                  :show-tooltip="true"
-                  :format-tooltip="val => `${val}px`" 
-                  style="width: 73%;"
-                ></el-slider>
-                <el-input-number 
-                  v-model="config.customize.switchWidth" 
-                  class="bs-el-input-number width-input"
-                  controls-position="right" 
-                  :min="20" 
-                  :max="100" 
-                  size="mini"
-                ></el-input-number>
-              </div>
-            </el-form-item>
-            <!-- 开关高度 -->
-            <el-form-item label="开关高度">
-              <div class="slider-with-number">
-                <el-slider 
-                  v-model="config.customize.switchHeight" 
-                  :min="10" 
-                  :max="50" 
-                  :show-tooltip="true"
-                  :format-tooltip="val => `${val}px`" 
-                  style="width: 73%;"
-                ></el-slider>
-                <el-input-number 
-                  v-model="config.customize.switchHeight" 
-                  class="bs-el-input-number width-input"
-                  controls-position="right" 
-                  :min="10" 
-                  :max="50" 
-                  size="mini"
-                ></el-input-number>
-              </div>
-            </el-form-item>
             <!-- 字体大小 -->
             <el-form-item label="字体大小">
               <el-input-number v-model="config.customize.fontSize" class="bs-el-input-number" :min="12" :max="100" />

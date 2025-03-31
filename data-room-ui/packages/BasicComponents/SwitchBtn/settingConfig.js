@@ -1,4 +1,4 @@
-﻿/*
+/*
  * @Descripttion: 开关组件配置
  * @Date: 2023-03-30
  */
@@ -58,10 +58,6 @@ const customConfig = {
     fontSize: 14,
     // 字体颜色
     fontColor: '#ffffff',
-    // 开关宽度
-    switchWidth: 40,
-    // 开关高度
-    switchHeight: 20,
     // 开启值
     activeValue: 1,
     // 关闭值
@@ -75,7 +71,11 @@ const customConfig = {
     // 关闭时文字
     inactiveText: '关闭',
     // 切换阈值当数据大于等于此值时开关为开
-    thresholdValue: 50
+    thresholdValue: 50,
+    // 开启状态图标
+    activeIconClass: '',
+    // 关闭状态图标
+    inactiveIconClass: ''
   }
 }
 export const dataConfig = {
