@@ -1037,12 +1037,20 @@ export default {
     'config.dataSource.businessKey' (val) {
       this.clearCustomVerify()
       this.clearVerify()
+      // 数据源变化时，强制刷新数据
+      if (this.$parent && this.$parent.$parent) {
+        this.$parent.$parent.chartInit()
+      }
     },
     // 切换数据集类型时将其他配置清空
     'config.dataSource.dataSetType' () {
       this.config.dataSource.businessKey = ''
       this.clearCustomVerify()
       this.clearVerify()
+      // 数据集类型变化时，强制刷新数据
+      if (this.$parent && this.$parent.$parent) {
+        this.$parent.$parent.chartInit()
+      }
     },
     // 参数改变时
     params: {

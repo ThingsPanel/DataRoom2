@@ -245,6 +245,11 @@ export default {
                         const newConfig = cloneDeep(config)
                         const updatedConfig = this.dataFormatting(newConfig, formattedData)
                         this.changeChartConfig(updatedConfig)
+                        
+                        // 强制更新组件
+                        if (this.chart) {
+                          this.chart.update(updatedConfig.option)
+                        }
                       })
                     },
                     (error) => {
