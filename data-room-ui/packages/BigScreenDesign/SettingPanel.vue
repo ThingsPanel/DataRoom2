@@ -36,6 +36,7 @@ import SettingTitle from 'data-room-ui/SettingTitle/index.vue'
 import RightSetting from 'data-room-ui/BigScreenDesign/RightSetting/index.vue'
 import OverallSetting from 'data-room-ui/BigScreenDesign/OverallSetting/index.vue'
 import { mapState } from 'vuex'
+import { EventBus } from 'data-room-ui/js/utils/eventBus'
 export default {
   name: '',
   components: {
@@ -107,7 +108,18 @@ export default {
       // if(this.activeItem)
     }
   },
-  mounted () { },
+  mounted () {
+    // 监听EventBus的update-chart-data事件
+    EventBus.$on('update-chart-data', (chartCode) => {
+      console.log('接收到更新数据请求:', chartCode);
+      // 通知父组件需要更新数据
+      this.$emit('updateDataSetting', { code: chartCode });
+    });
+  },
+  beforeDestroy() {
+    // 移除EventBus事件监听
+    EventBus.$off('update-chart-data');
+  },
   methods: {
     styleHandler (config) {
       this.$emit('styleHandler', config)

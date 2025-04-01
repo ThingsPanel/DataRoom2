@@ -323,6 +323,25 @@ export default {
       console.log('8. 使用默认resolveComponentType解析结果:', resolvedType)
       
       return resolvedType
+    },
+    // 添加 changeStyle 方法
+    changeStyle(config, isUpdateTheme) {
+      try {
+        // 获取内部组件引用
+        const componentRef = this.$refs[config.code]
+        if (componentRef && typeof componentRef.changeStyle === 'function') {
+          // 如果内部组件有 changeStyle 方法，调用它
+          return componentRef.changeStyle(config, isUpdateTheme)
+        } else if (componentRef) {
+          // 如果内部组件存在但没有 changeStyle 方法，尝试更新组件的 config 属性
+          componentRef.config = { ...componentRef.config, ...config }
+          return config
+        }
+        return config
+      } catch (error) {
+        console.error('RenderCard changeStyle 执行出错:', error, config)
+        return config
+      }
     }
   }
 }

@@ -497,10 +497,20 @@ export default {
     // 切换主题时针对远程组件触发样式修改的方法
     styleHandler (config) {
       this.$nextTick(() => {
-        this.$refs.Render?.$refs['RenderCard' + config.code][0]?.$refs[
-          config.code
-        ]?.changeStyle(cloneDeep(config), true)
-      })
+        try {
+          const renderCardRef = this.$refs.Render?.$refs['RenderCard' + config.code];
+          if (renderCardRef && renderCardRef[0]) {
+            const componentRef = renderCardRef[0].$refs[config.code];
+            if (componentRef && typeof componentRef.changeStyle === 'function') {
+              componentRef.changeStyle(cloneDeep(config), true);
+            } else {
+              console.warn(`组件 ${config.code} 没有 changeStyle 方法`);
+            }
+          }
+        } catch (error) {
+          console.error('执行 styleHandler 失败:', error);
+        }
+      });
     },
     // 自定义属性更新
     updateSetting (config) {
@@ -511,14 +521,15 @@ export default {
       // 如果是tab内的组件
       if (config.parentCode) {
         const dom = this.$refs.Render?.$refs['RenderCard' + config.parentCode][0]?.$refs[config.parentCode]?.$refs['RenderCard' + config.code]?.$refs[config.code]
-        if (dom) {
-          dom?.changeStyle(cloneDeep(config))
+        if (dom && typeof dom.changeStyle === 'function') {
+          dom.changeStyle(cloneDeep(config))
         }
       } else {
         if (this.$refs.Render?.$refs['RenderCard' + config.code]) {
-          this.$refs.Render?.$refs['RenderCard' + config.code][0]?.$refs[
-            config.code
-          ]?.changeStyle(cloneDeep(config))
+          const compRef = this.$refs.Render?.$refs['RenderCard' + config.code][0]?.$refs[config.code]
+          if (compRef && typeof compRef.changeStyle === 'function') {
+            compRef.changeStyle(cloneDeep(config))
+          }
         }
       }
     },

@@ -891,14 +891,14 @@
   </div>
 </template>
 <script>
+import { isEmpty, cloneDeep } from 'lodash'
+import { getDataSetDetails, executeDataSetSql } from 'data-room-ui/js/api/bigScreenApi'
+import ExpressionDialog from './ExpressionDialog.vue'
+import { mapState, mapMutations } from 'vuex'
 import ElDragSelect from './ElDragSelect.vue'
-import isEmpty from 'lodash/isEmpty'
-import cloneDeep from 'lodash/cloneDeep'
+import { EventBus } from 'data-room-ui/js/utils/eventBus'
 import ComponentRelation from 'data-room-ui/BigScreenDesign/RightSetting/ComponentRelation/index.vue'
 import ComponentBinding from 'data-room-ui/BigScreenDesign/RightSetting/ComponentBinding/index.vue'
-import { mapState, mapMutations } from 'vuex'
-import { getDataSetDetails } from 'data-room-ui/js/api/bigScreenApi'
-import ExpressionDialog from 'data-room-ui/BigScreenDesign/RightSetting/ExpressionDialog.vue'
 import DataSetSetting from 'data-room-ui/DataSetSetting/index.vue'
 
 export default {
@@ -1038,8 +1038,14 @@ export default {
       this.clearCustomVerify()
       this.clearVerify()
       // 数据源变化时，强制刷新数据
-      if (this.$parent && this.$parent.$parent) {
+      if (this.$parent && this.$parent.$parent && typeof this.$parent.$parent.chartInit === 'function') {
         this.$parent.$parent.chartInit()
+      } else {
+        // 使用事件总线通知需要更新
+        if (this.config && this.config.code) {
+          console.log('通过事件总线发送更新请求:', this.config.code)
+          EventBus.$emit('update-chart-data', this.config.code)
+        }
       }
     },
     // 切换数据集类型时将其他配置清空
@@ -1048,8 +1054,14 @@ export default {
       this.clearCustomVerify()
       this.clearVerify()
       // 数据集类型变化时，强制刷新数据
-      if (this.$parent && this.$parent.$parent) {
+      if (this.$parent && this.$parent.$parent && typeof this.$parent.$parent.chartInit === 'function') {
         this.$parent.$parent.chartInit()
+      } else {
+        // 使用事件总线通知需要更新
+        if (this.config && this.config.code) {
+          console.log('通过事件总线发送更新请求:', this.config.code)
+          EventBus.$emit('update-chart-data', this.config.code)
+        }
       }
     },
     // 参数改变时

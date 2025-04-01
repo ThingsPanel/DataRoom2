@@ -6,8 +6,8 @@
       :inactive-color="config.customize.inactiveColor"
       :active-text="config.customize.showText ? config.customize.activeText : ''"
       :inactive-text="config.customize.showText ? config.customize.inactiveText : ''"
-      :active-icon-class="config.customize.activeIconClass"
-      :inactive-icon-class="config.customize.inactiveIconClass"
+      :active-icon-class="loading ? 'el-icon-loading' : config.customize.activeIconClass"
+      :inactive-icon-class="loading ? 'el-icon-loading' : config.customize.inactiveIconClass"
       @change="handleChange"
     />
   </div>
@@ -26,8 +26,9 @@ export default {
   },
   data () {
     return {
-      switchValue: false,
-      style: {}
+      switchValue: true,
+      style: {},
+      loading: false
     }
   },
   watch: {
@@ -73,8 +74,17 @@ export default {
       }
     },
     handleChange (val) {
-      const { activeValue, inactiveValue, executeScript } = this.config.customize
+      const { activeValue, inactiveValue, executeScript, loadingDuration } = this.config.customize
       const value = val ? activeValue : inactiveValue
+      
+      // 启用loading状态
+      this.loading = true
+      
+      // 根据配置的loadingDuration或默认1000ms后关闭loading状态
+      setTimeout(() => {
+        this.loading = false
+      }, loadingDuration || 1000)
+      
       if (executeScript) {
         try {
           // eslint-disable-next-line no-new-func
@@ -97,6 +107,23 @@ export default {
   display: flex;
   align-items: center;
   justify-content: center;
+  
+  :deep(.el-switch) {
+    .el-icon-loading {
+      animation: rotate 1s linear infinite;
+      display: inline-block;
+      font-size: 14px;
+    }
+  }
+  
+  @keyframes rotate {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 }
 </style>
 

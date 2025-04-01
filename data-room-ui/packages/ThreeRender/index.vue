@@ -130,80 +130,90 @@ export default {
     
     // 组件的样式改变，返回改变后的config
     changeStyle (config, isUpdateTheme) {
-    
-
-      // 确保 config 有值
-      if (!config) {
-        return this.config || {}
-      }
-
-      // 确保 config 有 code 属性
-      if (!config.code && this.config && this.config.code) {
-        config.code = this.config.code
-      }
-
-      config = { ...this.config, ...config }
-
-      // 确保 config.setting 存在
-      if (!config.setting) {
-        config.setting = []
-      }
-
-
-      config = this.transformSettingToOption(config, 'custom')
-  
-
-      // 只有样式改变时更新主题配置，切换主题时不需要保存
-      if (!isUpdateTheme) {
-        try {
-          config.theme = settingToTheme(_.cloneDeep(config), this.customTheme)
-        } catch (e) {
-          console.error('设置主题失败:', e)
+      try {
+        // 确保 config 有值
+        if (!config) {
+          return this.config || {}
         }
-      }
 
-      // 确保 config 有 code 属性再调用 changeChartConfig
-      if (config.code) {
-        try {
-          this.changeChartConfig(config)
-          if (config.code === this.activeCode) {
-            this.changeActiveItemConfig(config)
+        // 确保 config 有 code 属性
+        if (!config.code && this.config && this.config.code) {
+          config.code = this.config.code
+        }
+
+        config = { ...this.config, ...config }
+
+        // 确保 config.setting 存在
+        if (!config.setting) {
+          config.setting = []
+        }
+
+        config = this.transformSettingToOption(config, 'custom')
+
+        // 只有样式改变时更新主题配置，切换主题时不需要保存
+        if (!isUpdateTheme) {
+          try {
+            config.theme = settingToTheme(_.cloneDeep(config), this.customTheme)
+          } catch (e) {
+            console.error('设置主题失败:', e)
           }
-        } catch (e) {
-          console.error('更新配置失败:', e)
         }
-      }
 
-      return config
+        // 确保 config 有 code 属性再调用 changeChartConfig
+        if (config.code) {
+          try {
+            this.changeChartConfig(config)
+            if (config.code === this.activeCode) {
+              this.changeActiveItemConfig(config)
+            }
+          } catch (e) {
+            console.error('更新配置失败:', e)
+          }
+        }
+
+        return config
+      } catch (error) {
+        console.error('changeStyle方法执行出错:', error)
+        return config || this.config || {}
+      }
     },
 
     // 转换设置到选项
     transformSettingToOption (config, tabName) {
+      try {
+        if (!config || !config.setting) return config
 
-    
-      if (!config || !config.setting) return config
-
-      // 直接在原始对象上操作，不创建新副本
-      config.setting.filter(item => item.tabName === tabName).forEach(item => {
-        if (item.optionField) {
-          const fields = item.optionField.split('.')
-          let current = config.option || {}
-          
-          if (!config.option) {
-            config.option = current
-          }
-          
-          for (let i = 0; i < fields.length - 1; i++) {
-            if (!current[fields[i]]) {
-              current[fields[i]] = {}
+        // 直接在原始对象上操作，不创建新副本
+        config.setting.filter(item => item.tabName === tabName).forEach(item => {
+          if (item.optionField) {
+            const fields = item.optionField.split('.')
+            
+            // 确保 config.option 存在
+            if (!config.option) {
+              config.option = {}
             }
-            current = current[fields[i]]
+            
+            let current = config.option
+            
+            // 创建必要的嵌套对象
+            for (let i = 0; i < fields.length - 1; i++) {
+              if (!current[fields[i]]) {
+                current[fields[i]] = {}
+              }
+              current = current[fields[i]]
+            }
+            
+            // 设置值
+            const lastField = fields[fields.length - 1]
+            current[lastField] = item.value
           }
-
-          current[fields[fields.length - 1]] = item.value
-        }
-      })
-      return config
+        })
+        
+        return config
+      } catch (error) {
+        console.error('transformSettingToOption方法执行出错:', error)
+        return config
+      }
     }
   }
 }
