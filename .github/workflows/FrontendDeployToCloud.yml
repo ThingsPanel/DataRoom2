@@ -1,7 +1,7 @@
 name: Deploy DataRoom UI
 on:
   push:
-    branches: [ 2.1.0.RELEASE ]
+    branches: [ 2.1.0.RELEASE.CLOUD ]
   workflow_dispatch:
 
 jobs:
