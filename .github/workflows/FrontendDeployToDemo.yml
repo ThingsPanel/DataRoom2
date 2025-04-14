@@ -1,0 +1,44 @@
+name: Deploy DataRoom UI to Demo
+on:
+  push:
+    branches: [ 2.1.0.RELEASE ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js and npm
+      uses: actions/setup-node@v3
+      with:
+        node-version: '14.x'
+        
+    - name: Build
+      working-directory: ./data-room-ui
+      run: |
+        npm install -g npm@6.x
+        npm install --registry=http://registry.npmmirror.com
+        npm run build
+        ls -lrt
+        cd bigScreen && tar -czf ../../deploy.tar.gz ./*
+        
+    - name: Upload to server
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.DEMO_HOST }}
+        username: ${{ secrets.DEMO_USER }}
+        password: ${{ secrets.DEMO_PASS }}
+        source: "deploy.tar.gz"
+        target: "/opt/dataroom/frontend"
+        
+    - name: Extract on server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEMO_HOST }}
+        username: ${{ secrets.DEMO_USER }}
+        password: ${{ secrets.DEMO_PASS }}
+        script: |
+          cd /opt/dataroom/frontend
+          tar -xzf deploy.tar.gz && rm deploy.tar.gz

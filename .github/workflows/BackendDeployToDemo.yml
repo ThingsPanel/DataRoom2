@@ -1,0 +1,43 @@
+name: Backend Build and Deploy to Demo
+
+on:
+  push:
+    branches: [ 2.1.0.RELEASE ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Build with Maven
+        run: |
+          cd DataRoom
+          mvn clean package -Dmaven.test.skip=true -P package
+        
+      - name: Deploy to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.DEMO_HOST }}
+          username: ${{ secrets.DEMO_USER }}
+          password: ${{ secrets.DEMO_PASS }}
+          source: "DataRoom/dataroom-server/target/dataroom-server.jar"
+          target: "/opt/dataroom"
+          overwrite: true
+
+      - name: Restart Service
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.DEMO_HOST }}
+          username: ${{ secrets.DEMO_USER }}
+          password: ${{ secrets.DEMO_PASS }}
+          script: |
+            systemctl restart dataroom
+            sleep 5
+            systemctl status dataroom
