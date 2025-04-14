@@ -496,7 +496,7 @@ export default {
           className: 'com.gccloud.dataset.entity.config.IotDataSetConfig', // 修正为IotDataSetConfig
           requestType: 'frontend',  // 默认使用前端代理
           method: 'get',
-          url: 'http://47.115.210.16:9999/api/v1/device/metrics/chart',
+          url: 'http://47.104.235.67:9999/api/v1/device/metrics/chart',
           headers: [],
           params: [], // 添加params数组用于存储参数
           body: '',
@@ -949,7 +949,7 @@ export default {
               className: 'com.gccloud.dataset.entity.config.IotDataSetConfig', // 使用正确的类名
               requestType: 'frontend',  // 默认使用前端代理
               method: 'get',
-              url: 'http://47.115.210.16:9999/api/v1/device/metrics/chart',
+              url: 'http://47.104.235.67:9999/api/v1/device/metrics/chart',
               headers: [{
             key: 'x-api-key',
             type: 'string',

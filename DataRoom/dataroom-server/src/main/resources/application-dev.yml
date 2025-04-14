@@ -16,4 +16,4 @@ gc:
       # 一个存储文件的绝对路径，需要有写入权限
       basePath: /root/data
       # 文件资源访问前缀，一般修改ip即可
-      urlPrefix: http://47.115.210.16:${server.port}${server.servlet.context-path}/static
+      urlPrefix: http://47.104.235.67:${server.port}${server.servlet.context-path}/static

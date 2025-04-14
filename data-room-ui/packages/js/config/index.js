@@ -11,7 +11,7 @@ import commonConfig, { displayOption } from './commonConfig'
 // 全局配置对象
 export const globalConfig = {
   urls: {
-    thingsPanelLogin: 'http://47.115.210.16:8080/' // 替换为你的 ThingsPanel 登录地址
+    thingsPanelLogin: 'http://47.104.235.67:8080/' // 替换为你的 ThingsPanel 登录地址
   }
 }
 
