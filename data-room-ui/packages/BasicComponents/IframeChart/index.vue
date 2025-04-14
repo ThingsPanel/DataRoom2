@@ -12,9 +12,8 @@
         oallowfullscreen="true"
         msallowfullscreen="true"
         :style="{
-          width: '200%',
-          height: '200%',
-          transform: 'scale(.5, .5) translate(-50%, -50%)',
+          width: '100%',
+          height: '100%',
           border: 'none'
         }"
         :src="newUrl"
