@@ -25,7 +25,7 @@ const setting = [
     optionField: 'borderColor',
     value: '#001C89'
   },
-   {
+  {
     label: '背景颜色',
     type: 'colorPicker',
     field: 'bgColor',
@@ -38,8 +38,8 @@ const setting = [
     field: 'fontColor',
     optionField: 'fontColor',
     value: '#FFFFFF'
-  },
-   {
+      },
+      {
     label: '标题字体大小',
     type: 'inputNumber',
     field: 'fontSize',
@@ -50,7 +50,7 @@ const setting = [
         min:12
       }
   },
-   {
+  {
     label: '装饰条颜色',
     type: 'colorPicker',
     field: 'decorColor1',

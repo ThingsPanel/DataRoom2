@@ -5,7 +5,7 @@
   >
     <!-- Title Element - Positioned outside the clipped box -->
     <div 
-      v-if="config.border.isTitle"
+      v-if="config.border.isTitle && config.title"
       class="border-title-element"
       ref="titleElement" 
       :style="titleStyle" 
@@ -13,6 +13,7 @@
       <!-- Text First -->
       <span
         class="border-title-text"
+        ref="titleTextSpan"
         :style="`
           color:${fontColor};
           font-size:${fontSize}px;
@@ -20,12 +21,17 @@
       >
         {{config.title}}
       </span>
-      <!-- Decoration Below -->
-      <div class="title-decoration">
-        <div class="stripe-1" :style="`background-color: ${decorColor1};`"></div>
-        <div class="stripe-2" :style="`background-color: ${decorColor1};`"></div>
-        <div class="stripe-3" :style="`background-color: ${decorColor1};`"></div>
-        <div class="stripe-4" :style="`background-color: ${decorColor1};`"></div>
+      <!-- Decoration Below - Container width matches text width -->
+      <div 
+        class="title-decoration"
+        :style="decorationContainerStyle"
+      >
+        <div 
+          v-for="(_, index) in 20"
+          :key="index" 
+          class="stripe"
+          :style="stripeStyle"
+        ></div>
       </div>
     </div>
 
@@ -53,6 +59,7 @@
 </template>
 <script>
 import { refreshComponentMixin } from 'data-room-ui/js/mixins/refreshComponent'
+import { nextTick } from 'vue'
 
 export default {
   name: 'GcBorder17',
@@ -84,7 +91,8 @@ export default {
       customBorderStyle: {},
       innerFillStyle: {},
       contentWrapStyle: {},
-      titleStyle: {} 
+      titleStyle: {}, 
+      decorationContainerWidth: 'auto'
     }
   },
   computed: {
@@ -117,20 +125,42 @@ export default {
         const size = Number(this.config.border.fontSize);
         return !isNaN(size) && size > 0 ? size : 14;
     },
-    decorColor1() { // Added computed for decor color
+    decorColor1() { 
         return this.config.border.decorColor1 || '#FFAD2C';
+    },
+    stripeStyle() {
+        return {
+            backgroundColor: this.decorColor1
+        };
+    },
+    decorationContainerStyle() {
+      return {
+        width: this.decorationContainerWidth
+      }
     }
   },
   watch: {
     'config.border': {
-      handler() {
+      async handler() {
         this.updateStyles();
+        await nextTick();
+        this.measureAndUpdateDecoration();
       },
       deep: true,
+      immediate: true
+    },
+    'config.title': {
+       async handler() {
+        await nextTick();
+        this.measureAndUpdateDecoration();
+      },
       immediate: true
     }
   },
   mounted () {
+      this.$nextTick(() => {
+          this.measureAndUpdateDecoration();
+      });
   },
   methods: {
     updateStyles() {
@@ -160,15 +190,21 @@ export default {
         paddingBottom: '15px'
       };
 
-      // Update title style object - Simplified for positioning and max-width
       this.titleStyle = {
           position: 'absolute',
           top: '0px',
           left: '0px',
           zIndex: 9999,
           maxWidth: `${this.cutWidth - 10}px`, 
-          // height, display, alignItems, lineHeight are now handled by CSS class
       };
+    },
+    measureAndUpdateDecoration() {
+        if (this.$refs.titleTextSpan) {
+            const titleWidth = this.$refs.titleTextSpan.offsetWidth;
+            this.decorationContainerWidth = `${titleWidth}px`; 
+        } else {
+            this.decorationContainerWidth = 'auto';
+        }
     }
   }
 }
@@ -219,27 +255,24 @@ export default {
   position: relative;
   display: flex; /* Use flex to align stripes horizontally */
   align-items: center; /* Vertically center stripes if needed */
-  width: auto; /* Let content determine width */
+  /* width is now controlled by :style="decorationContainerStyle" */
   height: 6px; /* Adjust height for the stripes */
   margin-top: 3px; /* Adjust spacing */
-  
-  /* Remove absolute positioning styles from stripes */
-  /* Apply common styles to all stripes */
-  .stripe-1, .stripe-2, .stripe-3, .stripe-4 {
+  overflow: hidden; /* Hide stripes that overflow the container */
+  white-space: nowrap; /* Prevent wrapping inside the container */
+
+  /* Apply common styles to the dynamically generated stripe class */
+  .stripe {
+    flex-shrink: 0; /* Prevent stripes from shrinking */
     width: 10px;      /* Set width for each stripe */
     height: 4px;      /* Set height for each stripe */
     margin-right: 3px; /* Space between stripes */
-    background-color: inherit; /* Inherit color from parent style binding */
+    /* background-color is now set via :style binding */
     transform: skewX(-30deg); /* Apply skew */
-    /* Removed position: absolute, left, top */
   }
   
-  /* Remove individual stripe positioning/sizing */
-  /* .stripe-1 { ... } */
-  /* .stripe-2 { ... } */
-  /* .stripe-3 { ... } */
-  /* .stripe-4 { ... } */
-  /* Removed .stripe-5 styles */
+  /* Remove individual stripe selectors */
+  /* .stripe-1, .stripe-2, .stripe-3, .stripe-4 { ... } */
 }
 
 .border-title-text {
