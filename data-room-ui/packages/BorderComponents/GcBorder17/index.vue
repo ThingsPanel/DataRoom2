@@ -217,43 +217,29 @@ export default {
 
 .title-decoration {
   position: relative;
-  display: flex; /* Keep using flex for internal alignment if needed, or just block */
-  width: 100%; /* Take full width */
-  height: 8px; /* Define a height for the decoration area */
-  margin-top: 2px; /* Space between text and decoration */
-  /* Removed margin-right */
-  /* Removed fixed width, let stripes define appearance */
+  display: flex; /* Use flex to align stripes horizontally */
+  align-items: center; /* Vertically center stripes if needed */
+  width: auto; /* Let content determine width */
+  height: 6px; /* Adjust height for the stripes */
+  margin-top: 3px; /* Adjust spacing */
   
+  /* Remove absolute positioning styles from stripes */
+  /* Apply common styles to all stripes */
   .stripe-1, .stripe-2, .stripe-3, .stripe-4 {
-    position: absolute;
-    height: 2px;
-    transform: skewX(-25deg);
+    width: 10px;      /* Set width for each stripe */
+    height: 4px;      /* Set height for each stripe */
+    margin-right: 3px; /* Space between stripes */
+    background-color: inherit; /* Inherit color from parent style binding */
+    transform: skewX(-30deg); /* Apply skew */
+    /* Removed position: absolute, left, top */
   }
   
-  /* Adjust stripe positions relative to the new container */
-  .stripe-1 {
-    width: 12px;
-    left: 0;
-    top: 0px; 
-  }
-  
-  .stripe-2 {
-    width: 18px;
-    left: 5px;
-    top: 2px;
-  }
-  
-  .stripe-3 {
-    width: 12px;
-    left: 10px;
-    top: 4px;
-  }
-  
-  .stripe-4 {
-    width: 8px;
-    left: 15px;
-    top: 6px; 
-  }
+  /* Remove individual stripe positioning/sizing */
+  /* .stripe-1 { ... } */
+  /* .stripe-2 { ... } */
+  /* .stripe-3 { ... } */
+  /* .stripe-4 { ... } */
+  /* Removed .stripe-5 styles */
 }
 
 .border-title-text {

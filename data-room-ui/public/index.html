@@ -7,6 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <link rel="icon" href="favicon.ico" type="image/x-icon">
   <title>ThingsPanel可视化编辑器</title>
+  <!-- Preload the large 3D model -->
+  <link rel="preload" href="static/libs/3d/bridge-minified.glb" as="fetch" type="model/gltf-binary" crossorigin="anonymous"> 
   <!-- 使用CDN的JS文件 -->
   <% for (var i in htmlWebpackPlugin.options.cdn && htmlWebpackPlugin.options.cdn.js) { %>
     <script src="<%= htmlWebpackPlugin.options.cdn.js[i] %>"></script>
