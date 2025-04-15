@@ -474,23 +474,23 @@ const setting = [
   }
 ]
 
-// 模拟数据
+// 模拟数据 - 改为车流量变化场景
 const data = [
-  { type: '日用品', money: 120 },
-  { type: '伙食费', money: 900 },
-  { type: '交通费', money: 200 },
-  { type: '水电费', money: 300 },
-  { type: '房租', money: 1200 },
-  { type: '商场消费', money: 1000 },
-  { type: '红包收入', money: -2000 }
-]
+  { type: '7-8点', money: 500 },   // 早高峰开始，增加500
+  { type: '8-9点', money: 450 },   // 早高峰持续，增加450
+  { type: '9-10点', money: -150 },  // 高峰回落，减少150
+  { type: '10-11点', money: -200 }, // 进一步减少200
+  { type: '11-12点', money: 50 },   // 午间前略微增加50
+  // G2 Waterfall 会自动计算最后一个标签的总和
+];
+
 // 配置处理脚本
 const optionHandler = ''
 
 // 数据处理脚本
 const dataHandler = ''
 
-// 图表配置 new Line('domName', option)
+// 图表配置 new Waterfall('domName', option)
 const option = {
   // 数据将要放入到哪个字段中
   dataKey: 'data',
@@ -499,16 +499,14 @@ const option = {
   data,
   xField: 'type',
   yField: 'money',
-  // color: 'l(90) 0:#6B74E4 1:#4391F4',
-  risingFill: '#f4664a',
-  fallingFill: '#30bf78',
+  risingFill: '#f4664a', // 红色代表增加 (直观上可能反直觉，但与默认涨跌色一致)
+  fallingFill: '#30bf78', // 绿色代表减少
   total: {
-    label: '总支出',
+    label: '时段净变化', // 修改总计标签文本
     style: {
       fill: '#96a6a6'
     }
   },
-
   label: {
     offsetY: 13,
     // 可手动配置 label 数据标签位置
@@ -523,7 +521,7 @@ const option = {
   },
   xAxis: {
     title: {
-      text: '',
+      text: '时间段', // 添加X轴标题
       position: 'end',
       style: {
         fill: '#e9e9e9',
@@ -556,10 +554,9 @@ const option = {
   },
   yAxis: {
     title: {
-      text: '',
+      text: '车流量变化', // 添加Y轴标题
       position: 'end',
       autoRotate: false,
-      // rotation: Math.PI / 2,
       style: {
         fill: '#8C8C8C',
         fontSize: 12
@@ -570,19 +567,21 @@ const option = {
         style: {
           stroke: '#E5E6EB10',
           lineWidth: 1,
-          lineDash: [4, 5],
+          lineDash: [4, 5], // Keep dashed grid lines
           strokeOpacity: 0.7
         }
       }
     },
     label: {
-      formatter: (v) => {
-        if (v < 1e3) return v
-        // 数值格式化为千分位
-        if (v >= 1e3 && v < 1e6) return `${v}`.replace(/\d{1,3}(?=(\d{3})+$)/g, (s) => `${s},`)
-        if (v >= 1e6 && v < 1e9) return `${(v / 1e6).toFixed(1)} M`
-        if (v >= 1e9 && v < 1e12) return `${(v / 1e9).toFixed(1)} B`
-        return `${(v / 10e8).toFixed(1)} B`
+      formatter: (v) => { // Keep the number formatter
+        if (v < 1e3 && v > -1e3) return v;
+        if (v >= 1e3 && v < 1e6) return `${(v / 1e3).toFixed(1)}k`;
+        if (v <= -1e3 && v > -1e6) return `${(v / 1e3).toFixed(1)}k`;
+        if (v >= 1e6 && v < 1e9) return `${(v / 1e6).toFixed(1)} M`;
+        if (v <= -1e6 && v > -1e9) return `${(v / 1e6).toFixed(1)} M`;
+        if (v >= 1e9 && v < 1e12) return `${(v / 1e9).toFixed(1)} B`;
+        if (v <= -1e9 && v > -1e12) return `${(v / 1e9).toFixed(1)} B`;
+        return `${v}`;
       },
       style: {
         fill: '#e9e9e9',
@@ -599,10 +598,10 @@ const option = {
   },
   meta: {
     type: {
-      alias: '类别'
+      alias: '时间段' // 更新别名
     },
-    sales: {
-      alias: '销售额'
+    money: {
+      alias: '车流量变化' // 更新别名
     }
   }
 }
