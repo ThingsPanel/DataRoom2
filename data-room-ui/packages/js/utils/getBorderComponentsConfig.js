@@ -216,7 +216,7 @@ export default function getComponentConfig (type, classNameType) {
         y: 0,
         type
       }
-
+    
     default:
       return {}
   }

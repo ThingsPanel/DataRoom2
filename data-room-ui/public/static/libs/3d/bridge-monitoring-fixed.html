@@ -154,54 +154,58 @@
             danger: '#f44336'
         };
 
-        // 监测数据状态对象 (Keep position property)
+        // 监测数据状态对象 (Add properties for cached dimensions)
         const monitoringData = [
             {
                 name: "结构应力",
                 value: "120 MPa",
                 description: "当前该部位所承受的应力值，低于设计允许的最大应力值 150MPa，处于正常范围。", 
-                // color: statusColors.normal, // We'll set class based on status
                 position: null, 
                 normalRange: [100, 140],
                 warningRange: [140, 150],
                 dangerThreshold: 150,
                 currentValue: 120,
-                unit: "MPa"
+                unit: "MPa",
+                labelWidth: null, // Cached width
+                labelHeight: null // Cached height
             },
             {
                 name: "位移",
                 value: "竖向: 5mm, 水平: 2mm",
                 description: "跨中竖向位移在允许范围内，表明梁体变形正常；桥墩顶部水平位移较小，说明桥墩稳定性良好。",
-                // color: statusColors.normal,
                 position: null, 
                 verticalValue: 5,
                 horizontalValue: 2,
                 verticalNormalRange: [0, 8],
                 horizontalNormalRange: [0, 5],
                 verticalUnit: "mm",
-                horizontalUnit: "mm"
+                horizontalUnit: "mm",
+                labelWidth: null,
+                labelHeight: null
             },
             {
                 name: "振动频率",
                 value: "10.5 Hz",
                 description: "与桥梁初始设计频率 10Hz 相比，略有变化但在合理波动范围内，结构未出现明显损伤迹象。",
-                // color: statusColors.normal,
                 position: null, 
                 normalRange: [9.5, 10.5],
                 warningRange: [9.0, 11.0],
                 currentValue: 10.5,
-                unit: "Hz"
+                unit: "Hz",
+                labelWidth: null,
+                labelHeight: null
             },
             {
                 name: "索力",
                 value: "800 kN",
                 description: "该斜拉索的拉力值，与设计索力 750kN 相比，偏差在允许范围内，索力分布较为均匀。",
-                // color: statusColors.normal,
                 position: null, 
                 normalRange: [700, 850],
                 warningRange: [650, 900],
                 currentValue: 800,
-                unit: "kN"
+                unit: "kN",
+                labelWidth: null,
+                labelHeight: null
             }
         ];
 
@@ -210,7 +214,7 @@
         const statusElement = document.getElementById('status');
         
         loader.load(
-            'bridge.glb',  // 模型路径
+            'bridge-minified.glb',  // 模型路径
             function(gltf) {
                 bridge = gltf.scene;
                 scene.add(bridge);
@@ -313,7 +317,7 @@
             ); // Front-Bottom-Left
         }
 
-        // Create 3D positioned HTML labels
+        // Create 3D positioned HTML labels and cache dimensions
         function createDataLabels() {
             dataLabels.forEach(label => {
                 if (label.parentNode) document.body.removeChild(label);
@@ -322,9 +326,8 @@
             
             monitoringData.forEach((data, index) => {
                 const labelDiv = document.createElement('div');
-                labelDiv.className = 'data-tag'; // Base class
+                labelDiv.className = 'data-tag'; 
                 labelDiv.id = `data-tag-${index}`;
-                // Initial status class will be set by updateAllData
                 
                 const titleElement = document.createElement('div');
                 titleElement.className = 'title';
@@ -334,7 +337,6 @@
                 const valueElement = document.createElement('div');
                 valueElement.className = 'value';
                 valueElement.textContent = data.value;
-                // Initial color set by updateAllData via class
                 labelDiv.appendChild(valueElement);
                 
                 const descriptionElement = document.createElement('div');
@@ -348,31 +350,41 @@
                 data.valueElement = valueElement; 
                 data.descriptionElement = descriptionElement; 
                 dataLabels.push(labelDiv);
+
+                // --- Cache dimensions after creation --- 
+                // Temporarily make it visible but off-screen to measure
+                labelDiv.style.position = 'absolute'; // Ensure it's positioned
+                labelDiv.style.visibility = 'hidden';
+                labelDiv.style.display = 'block';
+                data.labelWidth = labelDiv.offsetWidth;
+                data.labelHeight = labelDiv.offsetHeight;
+                labelDiv.style.display = 'none'; // Hide again immediately
+                labelDiv.style.visibility = 'visible';
+                // Reset position if needed, although it's set each frame in update
+                // ----------------------------------------
             });
-             updateLabelPositions(); 
+             updateLabelPositions(); // Initial position update using cached dimensions
         }
         
-        // Update label screen positions with 2D collision avoidance and grouping
+        // Update label screen positions using cached dimensions
         function updateLabelPositions() {
             const placedLabelRects = []; 
             const labelVerticalPadding = 5; 
-            const globalYShift = -30; // Pixels to shift all labels upwards
+            const globalYShift = -30; 
 
-            // --- Pre-calculate all initial projected positions --- 
             const initialProjections = monitoringData.map(data => {
                 if (!data.position) return null;
                 const position = data.position.clone();
                 position.project(camera);
-                if (position.z > 1) return null; // Behind camera
+                if (position.z > 1) return null; 
                 return {
                     x: (position.x * 0.5 + 0.5) * window.innerWidth,
                     y: (-position.y * 0.5 + 0.5) * window.innerHeight
                 };
             });
 
-            // --- Calculate average Y for pairs --- 
             let avgYBottom = null;
-            const bottomPairIndices = [0, 1]; // Stress, Displacement
+            const bottomPairIndices = [0, 1]; 
             const bottomYs = bottomPairIndices
                 .map(i => initialProjections[i]?.y)
                 .filter(y => y !== undefined && y !== null);
@@ -381,7 +393,7 @@
             }
            
             let avgYTop = null;
-            const topPairIndices = [2, 3]; // Frequency, Tension
+            const topPairIndices = [2, 3]; 
             const topYs = topPairIndices
                 .map(i => initialProjections[i]?.y)
                 .filter(y => y !== undefined && y !== null);
@@ -389,49 +401,37 @@
                 avgYTop = topYs.reduce((sum, y) => sum + y, 0) / topYs.length;
             }
 
-            // --- Process each label --- 
             monitoringData.forEach((data, index) => {
                 const labelElement = data.labelElement;
                 const initialProj = initialProjections[index];
+                const labelWidth = data.labelWidth;   // Use cached width
+                const labelHeight = data.labelHeight; // Use cached height
 
-                if (!initialProj || !labelElement) { // Check pre-calculated projection
+                if (!initialProj || !labelElement || !labelWidth || !labelHeight) { // Check cache too
                     if (labelElement) labelElement.style.display = 'none';
                     return;
                 }
 
-                // --- Determine Initial Target Y based on pairing --- 
                 let targetX = initialProj.x;
-                let targetY = initialProj.y; // Default to its own projection
+                let targetY = initialProj.y; 
 
                 if (bottomPairIndices.includes(index) && avgYBottom !== null) {
-                    targetY = avgYBottom; // Use bottom pair average Y
+                    targetY = avgYBottom; 
                 } else if (topPairIndices.includes(index) && avgYTop !== null) {
-                    targetY = avgYTop; // Use top pair average Y
+                    targetY = avgYTop; 
                 }
                 
-                // Apply global upward shift *before* collision checks based on this target
                 targetY += globalYShift;
 
-                // --- Calculate Dimensions (as before) --- 
-                labelElement.style.visibility = 'hidden';
-                labelElement.style.display = 'block';
-                labelElement.style.left = targetX + 'px'; 
-                labelElement.style.top = targetY + 'px';
+                // --- No need to calculate dimensions here anymore --- 
                 
-                const labelWidth = labelElement.offsetWidth;
-                const labelHeight = labelElement.offsetHeight;
-                labelElement.style.visibility = 'visible';
-                labelElement.style.display = 'none'; 
-
-                if (!labelWidth || !labelHeight) return; 
-                
-                // Calculate initial bounding box using potentially shifted targetY
+                // Calculate initial bounding box using cached dimensions and target pos
                 let currentLeft = targetX - labelWidth / 2;
                 let currentTop = targetY - labelHeight / 2;
                 let currentRight = currentLeft + labelWidth;
                 let currentBottom = currentTop + labelHeight;
 
-                // --- Collision Detection and Avoidance (as before) --- 
+                // --- Collision Detection and Avoidance (uses cached height) --- 
                 let collisionDetected = true;
                 let attempts = 0;
                 const maxAttempts = 15; 
@@ -448,12 +448,10 @@
                         if (overlaps) {
                             collisionDetected = true;
                             currentTop = placedRect.bottom + labelVerticalPadding;
-                            currentBottom = currentTop + labelHeight;
-                            // Recalculate targetY (center) based on the new top
-                            targetY = currentTop + labelHeight / 2;
-                            // Update currentLeft based on targetX as X doesn't change here
-                            currentLeft = targetX - labelWidth / 2;
-                            currentRight = currentLeft + labelWidth;
+                            currentBottom = currentTop + labelHeight; // Use cached height
+                            targetY = currentTop + labelHeight / 2;   // Use cached height
+                            currentLeft = targetX - labelWidth / 2;  // Use cached width
+                            currentRight = currentLeft + labelWidth; // Use cached width
                             break; 
                         }
                     }
@@ -464,12 +462,11 @@
                     console.warn("Max attempts reached for label collision avoidance:", data.name);
                 }
 
-                // --- Final Placement (check bounds using final top/left) --- 
-                 // Final top/left might have shifted due to collision
-                const finalTop = targetY - labelHeight / 2;
-                const finalBottom = finalTop + labelHeight;
-                const finalLeft = targetX - labelWidth / 2;
-                const finalRight = finalLeft + labelWidth;
+                // --- Final Placement (check bounds using cached dimensions) --- 
+                const finalTop = targetY - labelHeight / 2;    // Use cached height
+                const finalBottom = finalTop + labelHeight;  // Use cached height
+                const finalLeft = targetX - labelWidth / 2;   // Use cached width
+                const finalRight = finalLeft + labelWidth; // Use cached width
                 
                 if (finalLeft < 0 || finalRight > window.innerWidth || finalTop < 0 || finalBottom > window.innerHeight) {
                     labelElement.style.display = 'none';
