@@ -77,7 +77,7 @@ public class ApiKeyTenantFilter implements Filter {
             HttpEntity<?> entity = new HttpEntity<>(headers);
             
             ResponseEntity<String> response = restTemplate.exchange(
-                "http://demo.thingspanel.cn/api/v1/user/tenant/id",
+                "http://cloud.thingspanel.cn/api/v1/user/tenant/id",
                 HttpMethod.GET,
                 entity,
                 String.class
