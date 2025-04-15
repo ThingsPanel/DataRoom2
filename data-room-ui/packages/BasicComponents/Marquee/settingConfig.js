@@ -43,7 +43,7 @@ const customConfig = {
     skewY: 0
   },
   customize: {
-    title: 'DataRoom由GCPAAS开源社区开源',
+    title: 'ThingsPanel物联网平台',
     fontSize: 14,
     fontWeight: 700,
     icon: {
