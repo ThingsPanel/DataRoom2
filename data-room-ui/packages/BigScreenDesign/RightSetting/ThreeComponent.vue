@@ -62,13 +62,15 @@
               >
                 <el-input
                   v-if="setting.type === 'input'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)" 
+                  @input="setProperty(setting.optionField, $event)"
                   :placeholder="`请输入${setting.label}`"
                   clearable
                 />
                 <el-input-number
                   v-else-if="setting.type === 'inputNumber'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)"
+                  @input="value => setProperty(setting.optionField, value)"
                   :min="setting.min"
                   :max="setting.max"
                   :step="setting.step || 1"
@@ -76,7 +78,8 @@
                 />
                 <el-select
                   v-else-if="setting.type === 'select'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)"
+                  @input="setProperty(setting.optionField, $event)"
                   popper-class="bs-el-select"
                   class="bs-el-select"
                   :placeholder="`请选择${setting.label}`"
@@ -92,53 +95,30 @@
                 </el-select>
                 <el-color-picker
                   v-else-if="setting.type === 'colorPicker'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)"
+                  @change="setProperty(setting.optionField, $event)"
                   show-alpha
                 />
-                <template v-else-if="setting.type === 'colorSelect'">
-                  <el-color-picker
-                    v-model="setting.value"
-                    show-alpha
-                    @change="updateColorScheme"
-                  />
-                </template>
                 <el-switch
                   v-else-if="setting.type === 'switch'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)"
+                  @input="setProperty(setting.optionField, $event)"
                   :active-value="setting.active"
                   :inactive-value="setting.inactive"
                 />
                 <el-slider
                   v-else-if="setting.type === 'slider'"
-                  v-model="setting.value"
+                  :value="getProperty(setting.optionField)"
+                  @input="setProperty(setting.optionField, $event)"
                   :min="setting.min"
                   :max="setting.max"
                   :step="setting.step"
                 />
                 <div
-                  v-else-if="setting.type === 'padding'"
+                  v-else
+                  style="color: #aaa; font-size: 12px;"
                 >
-                  <PaddingSetting v-model="setting.value" />
-                </div>
-                <div
-                  v-else-if="setting.type === 'appendPadding'"
-                >
-                  <PaddingSetting v-model="setting.value" />
-                </div>
-                <div
-                  v-else-if="setting.type === 'gradual'"
-                >
-                  <GradualSetting v-model="setting.value" />
-                </div>
-                <div
-                  v-else-if="setting.type === 'textGradient'"
-                >
-                  <TextGradient v-model="setting.value" />
-                </div>
-                <div
-                  v-else-if="setting.type === 'borderColor'"
-                >
-                  <BorderColorSetting v-model="setting.value" />
+                  未知的配置类型: {{ setting.type }}
                 </div>
               </el-form-item>
             </div>
@@ -214,20 +194,34 @@ export default {
       }
     }
   },
+  watch: {
+    config: {
+      handler: 'init',
+      deep: true
+    }
+  },
   created() {
     this.init()
   },
   methods: {
     init() {
-      this.config = this.$store.state.bigScreen.activeItemConfig || {}
+      if (!this.config || !this.config.option) {
+        console.warn('[ThreeComponent] Init called with invalid config:', this.config)
+        this.config = { option: { customize: {} }, setting: [] }
+      } 
       if (!this.config.setting) {
-        this.config.setting = []
+        this.$set(this.config, 'setting', [])
+      }
+      if (!this.config.option) {
+        this.$set(this.config, 'option', { customize: {} })
+      }
+       if (!this.config.option.customize) {
+        this.$set(this.config.option, 'customize', {})
       }
       
       this.initGroupList()
     },
     
-    // 初始化分组列表
     initGroupList() {
       this.groupList = []
       const groupNameList = []
@@ -239,7 +233,7 @@ export default {
       this.config.setting.filter(
         (item) => item.tabName === 'custom'
       ).forEach(item => {
-        if (item.tabName === 'custom' && item.groupName) {
+        if (item.groupName) {
           if (!groupNameList.includes(item.groupName)) {
             groupNameList.push(item.groupName)
             this.groupList.push({
@@ -250,50 +244,40 @@ export default {
             this.groupList.find(group => group.groupName === item.groupName).list.push(item)
           }
         } else {
-          if (this.groupList.find(group => group.groupName === 'other')) {
-            this.groupList.find(group => group.groupName === 'other').list.push(item)
-          } else {
-            this.groupList.push({
-              groupName: 'other',
-              list: [item]
-            })
+          let otherGroup = this.groupList.find(group => group.groupName === 'other')
+          if (!otherGroup) {
+            otherGroup = { groupName: 'other', list: [] }
+            this.groupList.push(otherGroup)
           }
+          otherGroup.list.push(item)
         }
       })
       
-      // 将"其他"分组移到最后
-      for (let i = 0; i < this.groupList.length; i++) {
-        if (this.groupList[i].groupName === 'other') {
-          const otherObject = this.groupList.splice(i, 1)[0]
-          this.groupList.push(otherObject)
-          break
-        }
+      const otherIndex = this.groupList.findIndex(g => g.groupName === 'other')
+      if (otherIndex > -1) {
+        const otherObject = this.groupList.splice(otherIndex, 1)[0]
+        this.groupList.push(otherObject)
       }
     },
     
-    // 更新颜色方案
-    updateColorScheme() {
-      // 处理颜色方案更新
-      this.$emit('update', this.config)
+    getProperty(path) {
+      return _.get(this.config.option, path, null)
     },
     
-    // 应用配置变更
+    setProperty(path, value) {
+      _.set(this.config.option, path, value)
+    },
+    
     applyChanges() {
-      // 处理主题跟随
       if (this.config.option) {
         this.config.theme = settingToTheme(this.config, this.customTheme)
       }
       
-      console.log('ThreeComponent触发更新事件，当前配置:', {
-        theme: this.config.theme,
-        customize: this.config.option.customize
-      })
+      console.log('ThreeComponent Apply: Emitting update with config:', _.cloneDeep(this.config))
       
-      // 确保配置更新被传递给父组件
       this.$emit('update', this.config)
       
-      // 显示成功提示
-      this.$message.success('3D配置已更新')
+      this.$message.success('3D配置已应用')
     }
   }
 }
@@ -303,59 +287,17 @@ export default {
 @import '../../assets/style/settingWrap.scss';
 @import '../../assets/style/bsTheme.scss';
 
-// 筛选条件的按钮样式
-.add-filter-box {
-  position: relative;
-
-  .add-filter {
-    margin-left: 90px;
-    margin-bottom: 10px;
-  }
-
-  .add-filter-btn {
-    position: absolute;
-    top: 0;
-  }
-}
-
 .lc-field-body {
   padding: 12px 16px;
 }
 
 .el-form-item {
-  margin-bottom: 6px !important;
-}
-
-.lc-field-title {
-  position: relative;
-  padding-left: 12px;
-  line-height: 30px;
-  height: 30px;
-  margin-bottom: 12px;
-  &:after {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    content: '';
-    width: 4px;
-    height: 14px;
-    background-color: var(--bs-el-color-primary);
-  }
-}
-
-::v-deep .el-color-picker__trigger {
-  border-color: var(--bs-el-border);
-}
-
-.color-picker-box {
-  ::v-deep .el-color-picker__trigger {
-    width: 27px !important;
-  }
+  margin-bottom: 10px !important;
 }
 
 .apply-button-container {
   margin-top: 15px;
+  padding: 0 16px 12px;
   text-align: right;
 }
 </style>
