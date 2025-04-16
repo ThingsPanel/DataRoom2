@@ -423,8 +423,12 @@ export default {
         (gltf) => {
           console.log('[ThreeRenderCore loadModel] GLB loaded successfully.');
           this.model = gltf.scene;
+          if (this.scene) {
           this.scene.add(this.model);
-          
+        
+          if (!this.animationFrameId && this.renderer) {
+            this.animate();
+        }
           this.applyInitialModelTransforms(); 
           this.setupInitialCameraView(this.model);
           
@@ -435,7 +439,11 @@ export default {
 
           // Create HTML labels after model is ready (this should be the definitive initial creation)
           this.createHtmlLabels();
-
+          }else {
+        // 如果 scene 不存在，给出警告并清理
+        console.warn('GLTF 加载完成时场景已不存在，模型未添加。');
+        this.model = null; // 清理模型引用
+      }
           this.loading = false;
         },
         (xhr) => {

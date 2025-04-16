@@ -382,6 +382,5 @@ export default {
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  padding-bottom: 15px;
 }
 </style>
