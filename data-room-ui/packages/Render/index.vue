@@ -409,36 +409,42 @@ export default {
       
       let option = _chart.option
       
-      // 处理customComponent的特殊情况
-      if (_chart.type === 'customComponent') {
-        console.log('检测到customComponent类型组件')
+      // 处理 customComponent 或 threeJs 类型
+      // --- 优先检查 chartType --- 
+      if (_chart.chartType === 'threeJs') {
+         console.log('检测到 chartType=threeJs，识别为3D模型组件，保留原有配置');
+         // 保留option，可能后续需要特殊处理主题等
+      } 
+      // --- 如果 chartType 不为 threeJs，再检查 type 是否为 customComponent --- 
+      else if (_chart.type === 'customComponent') {
+        console.log('检测到 type=customComponent 且 chartType!=threeJs，尝试识别为G2Plot');
         
-        // 使用更多特征精确检测是否是3D模型组件
-        const is3DModelComponent = 
-          (_chart.category && _chart.category.includes('模型')) || 
-          (_chart.name && (_chart.name.includes('3D') || _chart.name.includes('模型') || _chart.name === 'PM25监测器')) ||
-          (_chart.title && _chart.title.includes('3D')) ||
-          (_chart.icon && _chart.icon === 'kongjian');
+        // G2Plot处理逻辑
+        console.log('检测到普通自定义组件，查找Plot配置');
+        const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name);
+        console.log('找到的Plot配置:', plotConfig ? plotConfig.name : '未找到');
         
-        if (is3DModelComponent) {
-          console.log('检测到3D模型组件，保留原有配置')
-          // 保留原有的option，不覆盖
-        } else {
-          // G2Plot处理逻辑
-          console.log('检测到普通自定义组件，查找Plot配置')
-          const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name)
-          console.log('找到的Plot配置:', plotConfig ? plotConfig.name : '未找到')
-          
-          // 只有找到对应的Plot配置时才应用
-          if (plotConfig) {
-            option = {
-              ...(plotConfig.option || {}),
-              theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
-            }
+        // 只有找到对应的Plot配置时才应用
+        if (plotConfig) {
+          option = {
+            ...(plotConfig.option || {}),
+            theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
           }
+        } else {
+           console.warn(`未找到名为 ${_chart.name} 的 G2Plot 配置，将使用原始 option`);
         }
+      } 
+      // --- 处理明确的 echartsComponent 类型 --- 
+      else if (_chart.type === 'echartsComponent') {
+         console.log('检测到 echartsComponent 类型');
+         // Echarts 可能有自己的默认配置或主题处理逻辑
+      } 
+      // --- 处理其他类型 --- 
+      else {
+         console.log(`检测到其他类型: ${_chart.type}`);
+         // 其他类型的处理逻辑
       }
-      
+
       const config = {
         ..._chart,
         x: parseInt(!chart.code

@@ -26,6 +26,7 @@ function getThreeList(files) {
         category: configMapKey,
         name: config.name,
         title: config.title,
+        chartType: config.chartType,
         border: { 
           type: '', 
           titleHeight: 60, 
@@ -33,8 +34,8 @@ function getThreeList(files) {
           color: ['#5B8FF9', '#61DDAA', '#5D7092', '#F6BD16', '#6F5EF9'], 
           padding: [16, 16, 16, 16] 
         },
-        icon: 'kongjian', // 使用图标
-        img: undefined, // 不使用图片
+        icon: null, // 使用图标
+        img: require(`../ThreeComponents/images/${config.title}.png`),
         className: 'com.gccloud.dataroom.core.module.chart.components.CustomComponentChart',
         w: 450,
         h: 320,
@@ -91,6 +92,7 @@ function getThreeList(files) {
         category: configMapKey,
         name: config.name,
         title: config.title,
+        chartType: config.chartType,
         border: { 
           type: '', 
           titleHeight: 60, 
@@ -98,8 +100,8 @@ function getThreeList(files) {
           color: ['#5B8FF9', '#61DDAA', '#5D7092', '#F6BD16', '#6F5EF9'], 
           padding: [16, 16, 16, 16] 
         },
-        icon: 'kongjian', // 使用图标
-        img: undefined, // 不使用图片
+        icon: null,
+        img: require(`../ThreeComponents/images/${config.title}.png`),
         className: 'com.gccloud.dataroom.core.module.chart.components.CustomComponentChart',
         w: 450,
         h: 320,

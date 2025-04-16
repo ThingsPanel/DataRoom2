@@ -17,15 +17,16 @@ export function saveScreen (data) {
       item.option = JSON.stringify(a)
       
       // 根据组件类型判断是否需要简化 setting
-      // 如果有 type 字段且值为 threeJs，或者是特定名称组件，则保留完整 setting
-      if ((item.type === 'threeJs') || (item.name === 'PM25监测器' || item.name === 'ThreeComponent')) {
+      if (item.chartType === 'threeJs') {
         // 保留完整 setting 结构
+        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=threeJs)`);
       } else {
         // 只保留 field 和 value
-        item.setting = item.setting.map((x) => {
+        console.log(`[saveScreen] 简化 ${item.name || item.code} 的 setting`);
+        item.setting = item.setting?.map((x) => {
           const { field, value } = x
           return { field, value }
-        })
+        }) || [] // 确保如果 setting 不存在或为 null，返回空数组
       }
     }
   })

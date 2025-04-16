@@ -271,22 +271,6 @@ export default {
     this.menuList[1].components = this.g2PlotComponents
     this.menuList[2].components = this.echartsComponents
     
-    // 确保所有3D模型组件的类型都是customComponent
-    if (this.threeComponents && this.threeComponents.length > 0) {
-      // 打印3D模型组件列表，查看详细信息
-      console.log('3D模型组件原始数据:', JSON.parse(JSON.stringify(this.threeComponents)))
-      
-      this.threeComponents = this.threeComponents.map(item => {
-        if (item.type === 'threeComponent') {
-          return { ...item, type: 'customComponent' }
-        }
-        return item
-      })
-      
-      // 打印修改后的3D模型组件列表
-      console.log('3D模型组件修改后数据:', JSON.parse(JSON.stringify(this.threeComponents)))
-    }
-    
     this.menuList[3].components = this.threeComponents
   },
   mounted () {
