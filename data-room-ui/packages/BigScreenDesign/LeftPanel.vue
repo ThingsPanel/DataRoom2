@@ -207,7 +207,7 @@ export default {
           id: 9,
           name: 'three',
           title: '3D模型',
-          icon: 'icon-kongjian',
+          icon: 'icon-jichushuju',
           components: this.threeComponents
         },
         {
