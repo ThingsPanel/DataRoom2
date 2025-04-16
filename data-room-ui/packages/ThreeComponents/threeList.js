@@ -6,88 +6,72 @@ import sortList from './threeListSort'
 const files = require.context('./', true, /[\u4e00-\u9fa5]+.js$/)
 const threeList = getThreeList(files)
 
-// 获取three配置
+// 获取 three 配置，函数名保持 getThreeList，内部逻辑严格对齐 getPlotList
 function getThreeList(files) {
   const configMapList = {}
   files.keys().forEach((key) => {
-    // 取到模型名称
+    // ./3D模型/桥梁监测.js -> configName = '桥梁监测' (与 plotList 保持一致，使用文件名)
     const configName = key.split('/')[2].replace('.js', '')
     configMapList[configName] = files(key).default
   })
-  
-  const threeList = []
-  
-  // 统一处理函数 - 最终修正版
-  const processConfig = (config, configMapKey) => {
-    // 1. 基础配置（严格对齐 plotList, 不含 option, setting 等）
-    const baseConfig = {
+
+  const plotList = [] // 使用 plotList 作为内部数组名，对齐 plotList.js
+
+  // 严格按照 plotList.js 的方式构建对象，直接在循环内完成
+  for (const configMapKey in configMapList) {
+    const index = sortList.findIndex((item) => item === configMapKey)
+    const config = configMapList[configMapKey]
+    
+    // 直接构建最终配置对象，结构和顺序严格对齐 plotList.js
+    plotList[index] = {
+      // --- 基础信息 --- (对齐 plotList.js)
       version: config.version,
-      category: configMapKey,
+      category: configMapKey, // 使用文件名作为 category
       name: config.name,
       title: config.title,
-      chartType: config.chartType || config.type, // 优先 chartType
-      border: { 
-        type: '', 
-        titleHeight: 60, 
-        fontSize: 30, 
-        color: ['#5B8FF9', '#61DDAA', '#5D7092', '#F6BD16', '#6F5EF9'], 
-        padding: [16, 16, 16, 16] 
+      border: { // 与 plotList.js 保持一致或根据需要调整
+        type: '',
+        titleHeight: 60,
+        fontSize: 16, // Align font size with plotList.js
+        isTitle: true, // Added from plotList.js
+        padding: [16, 16, 16, 16]
       },
       icon: null,
-      img: require(`../ThreeComponents/images/${config.title}.png`),
+      img: require(`../ThreeComponents/images/${config.title}.png`), // Three.js 图片路径
       className: 'com.gccloud.dataroom.core.module.chart.components.CustomComponentChart',
-      w: 450,
-      h: 320,
-      x: 0,
-      y: 0,
-      rotateX: config.rotateX || 0,
-      rotateY: config.rotateY || 0,
-      rotateZ: config.rotateZ || 0,
-      perspective: config.perspective || 0,
-      skewX: config.skewX || 0,
-      skewY: config.skewY || 0,
-      type: 'customComponent', // 保持 type 为 customComponent (如果需要兼容老逻辑)
-      loading: false
-    }
+      w: config?.option?.width || 450, // 对齐 plotList.js 尺寸处理
+      h: config?.option?.height || 320,
+      x: 0, y: 0,
+      rotateX: config.rotateX || 0, rotateY: config.rotateY || 0, rotateZ: config.rotateZ || 0,
+      perspective: config.perspective || 0, skewX: config.skewX || 0, skewY: config.skewY || 0,
+      type: 'customComponent',
+      chartType: config.chartType, // 使用组件定义的 chartType
+      loading: false,
 
-    // 2. 严格按照 plotList 模式合并 option
-    const mergedOption = {
-      ...(config.option || {}),       // 组件 option 在前
-      ...cloneDeep(settingConfig)  // 默认 settingConfig (只有 displayOption) 在后
-       // 注意：现在 customize 主要由下面的 dataConfig 提供
-    }
+      // --- Option 合并 --- (严格对齐 plotList.js)
+      option: {
+        ...(config.option || {}),    // 组件 option 优先展开
+        ...cloneDeep(settingConfig) // 通用 settingConfig 其次展开
+                                    // 假设 settingConfig 只包含应合并到 option 的属性
+      },
 
-    // 3. 合并最终对象
-    return {
-       ...baseConfig,              // 先基础
-       option: mergedOption,        // 合并后的 option
-       ...cloneDeep(dataConfig),   // 再展开 dataConfig (提供默认 customize 等)
-       // --- 关键：确保这些不被 dataConfig 覆盖 --- 
-       setting: config.setting,
-       dataHandler: config.dataHandler,
-       optionHandler: config.optionHandler
+      // --- 组件特定配置 --- (严格对齐 plotList.js)
+      setting: config.setting,
+      dataHandler: config.dataHandler,
+      optionHandler: config.optionHandler,
+
+      // --- 默认数据配置 --- (严格对齐 plotList.js，最后展开)
+      ...cloneDeep(dataConfig)
     }
   }
 
-  // 如果排序列表为空，则显示所有组件
-  if (sortList.length === 0) {
-    for (const configMapKey in configMapList) {
-      const config = configMapList[configMapKey]
-      threeList.push(processConfig(config, configMapKey))
-    }
-  } else {
-    // 原有逻辑
-    for (const configMapKey in configMapList) {
-      const index = sortList.findIndex((item) => item === configMapKey)
-      if (index === -1) continue // 跳过不在排序列表中的组件
+  // plotList.js 后面还有合并 customPlots 等的逻辑，threeList.js 目前没有
+  // 如果需要，可以在这里添加类似逻辑
+  // const plots = [...plotList, ...customThreePlots, ...otherThreeData];
 
-      const config = configMapList[configMapKey]
-      threeList[index] = processConfig(config, configMapKey)
-    }
-  }
-  
-  // 过滤掉空项
-  return threeList.filter(item => item)
+  // 返回过滤后的列表
+  return plotList.filter(item => item) // 使用 plotList 变量名
 }
 
-export default threeList 
+// 保持默认导出名为 threeList
+export default threeList

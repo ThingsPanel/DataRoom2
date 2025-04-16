@@ -160,6 +160,31 @@ export default {
         }).then(async res => {
           config.loading = false
           let _res = cloneDeep(res)
+
+          // --- BEGIN: Augment fieldList with binding keys --- 
+          try {
+            const bindingKeys = Object.keys(config.option?.customize?.binding || {});
+            let fieldList = res.fieldList || [];
+            const originalFieldCount = fieldList.length;
+            const existingNames = new Set(fieldList.map(f => f.fieldName));
+            console.log(`[changeDataByCode] Augmenting fieldList. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
+            bindingKeys.forEach(key => {
+              if (!existingNames.has(key)) {
+                const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false };
+                fieldList.push(newField);
+                existingNames.add(key); // Add to set to prevent duplicates if binding key appears later
+                console.log(`  > Added binding key to fieldList:`, newField);
+              }
+            });
+            // Update the fieldList in the response object (assuming this is used later)
+            res.fieldList = fieldList;
+            console.log(`[changeDataByCode] Finished augmenting fieldList. New count: ${fieldList.length}`);
+            console.log('Augmented fieldList:', JSON.parse(JSON.stringify(res.fieldList))); // Log the result
+          } catch (e) {
+            console.error('[changeDataByCode] Error augmenting fieldList:', e);
+          }
+          // --- END: Augment fieldList --- 
+
           // 如果是http数据集或iot数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
@@ -365,7 +390,31 @@ export default {
           console.log('getUpdateChartInfo 返回数据:', res)
           config.loading = false
           let _res = cloneDeep(res)
-          
+
+          // --- BEGIN: Augment fieldList with binding keys --- 
+          try {
+            const bindingKeys = Object.keys(config.option?.customize?.binding || {});
+            let fieldList = res.fieldList || [];
+            const originalFieldCount = fieldList.length;
+            const existingNames = new Set(fieldList.map(f => f.fieldName));
+            console.log(`[changeData] Augmenting fieldList. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
+            bindingKeys.forEach(key => {
+              if (!existingNames.has(key)) {
+                const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false };
+                fieldList.push(newField);
+                existingNames.add(key); // Add to set
+                console.log(`  > Added binding key to fieldList:`, newField);
+              }
+            });
+            // Update the fieldList in the response object
+            res.fieldList = fieldList;
+            console.log(`[changeData] Finished augmenting fieldList. New count: ${fieldList.length}`);
+             console.log('Augmented fieldList:', JSON.parse(JSON.stringify(res.fieldList))); // Log the result
+          } catch (e) {
+            console.error('[changeData] Error augmenting fieldList:', e);
+          }
+          // --- END: Augment fieldList --- 
+
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
               console.log('9999999', res.data)

@@ -1191,21 +1191,59 @@ export default {
       if (id) {
         this.config.dataSource.businessKey = id
         getDataSetDetails(id).then(res => {
-          this.fieldsList = res.fields
-          // 初始化时以组件本来的参数设置为主
+          // --- BEGIN: Augment fieldsList with binding keys if IoT type --- 
+          let finalFieldsList = res.fields || [];
+          console.log('[DataSetting] Received fields from API:', JSON.parse(JSON.stringify(finalFieldsList)));
+          console.log('[DataSetting] Current datasetType:', this.config.dataSource.datasetType);
+
+          if (this.config.dataSource.datasetType === 'iot') {
+            try {
+              const bindingKeys = Object.keys(this.config.option?.customize?.binding || {});
+              const originalFieldCount = finalFieldsList.length;
+              const existingNames = new Set(finalFieldsList.map(f => f.fieldName));
+              console.log(`[DataSetting] Augmenting fieldList for IoT type. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
+              
+              bindingKeys.forEach(key => {
+                if (!existingNames.has(key)) {
+                  const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false }; // Creating the new field object
+                  finalFieldsList.push(newField);
+                  existingNames.add(key); // Add to set to avoid duplicates
+                  console.log(`  > Added binding key to fieldList:`, newField);
+                }
+              });
+              console.log(`[DataSetting] Finished augmenting fieldList. New count: ${finalFieldsList.length}`);
+            } catch (e) {
+              console.error('[DataSetting] Error augmenting fieldList:', e);
+              // In case of error, potentially revert to original list? Or keep augmented?
+              // Keeping augmented for now, but logging the error.
+              finalFieldsList = res.fields || []; // Revert on error for safety?
+            }
+          } else {
+             console.log(`[DataSetting] Skipping fieldList augmentation as datasetType is not 'iot'.`);
+          }
+          // Assign the (potentially augmented) list to this.fieldsList
+          this.fieldsList = finalFieldsList;
+          console.log('[DataSetting] Final fieldsList assigned:', JSON.parse(JSON.stringify(this.fieldsList)));
+          // --- END: Augment fieldsList --- 
+
+          // 初始化时以组件本来的参数设置为主 (Original logic starts here)
           if (type === 'initial') {
             const deleteKeys = []
+            this.params = [] // Clear params before repopulating
             for (const key in this.config.dataSource.params) {
               const param = res?.params?.find(field => field.name === key)
               // 如果组件参数在数据集中找不到，说明参数已经被删除，不需要再显示
               if (param) {
-                deleteKeys.push(key)
+                // deleteKeys.push(key) // Don't delete if found
                 this.params.push({
                   name: key,
                   value: this.config.dataSource.params[key],
                   type: param?.type,
-                  remark: param?.remark
+                  remark: param?.remark,
+                  require: param?.require // Preserve require flag if available
                 })
+              } else {
+                 deleteKeys.push(key) // Mark for deletion if NOT found in dataset params
               }
             }
             if (res.params) {
@@ -1216,16 +1254,19 @@ export default {
                     name: param.name,
                     value: param.value,
                     type: param.type,
-                    remark: param.remark
+                    remark: param.remark,
+                    require: param.require // Add require flag for new params
                   })
                 }
               })
             }
+            // Remove params from config that are no longer in the dataset
             deleteKeys.forEach(key => {
               delete this.config.dataSource.params[key]
             })
           } else {
-            this.params = res.params
+            // If not initial, just use the params from the dataset details
+            this.params = res.params?.map(p => ({...p})) || [] // Ensure require flag is copied if exists
           }
           this.datasetName = res.name
           // 选择数据集的时候，如果数据集类型是dataModel,则不显示参数配置

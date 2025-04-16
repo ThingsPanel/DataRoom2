@@ -50,7 +50,7 @@ export default {
       ambientLight: null,
       directionalLight: null,
       directionalLight2: null,
-      htmlLabels: [], // Holds { id, labelElement, valueElement, descriptionElement, width, height }
+      htmlLabels: [], // Now holds { id, labelElement, valueContainerElement, descriptionElement, width, height, dataPointRef }
     };
   },
   watch: {
@@ -139,40 +139,38 @@ export default {
             newPoints = newPoints || [];
             oldPoints = oldPoints || [];
 
-            // --- Determine if full recreation is needed --- 
             let needsRecreation = false;
             if (newPoints.length !== oldPoints.length) {
                 needsRecreation = true;
-                console.log('[ThreeRenderCore Watcher] Label count changed. Recreating.');
+                console.log('[ThreeRenderCore Watcher dataPoints] Label count changed. Recreating.');
             } else {
-                 // Check if positions or IDs changed
                  for (let i = 0; i < newPoints.length; i++) {
                      const np = newPoints[i];
-                     const op = oldPoints[i]; 
-                     if (!op || np.id !== op.id || 
-                         np.position?.x !== op.position?.x || 
-                         np.position?.y !== op.position?.y || 
-                         np.position?.z !== op.position?.z) 
+                     const op = oldPoints[i];
+                     if (!op || np.id !== op.id ||
+                         np.position?.x !== op.position?.x ||
+                         np.position?.y !== op.position?.y ||
+                         np.position?.z !== op.position?.z) // Check only structural changes
                      {
                          needsRecreation = true;
-                         console.log(`[ThreeRenderCore Watcher] Position or ID changed at index ${i}. Recreating.`);
+                         console.log(`[ThreeRenderCore Watcher dataPoints] Position or ID changed at index ${i}. Recreating.`);
                          break;
                      }
                  }
             }
-            // --- End Recreation Check --- 
 
             if (needsRecreation) {
-                 // Recreate only if needed after initial load
-                 console.log('[ThreeRenderCore Watcher] Triggering label recreation due to structural change.');
-                 this.createHtmlLabels();
+                 console.log('[ThreeRenderCore Watcher dataPoints] Triggering label recreation due to structural change.');
+                 this.createHtmlLabels(); // Recreate labels fully
             } else {
-                 // Only update content if structure seems the same
-                 console.log('[ThreeRenderCore Watcher] Triggering label content update.');
-                 this.updateHtmlLabelsContent(newPoints); 
+                 // Structure is the same, update only static content (name, description)
+                 // Values and status are handled by the config.option.data watcher
+                 console.log('[ThreeRenderCore Watcher dataPoints] Triggering static label content update (name, description).');
+                 // Call the new method instead of the deleted one
+                 this.updateHtmlLabelStaticContent(newPoints);
             }
         },
-       deep: true 
+       deep: true
     },
     theme() {
       this.updateSceneBackground();
@@ -184,6 +182,78 @@ export default {
     },
     containerHeight() {
         // Trigger position update on container resize
+    },
+    // Watcher for the actual data updates
+    'config.option.data': {
+        handler(newData, oldData) {
+            if (!this.model || !this.htmlLabels || this.htmlLabels.length === 0 || !newData) {
+                console.log('[ThreeRenderCore Watcher config.option.data] Conditions not met, skipping update.');
+                return;
+            }
+
+            console.log('[ThreeRenderCore Watcher config.option.data] Data changed, updating label values:', JSON.parse(JSON.stringify(newData)));
+
+            if (!Array.isArray(newData)) {
+                console.warn('[ThreeRenderCore Watcher config.option.data] newData is not an array:', newData);
+                return;
+            }
+
+            // Create a map for efficient lookup: { bindingKey: value }
+            const dataMap = new Map(newData.map(item => item && item.id !== undefined ? [item.id, item.value] : null).filter(Boolean));
+
+            this.htmlLabels.forEach(labelInfo => {
+                const pointConfig = labelInfo.dataPointRef;
+                const valueContainerElement = labelInfo.valueContainerElement; // Use the container for value items
+                const labelElement = labelInfo.labelElement;
+
+                if (!pointConfig || !valueContainerElement || !pointConfig.dataStructure) return;
+
+                let overallWorstStatus = 'normal'; // Track the most severe status for the whole tag
+
+                pointConfig.dataStructure.forEach(structureItem => {
+                    const bindingKey = structureItem.bindingKey;
+                    if (!bindingKey) return;
+
+                    const itemContainer = valueContainerElement.querySelector(`[data-binding-key="${bindingKey}"]`);
+                    const valueTextElement = itemContainer?.querySelector('.value-text');
+                    const unitElement = valueContainerElement.querySelector(`[data-binding-key="${bindingKey}"] .unit-text`);
+
+                    if (itemContainer && valueTextElement) {
+                        const latestValue = dataMap.has(bindingKey) ? dataMap.get(bindingKey) : structureItem.defaultValue; // Use latest or default
+                        const latestValueStr = latestValue === undefined || latestValue === null ? '--' : String(Number(latestValue).toFixed(2)); // Format value
+
+                        // Update value text if changed
+                        if (valueTextElement.textContent !== latestValueStr) {
+                            valueTextElement.textContent = latestValueStr;
+                        }
+                        // Update unit text (might not change often, but good practice)
+                        if (unitElement && unitElement.textContent !== structureItem.unit) {
+                           unitElement.textContent = structureItem.unit || '';
+                        }
+
+                        // Calculate status
+                        const itemStatus = this.getStatus(latestValue, structureItem.thresholds);
+
+                        // --- Apply status class (for CSS to handle color) ---
+                        itemContainer.classList.remove('status-normal', 'status-warning', 'status-danger');
+                        itemContainer.classList.add(`status-${itemStatus}`);
+                        // ----------------------------------------------------
+
+                        // Determine overall worst status
+                        const statusOrder = { 'normal': 0, 'warning': 1, 'danger': 2 };
+                        if (statusOrder[itemStatus] > statusOrder[overallWorstStatus]) {
+                            overallWorstStatus = itemStatus;
+                        }
+                    } else {
+                        console.warn(`[ThreeRenderCore Watcher] Could not find value element for bindingKey ${bindingKey} in label ${labelInfo.id}`);
+                    }
+                });
+
+                // Update the main label's border based on the overall worst status (only applies class now)
+                this.setLabelStatusClass(labelElement, overallWorstStatus);
+            });
+        },
+        deep: true
     }
   },
   mounted() {
@@ -580,10 +650,31 @@ export default {
        }
      },
 
+    // --- Apply styles helper --- 
+    applyStyles(element, styleObject) {
+        if (!element || !styleObject || typeof styleObject !== 'object') {
+            return;
+        }
+        console.log(`[applyStyles] Applying to element:`, element, ` Styles:`, styleObject);
+        for (const prop in styleObject) {
+            if (Object.prototype.hasOwnProperty.call(styleObject, prop)) {
+                try {
+                    // Directly assign camelCase or kebab-case (browser handles most)
+                    element.style[prop] = styleObject[prop];
+                     console.log(`    Applied ${prop}: ${styleObject[prop]}`);
+                } catch (e) {
+                    console.warn(`[applyStyles] Failed to apply style ${prop}: ${styleObject[prop]}`, e);
+                }
+            }
+        }
+    },
+    // --- End Apply styles helper ---
+
     // --- HTML Label Methods ---
     clearHtmlLabels() {
       console.log('[ThreeRenderCore] Clearing HTML labels.');
       const container = this.$refs.htmlLabelContainer;
+      if (!container) return; // Add guard
       this.htmlLabels.forEach(labelInfo => {
         if (labelInfo.labelElement && labelInfo.labelElement.parentNode === container) {
           container.removeChild(labelInfo.labelElement);
@@ -596,13 +687,15 @@ export default {
       this.clearHtmlLabels();
       const container = this.$refs.htmlLabelContainer;
       const dataPoints = this.config?.option?.customize?.dataPoints;
-      const statusColors = this.config?.option?.customize?.statusColors || {};
 
       if (!container || !Array.isArray(dataPoints)) {
         console.warn('[ThreeRenderCore] Label container or dataPoints missing for createHtmlLabels.');
         return;
       }
       console.log(`[ThreeRenderCore] Recreating ${dataPoints.length} HTML labels...`);
+
+      const initialDataArray = this.config?.option?.data || [];
+      const initialDataMap = new Map(initialDataArray.map(item => item && item.id !== undefined ? [item.id, item.value] : null).filter(Boolean));
 
       dataPoints.forEach((point, index) => {
         if (!point || typeof point.position !== 'object') {
@@ -611,12 +704,10 @@ export default {
         }
         const pointId = point.id || `label-${index}`;
 
-        // --- Logging --- 
-        console.log(`[ThreeRenderCore createHtmlLabels] Processing point ${index} (ID: ${pointId}):`, 
-                     JSON.parse(JSON.stringify(point)) // Deep copy for logging
+        console.log(`[ThreeRenderCore createHtmlLabels] Processing point ${index} (ID: ${pointId}):`,
+                     JSON.parse(JSON.stringify(point))
                     );
-        // ------------- 
-        
+
         // Create elements
         const labelElement = document.createElement('div');
         labelElement.className = 'data-tag';
@@ -624,97 +715,161 @@ export default {
         labelElement.style.display = 'none';
         labelElement.style.pointerEvents = 'auto';
         labelElement.dataset.pointId = pointId;
+        // Apply point-level styles if defined (optional)
+        // this.applyStyles(labelElement, point.style); 
 
         const titleElement = document.createElement('div');
         titleElement.className = 'title';
         titleElement.textContent = point.name || 'N/A';
 
-        const valueElement = document.createElement('div');
-        valueElement.className = 'value';
-        console.log(`[ThreeRenderCore createHtmlLabels] Point ${pointId} - value from config:`, point.value);
-        valueElement.textContent = point.value === undefined ? '--' : String(point.value);
+        const valueContainerElement = document.createElement('div');
+        valueContainerElement.className = 'value-container';
+
+        let overallWorstStatus = 'normal';
+
+        if (point.dataStructure && Array.isArray(point.dataStructure)) {
+            point.dataStructure.forEach(structureItem => {
+                const bindingKey = structureItem.bindingKey;
+                if (!bindingKey) return;
+
+                const valueLineElement = document.createElement('div');
+                valueLineElement.className = 'value-line';
+                valueLineElement.dataset.bindingKey = bindingKey;
+
+                // --- Apply structureItem specific styles --- 
+                this.applyStyles(valueLineElement, structureItem.style);
+                // ---------------------------------------------
+
+                const labelText = structureItem.label ? `${structureItem.label}: ` : '';
+                const valueTextElement = document.createElement('span');
+                valueTextElement.className = 'value-text';
+                const initialValue = initialDataMap.has(bindingKey) ? initialDataMap.get(bindingKey) : structureItem.defaultValue;
+                valueTextElement.textContent = initialValue === undefined || initialValue === null ? '--' : String(Number(initialValue).toFixed(2));
+
+                const unitTextElement = document.createElement('span');
+                unitTextElement.className = 'unit-text';
+                unitTextElement.textContent = structureItem.unit || '';
+
+                valueLineElement.appendChild(document.createTextNode(labelText));
+                valueLineElement.appendChild(valueTextElement);
+                valueLineElement.appendChild(unitTextElement);
+                valueContainerElement.appendChild(valueLineElement);
+
+                // Calculate initial status and apply color/class
+                const itemStatus = this.getStatus(initialValue, structureItem.thresholds);
+                valueLineElement.classList.add(`status-${itemStatus}`);
+            });
+        } else {
+            // Fallback if no dataStructure (simple value)
+            valueContainerElement.textContent = '--'; // Or use point.value if it exists?
+            console.warn(`[ThreeRenderCore createHtmlLabels] Point ${pointId} has no dataStructure.`);
+        }
 
         const descriptionElement = document.createElement('div');
         descriptionElement.className = 'description';
         descriptionElement.textContent = point.description || '';
 
         labelElement.appendChild(titleElement);
-        labelElement.appendChild(valueElement);
+        labelElement.appendChild(valueContainerElement);
         labelElement.appendChild(descriptionElement);
 
-        // Apply initial status class
-        this.setLabelStatusClass(labelElement, point.status || 'normal');
+        // Apply initial overall status class AND border color
+        this.setLabelStatusClass(labelElement, overallWorstStatus); // This relies on setLabelStatusClass being updated too
 
-        // --- Measure and Cache Dimensions --- 
-        // Append to container temporarily to measure
+        // Measure and Cache Dimensions
         labelElement.style.visibility = 'hidden';
-        labelElement.style.display = 'block'; // Make it block to measure correctly
+        labelElement.style.display = 'block';
         container.appendChild(labelElement);
         const width = labelElement.offsetWidth;
         const height = labelElement.offsetHeight;
-        labelElement.style.display = 'none'; // Hide properly again
+        labelElement.style.display = 'none';
         labelElement.style.visibility = 'visible';
-        // --- End Measurement --- 
 
         if (width > 0 && height > 0) {
             this.htmlLabels.push({
                 id: pointId,
                 labelElement: labelElement,
-                valueElement: valueElement,
+                valueContainerElement: valueContainerElement, // Store reference to value container
                 descriptionElement: descriptionElement,
                 width: width,
                 height: height,
-                dataPointRef: point // Keep reference to original data point config
+                dataPointRef: point
             });
         } else {
              console.warn(`[ThreeRenderCore] Label for ${point.name} measured zero size. Hiding.`);
-             // Don't add to htmlLabels array, element won't be positioned.
-             // Remove from DOM if already appended? Yes.
              if(labelElement.parentNode === container) {
                  container.removeChild(labelElement);
              }
         }
       });
        console.log(`[ThreeRenderCore] Finished recreating ${this.htmlLabels.length} HTML labels.`);
-       // Trigger initial position update
        this.$nextTick(() => {
-           if (this.camera && this.renderer) { 
+           if (this.camera && this.renderer) {
              this.updateHtmlLabelPositions();
            }
        });
     },
 
-    // New method to update only content
-    updateHtmlLabelsContent(newDataPoints) {
-        if (!this.htmlLabels || this.htmlLabels.length === 0) {
-           console.warn('[ThreeRenderCore] updateHtmlLabelsContent called but no labels exist.');
-           // Maybe trigger recreation if labels should exist? Or just return.
-           // this.createHtmlLabels(); 
-           return;
-        }
-        
-        newDataPoints.forEach(point => {
-            const pointId = point.id;
-            if (!pointId) return;
-            
-            const labelInfo = this.htmlLabels.find(l => l.id === pointId);
-            if (labelInfo) {
-                // Update text content
-                labelInfo.valueElement.textContent = point.value === undefined ? '--' : String(point.value);
-                labelInfo.descriptionElement.textContent = point.description || '';
-                // Update status class
-                this.setLabelStatusClass(labelInfo.labelElement, point.status || 'normal');
-            } else {
-                 console.warn(`[ThreeRenderCore] updateHtmlLabelsContent: Could not find label info for ID ${pointId}`);
-            }
-        });
-    },
-
-    // Helper to set status class
+    // Helper to set status class ONLY on the main tag element
     setLabelStatusClass(element, status) {
+        if (!element) return;
         element.classList.remove('status-normal', 'status-warning', 'status-danger');
         const validStatus = ['normal', 'warning', 'danger'].includes(status) ? status : 'normal';
         element.classList.add(`status-${validStatus}`);
+    },
+
+     // New helper method to calculate status based on value and thresholds
+    getStatus(value, thresholds) {
+        if (thresholds === undefined || thresholds === null || value === undefined || value === null) {
+            return 'normal'; // Default to normal if no thresholds or value
+        }
+        const numValue = Number(value);
+        if (isNaN(numValue)) {
+             return 'normal'; // Treat non-numeric values as normal
+        }
+
+        // Check danger thresholds first (more specific)
+        if (thresholds.dangerMin !== undefined && numValue >= thresholds.dangerMin) {
+            return 'danger';
+        }
+         if (thresholds.dangerMax !== undefined && numValue <= thresholds.dangerMax) {
+            return 'danger';
+        }
+         if (Array.isArray(thresholds.danger) && thresholds.danger.length === 2 && numValue >= thresholds.danger[0] && numValue <= thresholds.danger[1]) {
+             return 'danger';
+         }
+
+
+        // Check warning thresholds
+        if (thresholds.warningMin !== undefined && numValue >= thresholds.warningMin) {
+            return 'warning';
+        }
+         if (thresholds.warningMax !== undefined && numValue <= thresholds.warningMax) {
+             return 'warning';
+         }
+        if (Array.isArray(thresholds.warning) && thresholds.warning.length === 2 && numValue >= thresholds.warning[0] && numValue <= thresholds.warning[1]) {
+            return 'warning';
+        }
+
+        // Check normal thresholds (less common to define explicitly, but possible)
+        if (thresholds.normalMin !== undefined && numValue < thresholds.normalMin) {
+           // Outside normal range - could be warning/danger handled above, or undefined state
+           // Let's assume if it's not danger/warning, it implies normal unless normal range is specified *and* it falls outside
+           // If only normal range is specified, maybe return 'warning'? Let's stick to explicit danger/warning first.
+        }
+        if (thresholds.normalMax !== undefined && numValue > thresholds.normalMax) {
+           // Outside normal range
+        }
+         if (Array.isArray(thresholds.normal) && thresholds.normal.length === 2 && (numValue < thresholds.normal[0] || numValue > thresholds.normal[1])) {
+             // Outside explicit normal range - this might imply warning or danger depending on setup
+             // It's safer to rely on explicit warning/danger thresholds.
+             // If NO warning/danger defined, and outside normal, maybe return 'warning'?
+             // For simplicity now: if it's not caught by danger/warning, assume normal.
+         }
+
+
+        // If none of the above matched, assume normal
+        return 'normal';
     },
 
     updateHtmlLabelPositions() {
@@ -822,7 +977,54 @@ export default {
             }
         });
     },
-    // --------------------------
+
+    // Method to update static content AND styles
+    updateHtmlLabelStaticContent(newDataPoints) {
+        if (!this.htmlLabels || this.htmlLabels.length === 0) {
+            console.warn('[ThreeRenderCore] updateHtmlLabelStaticContent called but no labels exist.');
+            return;
+        }
+
+        newDataPoints.forEach(point => {
+            const pointId = point.id;
+            if (!pointId) return;
+
+            const labelInfo = this.htmlLabels.find(l => l.id === pointId);
+            if (labelInfo) {
+                // Update Title (name)
+                const titleElement = labelInfo.labelElement?.querySelector('.title');
+                if (titleElement && titleElement.textContent !== (point.name || 'N/A')) {
+                    titleElement.textContent = point.name || 'N/A';
+                }
+
+                // Update Description
+                if (labelInfo.descriptionElement && labelInfo.descriptionElement.textContent !== (point.description || '')) {
+                    labelInfo.descriptionElement.textContent = point.description || '';
+                }
+
+                // Apply structureItem-level styles
+                if (point.dataStructure && Array.isArray(point.dataStructure)) {
+                    point.dataStructure.forEach(structureItem => {
+                        const bindingKey = structureItem.bindingKey;
+                        if (!bindingKey) return;
+                        // Find the specific value-line element
+                        const valueLineElement = labelInfo.valueContainerElement?.querySelector(`[data-binding-key="${bindingKey}"]`);
+                        if (valueLineElement) {
+                            // Re-apply styles from the updated point config
+                            this.applyStyles(valueLineElement, structureItem.style);
+                        }
+                    });
+                }
+
+                 labelInfo.dataPointRef = point; // Update ref
+
+            } else {
+                 console.warn(`[ThreeRenderCore] updateHtmlLabelStaticContent: Could not find label info for ID ${pointId}`);
+            }
+        });
+         console.log('[ThreeRenderCore] Finished updating static label content and styles.');
+    },
+    // -------------------------------------------------
   }
 }
 </script>
@@ -889,6 +1091,39 @@ export default {
        pointer-events: none; // Container doesn't block interactions with canvas
        overflow: hidden; // Clip labels overflowing the container (if not using document.body)
    }
+
+   /* Ensure .value-container and .value-line are styled if needed within scope */
+   .three-render-core :deep(.value-container) {
+       margin-top: 2px; // Add some space below title
+       margin-bottom: 4px; // Add space above description
+   }
+
+   .three-render-core :deep(.value-line) {
+       line-height: 1.4;
+       display: flex; // Arrange label, value, unit horizontally
+       justify-content: space-between; // Space out elements
+       align-items: baseline;
+       margin-bottom: 1px; // Small space between lines
+   }
+
+   .three-render-core :deep(.value-line .value-text) {
+       font-weight: bold;
+       margin: 0 4px; // Add space around value
+   }
+   .three-render-core :deep(.value-line .unit-text) {
+       font-size: 0.8em;
+       color: #bbb; // Dimmer unit text
+       margin-left: 2px;
+   }
+
+
+   /* Add styles for individual value line status if needed */
+   .three-render-core :deep(.value-line.status-warning .value-text) {
+       // color: #ffc107; /* Example: Color the value text */
+   }
+   .three-render-core :deep(.value-line.status-danger .value-text) {
+        // color: #f44336; /* Example: Color the value text */
+   }
 }
 
 /* --- Remove data-tag styles from scoped block --- */
@@ -899,45 +1134,41 @@ export default {
 <!-- Add a new non-scoped style block for data-tag styles -->
 <style lang="scss">
 /* --- Global or Non-Scoped Styles for Data Tags --- */
-/* Remove :deep() here */
 
+// --- Re-add Base Data Tag Styles ---
 .data-tag {
     position: absolute; // Set by JS anyway, but good default
     background: linear-gradient(145deg, rgba(40, 40, 70, 0.85), rgba(60, 60, 90, 0.9));
-    color: #f0f0f0;
-    padding: 8px 12px; // Slightly smaller padding
-    border-radius: 6px; // Slightly smaller radius
-    font-size: 13px;    // Smaller base font size
-    pointer-events: auto; // Allow interaction with the tag itself
+    color: #f0f0f0; // Base text color
+    padding: 8px 12px; // Padding
+    border-radius: 6px; // Rounded corners
+    font-size: 13px;    // Base font size for the tag
+    pointer-events: auto; // Allow interaction
     cursor: pointer;
     transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-    border: 1px solid rgba(255, 255, 255, 0.15); // Slightly less visible border
-    border-left-width: 4px; // Status color indicator
-    transform: translate(-50%, -50%); // Centering is handled by JS setting left/top
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-left-width: 4px; // Status color indicator width
+    transform: translate(-50%, -50%); // Centering
     z-index: 10;
     box-shadow: 0 3px 8px rgba(0, 0, 0, 0.35);
-    min-width: 130px; // Adjust min width
+    min-width: 130px; // Minimum width
     text-align: left;
-    white-space: nowrap; // Prevent wrapping which breaks measurement/layout
+    white-space: nowrap; // Prevent wrapping by default
 }
 
 .data-tag .title {
     font-weight: 600;
-    font-size: 11px; // Smaller title
+    font-size: 11px; // Title font size
     margin-bottom: 4px;
-    color: #a0a0a0; // Dimmer title
+    color: #a0a0a0; // Title color
     display: block;
-    text-transform: uppercase; // Example style
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-.data-tag .value {
-    font-weight: 700;
-    font-size: 16px; // Adjust value size
-    margin-bottom: 2px;
-    display: block;
-    letter-spacing: 0.5px;
-    text-shadow: 1px 1px 1px rgba(0,0,0,0.4);
+// Base style for the value container (if needed)
+.data-tag .value-container {
+    // font-size: 16px; // Example base size for values, can be overridden
 }
 
 .data-tag .description {
@@ -954,7 +1185,7 @@ export default {
 
 .data-tag:hover {
     background: linear-gradient(145deg, rgba(50, 50, 80, 0.9), rgba(70, 70, 100, 0.95));
-    transform: translate(-50%, -50%) scale(1.05); // Slightly less hover scale
+    transform: translate(-50%, -50%) scale(1.05);
     z-index: 1000;
     box-shadow: 0 5px 12px rgba(0, 0, 0, 0.45);
 }
@@ -962,27 +1193,32 @@ export default {
 .data-tag:hover .description {
     display: block;
 }
+// --- End Base Data Tag Styles ---
 
-/* Status Colors */
+// --- Re-add Status Color CSS Rules ---
+/* Status Colors for Tag Border */
 .data-tag.status-normal {
     border-left-color: #00f2a1;
 }
-.data-tag.status-normal .value {
-    color: #00f2a1;
-}
-
 .data-tag.status-warning {
     border-left-color: #ffc107;
 }
-.data-tag.status-warning .value {
-    color: #ffc107;
-}
-
 .data-tag.status-danger {
     border-left-color: #f44336;
 }
-.data-tag.status-danger .value {
-    color: #f44336;
+
+/* Status colors for Value Line Text */
+.value-line.status-normal .value-text {
+    color: inherit; // Use default text color for normal
 }
+.value-line.status-warning .value-text {
+     color: #ffc107;
+}
+.value-line.status-danger .value-text {
+     color: #f44336;
+}
+// --- End Status Color CSS Rules ---
+
+/* ... Potentially other existing non-scoped styles ... */
 
 </style>
