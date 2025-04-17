@@ -16,6 +16,9 @@
       >
         导出JSON
       </CusBtn>
+      <span v-if="lastAutoSaveTime" class="auto-save-indicator">
+        {{ lastAutoSaveTime }} 已自动保存
+      </span>
       <CusBtn
         style="margin-right:10px"
         @click.native="importJson"
@@ -207,7 +210,11 @@ export default {
       appInfo: '',
       saveLoading: false,
       createdImgLoading: false,
-      saveAndPreviewLoading: false
+      saveAndPreviewLoading: false,
+      // 自动保存相关
+      autoSaveIntervalId: null,
+      autoSaveInterval: 3 * 60 * 1000, // 3分钟
+      lastAutoSaveTime: ''
     }
   },
   computed: {
@@ -237,9 +244,13 @@ export default {
   mounted () {
     this.initialCoverPicture = this.pageInfo.coverPicture || ''
     this.$refs.zoomInput.$el.addEventListener('mousewheel', this.handleMouseWheel)
+    // 启动自动保存
+    this.startAutoSave()
   },
   beforeDestroy () {
     this.$refs.zoomInput.$el.removeEventListener('mousewheel', this.handleMouseWheel)
+    // 停止自动保存
+    this.stopAutoSave()
   },
   methods: {
     ...mapActions({
@@ -432,15 +443,17 @@ export default {
       return isValid
     },
     // 保存
-    async save (type, hasPageTemplateId = false) {
+    async save (type, hasPageTemplateId = false, isAutoSave = false) {
       const pageInfo = cloneDeep(this.handleSaveData())
-      console.log(pageInfo,type,"pageInfo1")
-
+      console.log(pageInfo, type, isAutoSave, "pageInfo1")
 
       // 保存时判断tabs组件里面的元素是否符合要求
       const flag = this.validateTabs(pageInfo?.chartList)
       if (!flag) {
-        this.$message.warning('请完成tab项配置')
+        // 自动保存时，如果校验失败，不提示用户
+        if (!isAutoSave) {
+          this.$message.warning('请完成tab项配置')
+        }
         return false
       }
       // 保存页面
@@ -450,65 +463,106 @@ export default {
         }
         if (type === 'preview') {
           pageInfo.isPreview = true
-          
-         
           const res = await saveScreen(pageInfo)
           return res
         } else {
           pageInfo.isPreview = false
-          this.saveLoading = true
-          pageInfo.coverPicture = this.initialCoverPicture
-          const node = document.querySelector('.render-theme-wrap')
+          if (!isAutoSave) {
+            this.saveLoading = true
+          }
+          pageInfo.coverPicture = this.initialCoverPicture // 默认使用初始封面
           let dataUrl = ''
           let res = null
-          try {
-            dataUrl = await toJpeg(node, { quality: 0.2 })
-          } catch (error) {
-            // 判断的error.currentTarget是img标签，如果是的，就弹出消息说是图片跨域
-            // 确认框
-            this.$confirm('保存封面失败，我们将使用上次保存的封面，不会影响大屏数据的保存。可能是因为图片、视频资源跨域了导致使用toDataURL API生成图片失败，我们可以将资源上传到资源库。然后在组件中使用资源库中的图片资源，以确保没有跨域问题。', '提示', {
-              confirmButtonText: '确定',
-              showCancelButton: false,
-              type: 'warning',
-              customClass: 'bs-el-message-box'
-            }).then(async () => {
-              res = await saveScreen(pageInfo)
-              this.$message.success('保存成功')
-            }).catch(async () => {
-              res = await saveScreen(pageInfo)
-              this.$message.success('保存成功')
-            })
-          }
-          if (dataUrl) {
-            if (showSize(dataUrl) > 200) {
-              // const newData = compressImage(dataUrl, 800)
-              // const url = dataURLtoBlob(dataUrl)
-              // // 压缩到500KB,这里的500就是要压缩的大小,可自定义
-              // const imgRes = await imageConversion.compressAccurately(url, {
-              //   size: 200, // 图片大小压缩到100kb
-              //   width: 1280, // 宽度压缩到1280
-              //   height: 720 // 高度压缩到720
-              // })
-              // const base64 = await translateBlobToBase64(imgRes)
-              // pageInfo.coverPicture = base64.result
-              this.$message.info('由于封面图片过大，进行压缩中')
-              const compressCoverPicture = await compressImage(dataUrl, { width: 1280, height: 720, size: 400, quality: 1 })
-              pageInfo.coverPicture = compressCoverPicture
-            } else {
-              pageInfo.coverPicture = dataUrl
+
+          // 仅在手动保存时生成新的封面图
+          if (!isAutoSave) {
+            const node = document.querySelector('.render-theme-wrap')
+            try {
+              dataUrl = await toJpeg(node, { quality: 0.2 })
+            } catch (error) {
+              this.$confirm('保存封面失败，我们将使用上次保存的封面，不会影响大屏数据的保存。可能是因为图片、视频资源跨域了导致使用toDataURL API生成图片失败，我们可以将资源上传到资源库。然后在组件中使用资源库中的图片资源，以确保没有跨域问题。', '提示', {
+                confirmButtonText: '确定',
+                showCancelButton: false,
+                type: 'warning',
+                customClass: 'bs-el-message-box'
+              }).then(async () => {
+                // 即使封面失败，也继续保存数据
+              }).catch(async () => {
+                // 点击遮罩层关闭也继续保存
+              })
+              // 无论用户是否确认提示，都继续尝试保存
             }
-         
-            res = await saveScreen(pageInfo)
+
+            if (dataUrl) {
+              if (showSize(dataUrl) > 200) {
+                this.$message.info('由于封面图片过大，进行压缩中')
+                try {
+                  const compressCoverPicture = await compressImage(dataUrl, { width: 1280, height: 720, size: 400, quality: 1 })
+                  pageInfo.coverPicture = compressCoverPicture
+                  this.initialCoverPicture = compressCoverPicture // 更新封面缓存
+                } catch (compressError) {
+                  console.error('封面压缩失败:', compressError)
+                  this.$message.warning('封面压缩失败，将使用上次保存的封面')
+                  // 压缩失败，继续使用 initialCoverPicture
+                }
+              } else {
+                pageInfo.coverPicture = dataUrl
+                this.initialCoverPicture = dataUrl // 更新封面缓存
+              }
+            }
+          } // end if (!isAutoSave)
+
+          // 执行保存
+          res = await saveScreen(pageInfo)
+          if (!isAutoSave) {
             this.$message.success('保存成功')
           }
           return res
         }
       } catch (error) {
-        console.error(error)
-        this.saveLoading = false
-        throw error
+        console.error(isAutoSave ? '自动保存失败:' : '保存失败:', error)
+        if (!isAutoSave) {
+          this.saveLoading = false
+          this.$message.error('保存失败')
+        }
+        // 对于自动保存，我们不向上抛出错误，避免中断其他操作
+        if (!isAutoSave) {
+           throw error
+        }
+        return false // 表示保存失败
       } finally {
-        this.saveLoading = false
+        if (!isAutoSave) {
+          this.saveLoading = false
+        }
+      }
+    },
+    // 自动保存方法
+    async autoSave () {
+      console.log('执行自动保存...')
+      try {
+        const success = await this.save(null, false, true) // 调用静默保存
+        if (success) {
+          const now = new Date()
+          this.lastAutoSaveTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+          console.log(`自动保存成功于 ${this.lastAutoSaveTime}`)
+        }
+      } catch (error) {
+        // 错误已在 save 方法内部处理（仅记录日志）
+      }
+    },
+    // 启动自动保存定时器
+    startAutoSave () {
+      // 清除可能已存在的定时器
+      this.stopAutoSave()
+      this.autoSaveIntervalId = setInterval(this.autoSave, this.autoSaveInterval)
+      console.log(`自动保存已启动，间隔 ${this.autoSaveInterval / 1000} 秒`)
+    },
+    // 停止自动保存定时器
+    stopAutoSave () {
+      if (this.autoSaveIntervalId) {
+        clearInterval(this.autoSaveIntervalId)
+        this.autoSaveIntervalId = null
+        console.log('自动保存已停止')
       }
     },
     goBack (path) {
@@ -695,6 +749,13 @@ export default {
 </script>
 <style lang="scss" scoped>
 @import '../BigScreenDesign/fonts/iconfont.css';
+
+.auto-save-indicator {
+  font-size: 12px;
+  color: #a1a5aa; // 浅灰色文字
+  margin-right: 10px;
+  user-select: none; // 防止文本被选中
+}
 
 .default-layout-box {
   display: flex;
