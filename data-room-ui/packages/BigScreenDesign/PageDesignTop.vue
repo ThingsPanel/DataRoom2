@@ -686,6 +686,7 @@ export default {
         // 移除 ID 和用户信息等
         delete exportConfig.id
         delete exportConfig.code // code 通常也是实例特定的，移除更安全
+        delete exportConfig.tenantId // tenantId 也应移除
         delete exportConfig.createBy
         delete exportConfig.createTime
         delete exportConfig.updateBy
@@ -731,12 +732,14 @@ export default {
               const currentId = this.pageInfo.id
               const currentName = this.pageInfo.name // 暂存当前名称，导入后恢复
               const currentType = this.pageInfo.type // 暂存当前类型
+              const currentTenantId = this.pageInfo.tenantId // 获取当前 tenantId
               this.changePageInfo({
                 ...importedConfig,
                 code: currentCode,
                 id: currentId,
                 name: currentName, // 恢复名称
-                type: currentType // 恢复类型
+                type: currentType, // 恢复类型
+                tenantId: currentTenantId // 确保使用当前的 tenantId
               })
               // --- DEBUG LOG --- 
               console.log('State after changePageInfo in importJson:', cloneDeep(this.$store.state.bigScreen.pageInfo));
