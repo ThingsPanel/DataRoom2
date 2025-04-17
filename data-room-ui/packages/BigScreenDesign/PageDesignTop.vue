@@ -675,9 +675,26 @@ export default {
     // 导出页面配置为 JSON 文件
     exportJson () {
       try {
-        const pageConfig = cloneDeep(this.pageInfo)
+        // 克隆原始配置
+        const originalConfig = cloneDeep(this.pageInfo)
+
+        // 创建一个用于导出的新对象，移除不需要的字段
+        const exportConfig = {
+          ...originalConfig,
+        }
+
+        // 移除 ID 和用户信息等
+        delete exportConfig.id
+        delete exportConfig.code // code 通常也是实例特定的，移除更安全
+        delete exportConfig.createBy
+        delete exportConfig.createTime
+        delete exportConfig.updateBy
+        delete exportConfig.updateTime
+        delete exportConfig.pageTemplateId // 模板ID通常也只对原实例有意义
+        // 如果还有其他特定于实例或用户的信息字段，也应在此处移除
+
         // 可以在这里添加对 pageConfig 的额外处理，比如移除不需要导出的字段
-        const jsonStr = JSON.stringify(pageConfig, null, 2) // 格式化输出
+        const jsonStr = JSON.stringify(exportConfig, null, 2) // 格式化输出清理后的配置
         const blob = new Blob([jsonStr], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const link = document.createElement('a')
