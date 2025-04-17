@@ -738,6 +738,9 @@ export default {
                 name: currentName, // 恢复名称
                 type: currentType // 恢复类型
               })
+              // --- DEBUG LOG --- 
+              console.log('State after changePageInfo in importJson:', cloneDeep(this.$store.state.bigScreen.pageInfo));
+              // --- END DEBUG LOG ---
               this.$message.success('JSON 文件导入成功')
               // 可以在这里触发一次保存历史记录
               this.saveTimeLine('导入JSON配置')
