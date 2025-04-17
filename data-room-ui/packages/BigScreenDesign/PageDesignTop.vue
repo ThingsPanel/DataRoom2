@@ -10,6 +10,18 @@
       <span class="logo-text name-span">{{ pageInfo.name }}</span>
     </div>
     <div class="head-btn-group">
+      <CusBtn
+        style="margin-right:10px"
+        @click.native="exportJson"
+      >
+        导出JSON
+      </CusBtn>
+      <CusBtn
+        style="margin-right:10px"
+        @click.native="importJson"
+      >
+        导入JSON
+      </CusBtn>
       <span style="margin-right:8px;font-size:12px">缩放</span>
       <el-input-number
         ref="zoomInput"
@@ -605,60 +617,79 @@ export default {
             this.$message.warning('出现未知错误，请重试')
           }
         })
+    },
+    // 导出页面配置为 JSON 文件
+    exportJson () {
+      try {
+        const pageConfig = cloneDeep(this.pageInfo)
+        // 可以在这里添加对 pageConfig 的额外处理，比如移除不需要导出的字段
+        const jsonStr = JSON.stringify(pageConfig, null, 2) // 格式化输出
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${this.pageInfo.name || 'page_config'}.json`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        console.error('导出 JSON 失败:', error)
+        this.$message.error('导出 JSON 失败')
+      }
+    },
+    // 导入 JSON 文件更新页面配置
+    importJson () {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.json'
+      input.onchange = (event) => {
+        const file = event.target.files[0]
+        if (!file) {
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const importedConfig = JSON.parse(e.target.result)
+            // TODO: 在这里可以添加对导入数据的校验逻辑
+            if (typeof importedConfig === 'object' && importedConfig !== null && importedConfig.pageConfig && importedConfig.chartList) {
+              // 使用导入的配置更新页面信息
+              // 保留原有的 code 和 id，防止覆盖导致的问题
+              const currentCode = this.pageInfo.code
+              const currentId = this.pageInfo.id
+              const currentName = this.pageInfo.name // 暂存当前名称，导入后恢复
+              const currentType = this.pageInfo.type // 暂存当前类型
+              this.changePageInfo({
+                ...importedConfig,
+                code: currentCode,
+                id: currentId,
+                name: currentName, // 恢复名称
+                type: currentType // 恢复类型
+              })
+              this.$message.success('JSON 文件导入成功')
+              // 可以在这里触发一次保存历史记录
+              this.saveTimeLine('导入JSON配置')
+              // 可能需要重新初始化或刷新某些状态
+              this.$nextTick(() => {
+                this.$emit('changeZoom', 'auto') // 触发自适应缩放
+              })
+            } else {
+              this.$message.error('导入的 JSON 文件格式不正确')
+            }
+          } catch (error) {
+            console.error('导入 JSON 失败:', error)
+            this.$message.error('导入 JSON 文件失败，请检查文件格式')
+          }
+        }
+        reader.onerror = (error) => {
+          console.error('读取文件失败:', error)
+          this.$message.error('读取文件失败')
+        }
+        reader.readAsText(file)
+      }
+      input.click()
     }
-    // createdImg () {
-    //   this.saveAndPreviewLoading = true
-    //   // 暂停跑马灯动画
-    //   EventBus.$emit('stopMarquee')
-    //   const node = document.querySelector('.render-theme-wrap')
-    //   // 获取node 下的所有img标签，拿到他们的src
-    //   const imgTags = node.querySelectorAll('img')
-    //   const requests = Array.from(imgTags).map(img => {
-    //     const src = img.getAttribute('src')
-    //     return fetch(src, {
-    //       headers: { 'Access-Control-Allow-Origin': '*' }
-    //     }).then(response => {
-    //       if (response.ok) {
-    //         return response.blob()
-    //       } else {
-    //         throw new Error('网络请求失败')
-    //       }
-    //     }).then(blob => {
-    //       return new Promise((resolve, reject) => {
-    //         const reader = new FileReader()
-    //         reader.onload = () => resolve(reader.result)
-    //         reader.onerror = reject
-    //         reader.readAsDataURL(blob)
-    //       })
-    //     }).then(dataUrl => {
-    //       img.setAttribute('src', dataUrl)
-    //     }).catch(error => {
-    //       console.error('Fetch error:', error)
-    //     })
-    //   })
-
-    //   Promise.all(requests).then(() => {
-    //     toPng(node)
-    //       .then((dataUrl) => {
-    //         const link = document.createElement('a')
-    //         link.download = `${this.pageInfo.name}.png`
-    //         link.href = dataUrl
-    //         link.click()
-    //         link.addEventListener('click', () => {
-    //           link.remove()
-    //         })
-    //         this.saveAndPreviewLoading = false
-    //         // 恢复跑马灯动画
-    //         EventBus.$emit('startMarquee')
-    //       }).catch((error) => {
-    //         console.info(error)
-    //         this.$message.warning('出现未知错误，请重试')
-    //         this.saveAndPreviewLoading = false
-    //       })
-    //   }).catch(error => {
-    //     console.error('Fetch error:', error)
-    //   })
-    // }
   }
 }
 </script>
