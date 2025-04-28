@@ -2,9 +2,6 @@
   <div
     class="bs-design-wrap bs-bar"
     style="width: 100%; height: 100%"
-    @mousedown.stop
-    @mousemove.stop
-    @mouseup.stop
     @wheel.stop
   >
     <el-button v-if="currentDeep > 0" class="button" type='text' @click.stop="backToPreviousLevel(config)"> 返回上一级</el-button>
