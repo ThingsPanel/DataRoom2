@@ -8,24 +8,6 @@
               <div class="page-header-left">
                 {{ !isEdit ? 'IoT数据集详情' : dataForm.id ? '编辑IoT数据集' : '新增IoT数据集' }}
               </div>
-              <div class="page-header-right">
-                <el-button
-                  v-if="isEdit"
-                  type="primary"
-                  size="small"
-                  :loading="saveloading"
-                  @click="save('form')"
-                >
-                  保存
-                </el-button>
-                <el-button
-                  class="bs-el-button-default"
-                  size="small"
-                  @click="goBack"
-                >
-                  返回
-                </el-button>
-              </div>
             </div>
           </template>
         </el-page-header>
@@ -411,9 +393,38 @@
               </div>
             </div>
           </el-col>
+          
         </el-row>
       </div>
     </el-scrollbar>
+
+    <!-- Buttons container moved outside el-scrollbar -->
+    <div v-if="isEdit" class="form-actions">
+        <el-button
+          type="primary"
+          size="small"
+          :loading="saveloading"
+          @click="save('form')"
+        >
+          保存
+        </el-button>
+        <el-button
+          class="bs-el-button-default"
+          size="small"
+          @click="goBack"
+        >
+          返回
+        </el-button>
+    </div>
+      <div v-else class="form-actions">
+        <el-button
+          class="bs-el-button-default"
+          size="small"
+          @click="goBack"
+        >
+          返回
+        </el-button>
+    </div>
 
     <el-dialog
       title="字段描述"
@@ -836,76 +847,43 @@ export default {
 
               // 处理配置数据
               if (config) {
-                // 设置数据类型和数据模式
-                if (config.data_type) {
-                  this.queryParams.data_type = config.data_type
-                  // 移除: this.dataForm.data_type = config.data_type
+                // === Corrected Logic: Prioritize userDefinedJson.queryParams ===
+                if (config.userDefinedJson && config.userDefinedJson.queryParams) {
+                  // Directly assign queryParams from the stored object
+                  this.queryParams = { 
+                    ...this.queryParams, // Keep defaults initially
+                    ...config.userDefinedJson.queryParams // Overwrite with stored values
+                  };
+                   // Ensure selectedDeviceName is set from queryParams if available
+                  if(this.queryParams.device_name){
+                    this.selectedDeviceName = this.queryParams.device_name;
+                  }
+                  console.log('Loaded queryParams from userDefinedJson:', this.queryParams);
+                } else {
+                   // Fallback/Old logic (might be removable if userDefinedJson is always present)
+                   console.warn('userDefinedJson.queryParams not found in config, attempting fallback.');
+                   // ... (keep old logic here if needed as a fallback) ...
+                    if (config.data_type) this.queryParams.data_type = config.data_type;
+                    if (config.data_mode) this.queryParams.data_mode = config.data_mode;
+                    if (config.device_id) this.queryParams.device_id = config.device_id;
+                    if (config.key) this.queryParams.key = config.key;
+                    // ... (rest of the old param parsing logic) ...
                 }
-
-                if (config.data_mode) {
-                  this.queryParams.data_mode = config.data_mode
-                  // 移除: this.dataForm.data_mode = config.data_mode
-                }
-
-                // 直接设置设备ID和数据标识
-                if (config.device_id) {
-                  this.queryParams.device_id = config.device_id
-                  // 移除: this.dataForm.device_id = config.device_id
-                }
-
-                if (config.key) {
-                  this.queryParams.key = config.key
-                  // 移除: this.dataForm.key = config.key
-                }
-
-                // 处理params，查找device_id和设备名称
-                if (config.params && Array.isArray(config.params)) {
-                  // 移除重复的参数，保留最后一个
-                  const uniqueParams = {}
-                  config.params.forEach(param => {
-                    uniqueParams[param.key] = param.value
-                  })
-
-                  // 优先从params中获取device_name
-                  if (uniqueParams.device_name) {
-                    this.selectedDeviceName = uniqueParams.device_name
-                    this.queryParams.device_name = uniqueParams.device_name
-                    // 移除: this.dataForm.device_name = uniqueParams.device_name
-                  }
-
-                  // 如果没有设置device_id，从params中获取
-                  if (!this.queryParams.device_id && uniqueParams.device_id) {
-                    this.queryParams.device_id = uniqueParams.device_id
-                    // 移除: this.dataForm.device_id = uniqueParams.device_id
-                  }
-
-                  // 如果没有设置key，从params中获取
-                  if (!this.queryParams.key && uniqueParams.key) {
-                    this.queryParams.key = uniqueParams.key
-                    // 移除: this.dataForm.key = uniqueParams.key
-                  }
-
-                  // 回显聚合选项
-                  if (uniqueParams.aggregate_window) {
-                    this.queryParams.aggregate_window = uniqueParams.aggregate_window
-                    // 移除: this.dataForm.aggregate_window = uniqueParams.aggregate_window
-                  }
-
-                  if (uniqueParams.aggregate_function) {
-                    this.queryParams.aggregate_function = uniqueParams.aggregate_function
-                    // 移除: this.dataForm.aggregate_function = uniqueParams.aggregate_function
-                  }
-
-                  // 回显时间范围
-                  if (uniqueParams.time_range) {
-                    this.queryParams.time_range = uniqueParams.time_range
-                    // 移除: this.dataForm.time_range = uniqueParams.time_range
-                  }
-                }
+                // === End Corrected Logic ===
 
                 // 设置字段描述和输出字段列表
                 this.dataForm.config.fieldDesc = config.fieldDesc || {}
                 this.outputFieldList = config.fieldList || []
+              }
+
+              // 确保在设备列表加载后查找设备名称
+              await this.fetchDeviceList() // Ensure device list is loaded
+              if (!this.selectedDeviceName && this.queryParams.device_id && this.deviceList.length > 0) {
+                  const foundDevice = this.deviceList.find(d => d.id === this.queryParams.device_id)
+                  if(foundDevice) {
+                      this.selectedDeviceName = foundDevice.name
+                      this.queryParams.device_name = foundDevice.name // Also update queryParams if needed
+                  }
               }
 
               // 根据responseScript设置dataPath
@@ -2112,7 +2090,8 @@ export default {
 
   .data-set-scrollbar {
     flex: 1;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 60px); // Adjust height calculation if header height changes
+    padding-bottom: 60px; // Add padding to prevent content overlap with fixed actions
   }
 
   .header {
@@ -2527,6 +2506,22 @@ export default {
     color: var(--bs-el-text-secondary);
     font-size: 12px;
   }
+}
+
+// 添加按钮容器样式
+.form-actions {
+  position: sticky; // Change from fixed to sticky
+  bottom: 0;
+  // left/right might not be needed or need adjustment with sticky depending on container
+  // left: 0; 
+  // right: 0;
+  width: 100%; // Ensure it spans the container width
+  text-align: center; // Change alignment from right to center
+  padding: 10px 30px; // Adjust padding
+  background-color: var(--bs-background-2); // Add background color
+  border-top: 1px solid var(--bs-border-color);
+  z-index: 10; // Ensure it's above other content
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.1); // Optional shadow
 }
 </style>
 
