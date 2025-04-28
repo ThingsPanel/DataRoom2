@@ -180,6 +180,12 @@
                       prop="queryParams.data_mode"
                       :rules="queryParamsRules.data_mode"
                     >
+                       <span slot="label">
+                        数据模式
+                        <el-tooltip placement="top" effect="dark" content="选择获取设备数据的模式：最新（最后上报的值）或历史（一段时间内的值，仅遥测数据支持）。">
+                          <i class="el-icon-question" style="margin-left: 4px; cursor: pointer;"></i>
+                        </el-tooltip>
+                      </span>
                       <el-select
                         v-model="queryParams.data_mode"
                         class="bs-el-select"
@@ -259,6 +265,12 @@
                         label-width="80px"
                         class="aggregate-item"
                       >
+                        <span slot="label">
+                          聚合间隔
+                          <el-tooltip placement="top" effect="dark" content="查询历史数据时，将数据按指定时间窗口聚合计算（如每分钟平均值）。'不聚合'表示获取原始数据点。">
+                            <i class="el-icon-question" style="margin-left: 4px; cursor: pointer;"></i>
+                          </el-tooltip>
+                        </span>
                         <el-select
                           v-model="queryParams.aggregate_window"
                           placeholder="请选择聚合窗口"
@@ -367,11 +379,17 @@
               </div>
 
               <el-form size="small" label-width="80px" :model="pathForm">
-                <el-form-item label="数据路径" prop="dataPath">
+                <el-form-item prop="dataPath">
+                  <span slot="label">
+                      数据路径
+                      <el-tooltip placement="top" effect="dark" content="用于从执行结果中提取实际数据列表的路径，使用点表示法，例如：data 或 data.points。请参考右侧执行后的原始响应结构。">
+                        <i class="el-icon-question" style="margin-left: 4px; cursor: pointer;"></i>
+                      </el-tooltip>
+                    </span>
                   <el-input
                     v-model="pathForm.dataPath"
                     class="bs-el-input"
-                    placeholder="如：data.value 或 data.points"
+                    placeholder="例如: data 或 data.points"
                   />
                 </el-form-item>
               </el-form>
