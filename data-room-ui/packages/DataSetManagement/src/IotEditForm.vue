@@ -877,6 +877,19 @@ export default {
                     this.selectedDeviceName = this.queryParams.device_name;
                   }
                   console.log('Loaded queryParams from userDefinedJson:', this.queryParams);
+                  // Also set the method on the main config object
+                  if (config.userDefinedJson.method) {
+                    this.dataForm.config.method = config.userDefinedJson.method;
+                  } else {
+                     this.dataForm.config.method = 'get'; // Default to get if missing
+                  }
+                  // Explicitly set the URL from userDefinedJson as well
+                   if (config.userDefinedJson.url) {
+                    this.dataForm.config.url = config.userDefinedJson.url;
+                  } else {
+                    // Fallback or default if URL is missing in saved config
+                    this.dataForm.config.url = 'http://47.115.210.16:9999/api/v1/device/metrics/chart'; 
+                  }
                 } else {
                    // Fallback/Old logic (might be removable if userDefinedJson is always present)
                    console.warn('userDefinedJson.queryParams not found in config, attempting fallback.');
@@ -889,9 +902,32 @@ export default {
                 }
                 // === End Corrected Logic ===
 
+                // Force requestType to 'frontend' for consistency in edit mode
+                this.dataForm.config.requestType = 'frontend'; 
+
                 // 设置字段描述和输出字段列表
                 this.dataForm.config.fieldDesc = config.fieldDesc || {}
                 this.outputFieldList = config.fieldList || []
+                
+                // Ensure x-api-key header is present and up-to-date in edit mode
+                const currentTicket = sessionStorage.getItem('ticket');
+                if (!this.dataForm.config.headers) {
+                  this.dataForm.config.headers = []; // Initialize if headers array doesn't exist
+                }
+                const apiKeyIndex = this.dataForm.config.headers.findIndex(h => h.key === 'x-api-key');
+                if (apiKeyIndex !== -1) {
+                  // Update existing header
+                  this.dataForm.config.headers[apiKeyIndex].value = currentTicket;
+                } else {
+                  // Add new header if not found
+                  this.dataForm.config.headers.push({
+                    key: 'x-api-key',
+                    type: 'string',
+                    value: currentTicket,
+                    remark: ''
+                  });
+                }
+                 console.log('Ensured headers in edit mode:', this.dataForm.config.headers);
               }
 
               // 确保在设备列表加载后查找设备名称
@@ -1133,6 +1169,11 @@ export default {
           responseScript: this.dataForm.config.responseScript
         }
         console.log('已保存数据查询参数配置到userDefinedJson:', this.dataForm.config.userDefinedJson)
+      }
+      
+      // Ensure requestType is always saved as frontend
+      if (this.dataForm.config) {
+          this.dataForm.config.requestType = 'frontend';
       }
 
       // 开始保存流程
@@ -1525,7 +1566,7 @@ export default {
       // 执行前构建字段描述信息，确保它保存在config中
       this.buildFieldDesc()
       
-      // 确保responseScript与当前数据模式一致
+      // 确保responseScript与当前数据模式一致 (Re-ensure consistency before execution)
       this.setDataPath()
 
       // 执行前对参数进行处理，最新数据模式不需要传递历史数据参数

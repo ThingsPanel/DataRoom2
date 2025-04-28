@@ -60,6 +60,9 @@ export default function axiosFormatting (customConfig) {
       params: newCustomConfig.params,
       datasetType: newCustomConfig.datasetType
     })
+    // === Add diagnostic log ===
+    console.log('axiosFormatting - method value before request:', newCustomConfig.method, 'Type:', typeof newCustomConfig.method);
+    // === End diagnostic log ===
     instance({
       method: newCustomConfig.method,
       url: newCustomConfig.url,
