@@ -3,6 +3,33 @@ import { commonConfig, displayOption } from 'data-room-ui/js/config';
 // displayOption is usually not needed for a simple display component
 // export const settingConfig = { ... };
 
+// Define and export settingConfig containing displayOption
+export const settingConfig = {
+  // 设置面板属性的显隐
+  displayOption: {
+    ...displayOption, // Inherit base settings
+    dataSource: {
+      enable: true // Enable data source selection
+    },
+    dataSourceType: {
+      enable: true // Enable data source type selection
+    },
+    title: {
+      enable: true,
+    },
+    // Enable metricField to select the field containing the icon code
+    metricField: {
+      label: '图标代码字段', // Customize label
+      enable: true,
+      multiple: false // Usually a single field provides the code
+    },
+    // Keep others disabled if not needed
+    dimensionField: { enable: false },
+    params: { enable: false },
+    headerField: { enable: false }
+  }
+};
+
 const customConfig = {
   type: 'weatherIcon', // Changed type
   root: {
@@ -33,29 +60,8 @@ const customConfig = {
   }
 };
 
+// Simplify dataConfig
 export const dataConfig = {
-  ...commonConfig(customConfig),
-  // Re-enable data source options
-  displayOption: {
-    ...displayOption, // Inherit base settings
-     dataSource: {
-       enable: true // Enable data source selection
-     },
-     dataSourceType:{
-        enable: true // Enable data source type selection
-     },
-    title: {
-        enable: true,
-    },
-    // Enable metricField to select the field containing the icon code
-    metricField: { 
-        label: '图标代码字段', // Customize label
-        enable: true, 
-        multiple: false // Usually a single field provides the code
-    }, 
-    // Keep others disabled if not needed
-    dimensionField: { enable: false },
-    params: { enable: false },
-    headerField: { enable: false }
-  }
+  ...commonConfig(customConfig)
+  // Remove displayOption from here
 }; 
