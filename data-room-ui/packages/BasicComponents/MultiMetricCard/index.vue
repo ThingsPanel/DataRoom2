@@ -3,25 +3,38 @@
     :class="`bs-indexCard`"
     class="multi-metric-card-list"
   >
-    <!-- 外层循环：应用 weather-card-item 类 -->
-    <div 
-      v-for="(item, itemIndex) in optionData" 
-      :key="itemIndex" 
-      class="weather-card-item"
-    >
-      <span class="date-text">{{ getWeekday(item.fxDate) }}</span>
-      <div class="icons">
-          <div class="icon">
-            <i :class="'qi-'+item.iconDay"></i>
+    <!-- Loading Placeholder State -->
+    <template v-if="config.loading">
+      <div 
+        v-for="n in 7" 
+        :key="'placeholder-' + n" 
+        class="weather-card-item placeholder-card"
+      >
+        <span class="placeholder-text placeholder-date"></span>
+        <div class="placeholder-icon"></div>
+        <div class="placeholder-text placeholder-temp"></div>
+      </div>
+    </template>
+
+    <!-- Data Display State -->
+    <template v-else-if="optionData && optionData.length > 0">
+      <div 
+        v-for="(item, itemIndex) in optionData" 
+        :key="itemIndex" 
+        class="weather-card-item"
+      >
+        <span class="date-text">{{ getWeekday(item.fxDate) }}</span>
+        <div class="icons">
+            <div class="icon">
+              <i :class="'qi-'+item.iconDay"></i>
+            </div>
           </div>
-        </div>
-        <div class="temperature-range">
-           <span>{{ item.tempMin }}</span><span class="separator">-</span><span>{{ item.tempMax }}</span>℃
-         </div>
-    </div>
-    <div v-if="!optionData || optionData.length === 0" style="color: #999; font-size: 12px; text-align: center; padding: 20px; width: 100%;">
-      暂无数据或数据格式错误。
-    </div>
+          <div class="temperature-range">
+             <span>{{ item.tempMin }}</span><span class="separator">-</span><span>{{ item.tempMax }}</span>℃
+           </div>
+      </div>
+    </template>
+
   </div>
 </template>
 
@@ -54,7 +67,43 @@ export default {
     },
     optionData () {
       // 确保返回的是数组
-      return this.option?.data instanceof Array ? this.option.data : []
+      return this.option?.data instanceof Array ? this.option.data : [{
+        fxDate: '2025-04-29',
+        iconDay: '100',
+        tempMin: 0,  
+        tempMax: 0
+
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },{
+        fxDate: '2025-04-30',
+        iconDay: '100',
+        tempMin: 0,
+        tempMax: 0
+      },]
     },
     customize () {
       return this.config?.customize
@@ -102,7 +151,7 @@ export default {
 .multi-metric-card-list {
   display: flex;
   flex-wrap: wrap; /* 允许换行 */
-  gap: 24px; /* 卡片之间的间距 *//* 容器内边距 */
+  gap: 24px; /* 卡片之间的间距 */
   width: 100%;
   height: 100%;
   box-sizing: border-box;
@@ -152,9 +201,71 @@ export default {
   }
 }
 
+/* Placeholder Card Styles */
+.placeholder-card {
+  background-color: #f0f0f0; /* Use a light grey background */
+  box-shadow: none; /* Remove shadow */
+  cursor: default;
+  pointer-events: none; /* Disable hover effects */
+
+  &:hover {
+    background-color: #f0f0f0; /* Keep background same on hover */
+    transform: none;
+    box-shadow: none;
+  }
+
+  .placeholder-text,
+  .placeholder-icon {
+    background-color: #e0e0e0; /* Darker grey for content blocks */
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+
+  .placeholder-date {
+    width: 60%; 
+    height: 36px; /* Match date-text approx height */
+    margin-bottom: 8px;
+  }
+
+  .placeholder-icon {
+    width: 44px; /* Match icon approx size */
+    height: 44px;
+    border-radius: 50%; /* Make icon placeholder round */
+    margin: 5px 0; 
+  }
+
+  .placeholder-temp {
+    width: 80%;
+    height: 24px; /* Match temperature-range approx height */
+    margin-top: 8px;
+  }
+}
+
+/* No Data Message Style */
+.no-data-message {
+  color: #999; 
+  font-size: 12px; 
+  text-align: center; 
+  padding: 20px; 
+  width: 100%;
+}
+
+/* Animation for placeholder */
+@keyframes pulse {
+  0% {
+    background-color: #e0e0e0;
+  }
+  50% {
+    background-color: #d0d0d0;
+  }
+  100% {
+    background-color: #e0e0e0;
+  }
+}
+
 /* 日期样式 */
 .date-text {
-  font-size: 36px;
+  font-size: 28px;
   color: #666;
   margin-bottom: 8px;
 }

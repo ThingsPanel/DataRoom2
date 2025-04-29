@@ -114,14 +114,28 @@ export default {
      * 构造chart
      */
     newChart (config) {
-      this.chart = new g2Plot[config.chartType](this.chatId, {
-        renderer: 'svg',
-        // 仪表盘缩放状态下，点击准确
-        supportCSSTransform: true,
-        ...config.option
-      })
-      this.chart.render()
-      this.registerEvent()
+
+      if (this.chart) {
+        try {
+            this.chart.destroy();
+        } catch (destroyError) {
+            console.error(`[PlotRender newChart] Error destroying previous chart instance for ${config?.code}:`, destroyError);
+        }
+        this.chart = null; // Reset chart instance variable
+      }
+
+      try {
+          this.chart = new g2Plot[config.chartType](this.chatId, {
+            renderer: 'canvas',
+            supportCSSTransform: true,
+            ...config.option
+          });
+          this.chart.render();
+          this.registerEvent();
+      } catch (renderError) {
+          console.error(`[PlotRender newChart] Error during G2Plot instantiation or rendering for ${config?.name || config?.code}:`, renderError);
+          console.error(`[PlotRender newChart] Config option that caused the error:`, config.option); // Log config again on error
+      }
     },
     /**
      * 注册事件
@@ -167,42 +181,151 @@ export default {
       return config
     },
     dataFormatting (config, data) {
+       // --- Add Log: Identify component ---
+       console.log(`[PlotRender dataFormatting] Processing for: ${config?.title || config?.name || config?.code}`);
+       // --- End Log ---
+
       // 数据返回成功则赋值
       if (data.success) {
-        data = data.data || []
+        let rawData = data.data || []; // 使用 rawData 存储原始数据
         config = this.transformSettingToOption(config, 'data')
-        // 获取到后端返回的数据，有则赋值
         const option = config.option
         const setting = config.setting
-        if (config.dataHandler) {
+        const yField = option?.yField; // 获取 y 轴字段名
+        const xField = option?.xField; // 获取 x 轴字段名
+
+        // --- Add Log: Inspect data before eval ---
+        console.log(`[PlotRender dataFormatting] Raw data before eval for ${config?.name}:`, JSON.stringify(rawData));
+        console.log(`[PlotRender dataFormatting] config.dataHandler for ${config?.name}:`, config.dataHandler);
+        // --- End Log ---
+
+        if (config.dataHandler || config.name === 'YiBiaoPan') { // 如果有 handler 或者 是仪表盘，就尝试执行
+          // --- Wrap execution in try...catch --- 
           try {
-            // 此处函数处理data
-            eval(config.dataHandler)
+            let handlerScript = config.dataHandler;
+            // --- Runtime Fix: Force correct handler for YiBiaoPan --- 
+            if (config.name === 'YiBiaoPan') {
+              console.log(`[PlotRender dataFormatting] Applying runtime fix: Using corrected dataHandler for YiBiaoPan.`);
+              handlerScript = `
+                let value = 0; 
+                try {
+                  const fieldNameItem = setting.find(item => item.field === 'percent');
+                  const fieldName = fieldNameItem?.value;
+                  if (typeof fieldName === 'string' && fieldName.length > 0) {
+                    if (Array.isArray(data) && data.length > 0 && data[0] !== null && data[0] !== undefined) {
+                      let rawValue = data[0][fieldName];
+                      if (typeof rawValue === 'object' && rawValue !== null && rawValue.hasOwnProperty('value')) {
+                         rawValue = rawValue.value;
+                      } else if (typeof rawValue === 'object' && rawValue !== null) {
+                         console.warn('YiBiaoPan dataHandler: rawValue is an object but lacks a .value property. Using 0.');
+                         rawValue = 0;
+                      }
+                      if (rawValue !== undefined) {
+                         const parsedValue = parseFloat(rawValue);
+                         if (!isNaN(parsedValue)) {
+                           value = parsedValue;
+                           if (value > 1) { value = value / 100; if (value > 1) value = 1; }
+                           if (value < 0) value = 0;
+                         } else { value = 0; }
+                      } else { value = 0; }
+                    } else { value = 0; }
+                  } else { value = 0; }
+                } catch (scriptError) {
+                    console.error('YiBiaoPan dataHandler (runtime fix): Unexpected error during execution:', scriptError);
+                    value = 0;
+                }
+                option.percent = value;
+              `;
+            }
+            // --- End Runtime Fix ---
+
+            if (handlerScript) { // 确保有脚本再执行
+              const dataHandlerFn = new Function('data', 'setting', 'option', handlerScript);
+              console.log(`[PlotRender dataFormatting] Executing dataHandlerFn for ${config?.name}...`);
+              dataHandlerFn(rawData, setting, option);
+              console.log(`[PlotRender dataFormatting] Raw data *after* successful dataHandlerFn execution for ${config?.name}:`, JSON.stringify(rawData));
+               // --- Add Final Check for option.percent (Gauge) --- 
+               if (config.name === 'YiBiaoPan') {
+                  if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
+                    console.warn(`[PlotRender dataFormatting] Invalid option.percent detected for YiBiaoPan after handler:`, option.percent, '. Forcing to 0.');
+                    option.percent = 0;
+                  }
+               }
+               // --- End Final Check ---
+            }
           } catch (e) {
-            console.error(e)
+            console.error(`[PlotRender dataFormatting] Error during dataHandlerFn execution for ${config?.name}:`, e);
+             // --- Add Final Check for option.percent (Gauge) even on error --- 
+             if (config.name === 'YiBiaoPan') {
+                if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
+                  console.warn(`[PlotRender dataFormatting] Invalid option.percent detected for YiBiaoPan after handler error:`, option.percent, '. Forcing to 0.');
+                  option.percent = 0;
+                }
+             }
+             // --- End Final Check ---
           }
+          // --- End wrap --- 
         }
+
+        let processedData = []; // 存储处理后的数据
+        if (Array.isArray(rawData)) { 
+           processedData = rawData.map((item, index) => { // 添加 index 用于日志
+              const newItem = { ...item }; 
+
+              // --- 校验和处理 yField --- 
+              if (yField && newItem.hasOwnProperty(yField)) {
+                  const originalValue = newItem[yField];
+                  let numericValue = typeof originalValue === 'number' ? originalValue : parseFloat(originalValue);
+                  if (isNaN(numericValue)) {
+                      // console.warn(...) // 保留之前的警告
+                      newItem[yField] = 0;
+                  } else {
+                      newItem[yField] = numericValue;
+                      // --- Add Log: Verify conversion inside map ---
+                      if (index < 5) { // 只打印前几个，避免日志过多
+                         console.log(`[PlotRender dataFormatting] Item ${index} for ${config?.name} - yField '${yField}' converted: ${originalValue} -> ${newItem[yField]} (Type: ${typeof newItem[yField]})`);
+                      }
+                      // --- End Log ---
+                  }
+              }
+              // --- 结束：校验和处理 yField ---
+
+              // --- 处理 xField/yField 为数字转字符串的逻辑 (逻辑不变) ---
+              if (config.chartType !== 'Bar' && xField && typeof newItem[xField] === 'number') {
+                 newItem[xField] = (newItem[xField]).toString();
+              }
+              if (config.chartType === 'Bar' && yField && typeof item[yField] === 'number') {
+                 newItem[yField] = (newItem[yField]).toString();
+              }
+              // --- 结束：处理 xField/yField --- 
+
+              return newItem;
+           });
+             // --- Add Log: Verify processedData before assignment ---
+             console.log(`[PlotRender dataFormatting] Processed data for ${config?.name} (first 5 items):`, JSON.stringify(processedData.slice(0, 5)));
+             // --- End Log ---
+        } else {
+           // --- Add Log: Handle case where rawData is not an array --- 
+           console.error(`[PlotRender dataFormatting] rawData is not an array after potential eval for ${config?.name}. Assigning empty array. rawData:`, rawData);
+           processedData = []; // 如果不是数组，则使用空数组，防止 map 报错
+        }
+         // --- End Modify --- 
+
         if (config.chartType == 'Treemap') {
-          const xAxis = config.setting.find(item => item.field === 'xField')?.value
-          const listData = data.children.map(item => {
-            if (xAxis && typeof item[xAxis] === 'number') {
-              item[xAxis] = (item[xAxis]).toString()
+          // TODO: Treemap 的 value 字段也需要类似的 NaN 检查
+          const listData = processedData.map(item => {
+            // Treemap xField 转换逻辑
+            if (xField && typeof item[xField] === 'number') { // 使用 xField 变量
+              item[xField] = (item[xField]).toString()
             }
             return item
           })
           config.option.data = { name: 'root', children: [...listData] }
         } else {
-          // 如果维度为数字类型则转化为字符串，否则在不增加其他配置的情况下会导致图标最后一项不显示（g2plot官网已说明）
-          const xAxis = config.setting.find(item => item.field === 'xField')?.value
-          const yAxis = config.setting.find(item => item.field === 'yField')?.value
-          config.option.data = data?.map(item => {
-            if (config.chartType !== 'Bar' && xAxis && typeof item[xAxis] === 'number') {
-              item[xAxis] = (item[xAxis]).toString()
-            } else if (config.chartType === 'Bar' && yAxis && typeof item[yAxis] === 'number') {
-              item[yAxis] = (item[yAxis]).toString()
-            }
-            return item
-          })
+          // --- Modify: Ensure assignment happens --- 
+          config.option.data = processedData; 
+          console.log(`[PlotRender dataFormatting] Assigned processedData to config.option.data for ${config?.name}`);
+          // --- End Modify ---
         }
       } else {
         // 数据返回失败则赋前端的模拟数据

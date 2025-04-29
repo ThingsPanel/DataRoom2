@@ -16,7 +16,7 @@
     <vdr
       v-for="chart in chartList"
       :id="chart.code"
-      :key="chart.updateKey || chart.code"
+      :key="chart.code"
       class="drag-item"
       :class="{
         'multiple-selected': activeCodes.includes(chart.code),

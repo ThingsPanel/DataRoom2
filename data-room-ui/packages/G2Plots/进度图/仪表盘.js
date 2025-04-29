@@ -213,29 +213,60 @@ const optionHandler = 'option.range.color = [option.color1, option.color2]\n' +
   '  }'
 
 // 数据处理脚本
-const dataHandler = 'const fieldName = setting.filter(function(item) { return item.field === "percent"; })[0].value;\n' +
-  'let rawValue = data[0][fieldName];\n' +
-  '// 处理数据是对象的情况\n' +
-  'if (typeof rawValue === "object" && rawValue !== null) {\n' +
-  '  rawValue = rawValue.value;\n' +
-  '}\n' +
-  'let value = parseFloat(rawValue);\n' +
-  '// 如果value是NaN，设为0\n' +
-  'if (isNaN(value)) {\n' +
-  '  value = 0;\n' +
-  '}\n' +
-  '// 将百分比转换为0-1之间的值\n' +
-  'if (value > 1) {\n' +
-  '  value = value / 100;\n' +
-  '  // 如果转换后仍然大于1，则设为1\n' +
-  '  if (value > 1) {\n' +
-  '    value = 1;\n' +
-  '  }\n' +
-  '}\n' +
-  'if (value < 0) {\n' +
-  '  value = 0;\n' +
-  '}\n' +
-  'option.percent = value;'
+const dataHandler = `
+  let value = 0; // Default value
+  try {
+    const fieldNameItem = setting.find(item => item.field === 'percent'); // Use find for clarity
+    const fieldName = fieldNameItem?.value; // Safely access value
+
+    // Check if fieldName is valid
+    if (typeof fieldName === 'string' && fieldName.length > 0) {
+      // Check if data is a valid array with at least one element
+      if (Array.isArray(data) && data.length > 0 && data[0] !== null && data[0] !== undefined) {
+        let rawValue = data[0][fieldName]; // Try to get the value
+
+        // Handle potential object value safely
+        if (typeof rawValue === 'object' && rawValue !== null && rawValue.hasOwnProperty('value')) {
+           rawValue = rawValue.value;
+        } else if (typeof rawValue === 'object' && rawValue !== null) {
+           console.warn('YiBiaoPan dataHandler: rawValue is an object but lacks a .value property. Using 0.');
+           rawValue = 0; // Or handle as error / default
+        }
+
+        // Ensure rawValue is not undefined before parsing
+        if (rawValue !== undefined) {
+           const parsedValue = parseFloat(rawValue);
+           if (!isNaN(parsedValue)) { // Check if parsing was successful
+             value = parsedValue;
+             // Convert percentage if needed
+             if (value > 1) {
+               value = value / 100;
+               if (value > 1) value = 1; // Cap at 100%
+             }
+             if (value < 0) value = 0; // Cap at 0%
+           } else {
+               console.warn('YiBiaoPan dataHandler: Could not parse rawValue to float:', rawValue, '. Using 0.');
+               value = 0;
+           }
+        } else {
+            console.warn('YiBiaoPan dataHandler: rawValue is undefined for fieldName:', fieldName, '. Using 0.');
+            value = 0;
+        }
+      } else {
+         console.warn('YiBiaoPan dataHandler: Input data is not a valid non-empty array. Using 0.');
+         value = 0; // data is invalid
+      }
+    } else {
+       console.warn('YiBiaoPan dataHandler: Could not find valid fieldName from settings for "percent". Using 0.');
+       value = 0; // fieldName not found
+    }
+  } catch (scriptError) {
+      console.error('YiBiaoPan dataHandler: Unexpected error during execution:', scriptError);
+      value = 0; // Assign default on error
+  }
+  // Always assign the final value (even if it's the default 0)
+  option.percent = value;
+`;
 
 // 图表配置 new Gauge('domName', option)
 const option = {

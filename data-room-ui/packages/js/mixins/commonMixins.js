@@ -10,6 +10,7 @@ import { getChatInfo, getUpdateChartInfo } from '../api/bigScreenApi'
 import axiosFormatting from '../../js/utils/httpParamsFormatting'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
 import cloneDeep from 'lodash/cloneDeep'
+import debounce from 'lodash/debounce'
 import { sendRequest, startPolling, stopPolling } from '../../js/utils/httpRequest'
 
 export default {
@@ -20,10 +21,25 @@ export default {
       dataLoading: false
     }
   },
+  created() {
+    this.debouncedGetDataByExpression = debounce((config) => {
+      // Log when debounced function actually executes
+      console.log(`[Diag] Executing debouncedGetDataByExpression for ${config?.title || config?.code}`);
+      this.getDataByExpression(config);
+    }, 1500);
+
+    this.debouncedChangeData = debounce((config, filterList) => {
+      // Log when debounced function actually executes
+      console.log(`[Diag] Executing debouncedChangeData for ${config?.title || config?.code}`);
+      this.changeData(config, filterList);
+    }, 1500);
+  },
   watch: {
     'config.expression': { // 表达式发生变化
       handler (val) {
-        this.getDataByExpression(this.config)
+        // Log watcher trigger
+        console.log(`[Diag] Watcher triggered: config.expression for ${this.config?.title || this.config?.code}`);
+        this.debouncedGetDataByExpression(this.config)
       }
     },
     // 标题发生变化时需要及时更新表达式中的数据集库的字段名
@@ -36,20 +52,22 @@ export default {
     currentDataset: { // 关联的数据发生变化
       handler (val, old) {
         if (val && Object.keys(val).length && JSON.stringify(val) !== JSON.stringify(old)) {
-          this.getDataByExpression(this.config)
+          // Log watcher trigger
+          console.log(`[Diag] Watcher triggered: currentDataset for ${this.config?.title || this.config?.code}`);
+          this.debouncedGetDataByExpression(this.config)
         }
       },
-      deep: true,
-      immediate: true
+      deep: true
     },
     currentComputedDatas: { // 关联的数据发生变化
       handler (val, old) {
         if (val && Object.keys(val).length && JSON.stringify(val) !== JSON.stringify(old)) {
-          this.getDataByExpression(this.config)
+          // Log watcher trigger
+          console.log(`[Diag] Watcher triggered: currentComputedDatas for ${this.config?.title || this.config?.code}`);
+          this.debouncedGetDataByExpression(this.config)
         }
       },
-      deep: true,
-      immediate: true
+      deep: true
     }
   },
   computed: {
@@ -107,7 +125,12 @@ export default {
     this.watchCacheData()
   },
   beforeDestroy() {
-    // 停止轮询
+    if (this.debouncedGetDataByExpression && this.debouncedGetDataByExpression.cancel) {
+      this.debouncedGetDataByExpression.cancel();
+    }
+    if (this.debouncedChangeData && this.debouncedChangeData.cancel) {
+      this.debouncedChangeData.cancel();
+    }
     if (this.config && this.config.code) {
       stopPolling(this.config.code)
     }
@@ -123,17 +146,19 @@ export default {
      * 初始化组件
      */
     chartInit () {
+      // Log chartInit call
+      console.log(`[Diag] chartInit called for ${this.config?.title || this.config?.code}`);
       let config = this.config
       // key和code相等，说明是一进来刷新，调用list接口
       if (this.isPreview) {
         // 改变样式
         config = this.changeStyle(config) ? this.changeStyle(config) : config
-        // 改变数据
+        // 改变数据 - 预览时直接调用，不防抖
         config = this.changeDataByCode(config)
       } else {
-        // 否则说明是更新，这里的更新只指更新数据（改变样式时是直接调取changeStyle方法），因为更新数据会改变key,调用chart接口
+        // 编辑模式下初始化或更新 - 使用防抖版本
         // eslint-disable-next-line no-unused-vars
-        config = this.changeData(config)
+        config = this.debouncedChangeData(config)
       }
     },
     /**

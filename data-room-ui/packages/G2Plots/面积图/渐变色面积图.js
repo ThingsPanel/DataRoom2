@@ -535,7 +535,23 @@ if(autoHide){
 }
   `
 // 数据处理脚本
-const dataHandler = ''
+const dataHandler = `
+  if (Array.isArray(data)) {
+    data.forEach(item => {
+      if (item && item.fxTime) {
+        try {
+          const date = new Date(item.fxTime);
+          const hours = date.getHours();
+          // 格式化为 HH:00 字符串
+          item.fxTime = String(hours).padStart(2, '0') + ':00'; 
+        } catch (e) {
+          console.error('[渐变色面积图 dataHandler] Error processing fxTime:', item.fxTime, e);
+          item.fxTime = 'Invalid Time'; // 或者设置为 null 或其他默认值
+        }
+      }
+    });
+  }
+`;
 
 // 图表配置 new Line('domName', option)
 const option = {
