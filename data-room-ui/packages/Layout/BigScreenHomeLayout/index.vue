@@ -128,7 +128,6 @@ export default {
     '$route': {
       handler(newRoute) {
         // 仅在有 ticket 时更新，没有时不处理
-        console.log(newRoute, 'newRoute')
         if (newRoute.query.ticket) {
           sessionStorage.setItem('ticket', newRoute.query.ticket);
         }

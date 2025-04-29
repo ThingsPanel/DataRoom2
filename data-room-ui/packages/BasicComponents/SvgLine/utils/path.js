@@ -118,12 +118,7 @@ export function generatePathData(points, lineType) {
  * @returns {Number} 线段索引，-1表示未找到
  */
 export function findClickedLineSegment(x, y, points, threshold = 8) {
-  console.log('findClickedLineSegment 被调用:', { 
-    x, 
-    y, 
-    pointsLength: points ? points.length : 0,
-    threshold 
-  });
+
   
   // 防御性检查
   if (!points || !Array.isArray(points) || points.length < 2) {
@@ -147,7 +142,6 @@ export function findClickedLineSegment(x, y, points, threshold = 8) {
     }
     
     const distance = getDistanceToLineSegment(x, y, p1, p2);
-    console.log(`线段 ${i}: (${p1.x},${p1.y})-(${p2.x},${p2.y}) 距离: ${distance}`);
     
     if (distance < minDistance) {
       minDistance = distance;
@@ -157,7 +151,6 @@ export function findClickedLineSegment(x, y, points, threshold = 8) {
   
   // 只有当最小距离小于阈值时才返回线段索引
   const result = minDistance < threshold ? closestIndex : -1;
-  console.log(`最终结果: 索引=${result}, 最小距离=${minDistance}, 阈值=${threshold}`);
   
   return result;
 }

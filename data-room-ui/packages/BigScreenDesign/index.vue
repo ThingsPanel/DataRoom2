@@ -291,11 +291,11 @@ export default {
   },
   created () {
     this.changePageLoading(true)
-    console.log('页面查询参数:', this.$route.query)
+
     // 如果URL中有ticket参数，将其保存到sessionStorage中
     if (this.$route.query.ticket) {
       sessionStorage.setItem('ticket', this.$route.query.ticket)
-      console.log('已将ticket保存到sessionStorage:', this.$route.query.ticket)
+   
     }
     this.permission()
     /**

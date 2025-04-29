@@ -90,7 +90,7 @@ export default {
             }
           }
         })
-        console.log('pageInfo', pageInfo.chartList)
+    
 
         // 改变页面数据
         commit('changePageInfo', pageInfo)

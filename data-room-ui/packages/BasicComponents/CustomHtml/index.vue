@@ -51,6 +51,7 @@ export default {
 @import "../../assets/fonts/numberFont/stylesheet.css";
 .bs-design-wrap{
   width: 100%;
+  height: 100%;
   padding: 10px;
 }
 </style>

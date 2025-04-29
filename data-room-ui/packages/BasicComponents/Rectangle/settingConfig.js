@@ -23,11 +23,20 @@ const customConfig = {
     borderColor: 'rgba(131, 191, 246, 0)',
     borderWidth: 1,
     backgroundColor: '#007aff',
-    colorType: 'single',
+    colorType: 'gradient',
     gradientColor0: '#83bff6',
     gradientColor1: '#188df0',
     gradientDirection: 'to right',
-    opacity: 100
+    opacity: 1,
+    borderRadiusTopLeft: 4,
+    borderRadiusTopRight: 4,
+    borderRadiusBottomLeft: 4,
+    borderRadiusBottomRight: 4,
+    boxShadow: 'none',
+    paddingTop: 0,
+    paddingRight: 0,
+    paddingBottom: 0,
+    paddingLeft: 0
   }
 }
 

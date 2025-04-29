@@ -385,6 +385,34 @@ export default function getComponentConfig (type) {
         type
       }
 
+    // New MultiMetricCard case
+    case 'multiMetricCard':  // 多指标卡片
+      return {
+        name: '多指标卡片',
+        title: '多指标卡片',
+        icon: Icon.getNameList()[30], // Reuse an existing card icon for now
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenIndexCardChart', // Assuming a corresponding Java class name
+        w: 350, // Default width based on example
+        h: 250, // Default height based on example
+        x: 0,
+        y: 0,
+        type
+      }
+
+    // New WeatherIcon case
+    case 'weatherIcon':  // 天气图标
+      return {
+        name: '天气图标',
+        title: '天气图标',
+        icon: Icon.getNameList()[30], // Reuse an existing icon for now
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenTextChart', // Assuming a Java class name
+        w: 80, // Default size suitable for an icon
+        h: 80,
+        x: 0,
+        y: 0,
+        type
+      }
+
     // 7. 图表类
     case 'candlestick':   // K线图
       return {

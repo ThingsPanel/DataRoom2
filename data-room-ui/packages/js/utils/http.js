@@ -79,7 +79,7 @@ httpCustom.interceptors.request.use(config => {
 http.interceptors.response.use(response => {
 
   // 验证请求头是否包含x-api-key
-  console.log(response.data.msg === "租户ID为空，不允许查询分类", 98)
+
 
   if (response?.data?.msg?.includes("租户ID为空")) {
     MessageBox.confirm(
@@ -134,13 +134,6 @@ http.interceptors.response.use(response => {
  */
 httpCustom.interceptors.response.use(response => {
   // 验证请求头是否包含x-api-key
-  console.log('httpCustom响应拦截器中的请求头:', response.config.headers)
-  if (response.config.headers['x-api-key']) {
-    console.log('httpCustom验证成功: x-api-key已正确添加到请求头', response.config.headers['x-api-key'])
-  } else {
-    console.warn('httpCustom验证失败: 请求头中没有找到x-api-key')
-  }
-
   const res = response.data
   return res
 }, error => {
@@ -232,7 +225,7 @@ export function download (url, headers = {}, params = {}, body = {}) {
   // 如果ticket存在，则添加到请求头
   if (ticket) {
     headers['x-api-key'] = ticket
-    console.log('已添加x-api-key到下载请求头:', url)
+  
   }
 
   return new Promise((resolve, reject) => {
@@ -245,7 +238,7 @@ export function download (url, headers = {}, params = {}, body = {}) {
       withCredentials: false,
       responseType: 'arraybuffer'
     }).then(res => {
-      console.log(res)
+  
       // IE10,11采用自带下载文件流方法
       if ((!!window.ActiveXObject || 'ActiveXObject' in window) && window.navigator && window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(new Blob([res.data]), res.headers.filename)

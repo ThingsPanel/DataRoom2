@@ -146,7 +146,6 @@ export const sendRequest = async (config) => {
 
       // 如果是取消的请求，特殊处理
       if (axios.isCancel(error)) {
-        console.log('请求已取消:', config.url)
         const cancelError = new Error('请求已取消')
         cancelError.isCancel = true
         throw cancelError
@@ -174,7 +173,6 @@ export const startPolling = (config, callback, errorCallback) => {
     return null
   }
   
-  console.log('启动轮询，组件ID:', config.componentId)
   
   // 首先检查是否已经有相同组件ID的轮询，如果有先停止
   stopPolling(config.componentId)
@@ -204,10 +202,8 @@ export const startPolling = (config, callback, errorCallback) => {
   
   // 使用Vuex管理轮询定时器
   if (store && store.commit) {
-    console.log('将轮询定时器添加到Vuex，组件ID:', config.componentId)
     store.commit('ADD_POLLING_TIMER', { code: config.componentId, timerId })
   } else {
-    console.warn('Vuex store不可用，将使用内存存储定时器')
     // 如果Vuex不可用，使用内存存储
     if (!window._pollingTimers) window._pollingTimers = {}
     window._pollingTimers[config.componentId] = timerId
@@ -226,13 +222,11 @@ export const stopPolling = (componentId) => {
     return
   }
   
-  console.log('尝试停止轮询，组件ID:', componentId)
   
   // 使用Vuex管理的轮询定时器进行清理
   if (store && store.commit && store.state && store.state.pollingTimers) {
     const vuexTimer = store.state.pollingTimers[componentId]
     if (vuexTimer) {
-      console.log('从Vuex清理轮询定时器，组件ID:', componentId)
       clearInterval(vuexTimer)
       store.commit('CLEAR_POLLING_TIMER', componentId)
     } else {
@@ -242,7 +236,6 @@ export const stopPolling = (componentId) => {
   
   // 检查内存中是否有存储的定时器
   if (window._pollingTimers && window._pollingTimers[componentId]) {
-    console.log('从内存中清理轮询定时器，组件ID:', componentId)
     clearInterval(window._pollingTimers[componentId])
     delete window._pollingTimers[componentId]
   }

@@ -169,12 +169,12 @@ const optionHandler = ''
 
 // 数据处理脚本 - 将在此实现
 const dataHandler = `
-console.log('[dataHandler] Received:', data);
+
 if(data && data.length > 0){ // 检查 data 是否存在且有长度
   data.forEach(item => {
     // 检查 item.value 是否是包含逗号的字符串
     if (item && typeof item.value === 'string' && item.value.includes(',')) {
-      console.log(\`  Processing item with value: \"\${item.value}\"\`);
+      
       const splitValues = item.value.split(',');
 
       // Helper function to safely convert split value to number or return 0
@@ -192,11 +192,9 @@ if(data && data.length > 0){ // 检查 data 是否存在且有长度
       item.vibrationFrequency = getValueOrDefault(splitValues, 3);
       item.cableForce = getValueOrDefault(splitValues, 4);
 
-      console.log(\`    Assigned (split): structuralStress=\${item.structuralStress}, displacementV=\${item.displacementV}, ...\`);
 
     } else {
       // 如果 item.value 不符合分割条件，则赋默认值 0
-      console.log(\`  Skipping split for item, assigning defaults. Value was: \"\${item?.value}\"\`);
       item.structuralStress = 0;
       item.displacementV = 0;
       item.displacementH = 0;
@@ -208,7 +206,6 @@ if(data && data.length > 0){ // 检查 data 是否存在且有长度
    console.warn('[dataHandler] Input data is null or empty array.');
 }
 
-console.log('[dataHandler] Processed:', data);
 
 `
 

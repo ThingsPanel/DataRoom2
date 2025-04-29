@@ -273,7 +273,6 @@ export default {
         this.config.theme = settingToTheme(this.config, this.customTheme)
       }
       
-      console.log('ThreeComponent Apply: Emitting update with config:', _.cloneDeep(this.config))
       
       this.$emit('update', this.config)
       

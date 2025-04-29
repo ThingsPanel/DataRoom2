@@ -803,7 +803,6 @@ export default {
         if (this.datasetId) {
           try {
             const response = await getDataset(this.datasetId)
-            console.log('获取到数据集详情:', response)
 
             // 检查返回的数据结构
             if (response && response.id) {
@@ -876,7 +875,6 @@ export default {
                   if(this.queryParams.device_name){
                     this.selectedDeviceName = this.queryParams.device_name;
                   }
-                  console.log('Loaded queryParams from userDefinedJson:', this.queryParams);
                   // Also set the method on the main config object
                   if (config.userDefinedJson.method) {
                     this.dataForm.config.method = config.userDefinedJson.method;
@@ -927,7 +925,6 @@ export default {
                     remark: ''
                   });
                 }
-                 console.log('Ensured headers in edit mode:', this.dataForm.config.headers);
               }
 
               // 确保在设备列表加载后查找设备名称
@@ -950,7 +947,6 @@ export default {
                   this.pathForm.dataPath = 'data';
                   this.queryParams.data_mode = 'latest';
                 }
-                console.log(`根据responseScript回显数据路径: ${this.pathForm.dataPath}, data_mode: ${this.queryParams.data_mode}`);
               } else {
                 // 设置默认responseScript
                 this.dataForm.config.responseScript = 'return resp.data';
@@ -1041,8 +1037,6 @@ export default {
       // 清空现有params
       this.dataForm.config.params = []
 
-      console.log('开始更新params数组，selectedMetric:', this.selectedMetric)
-      console.log('当前queryParams:', this.queryParams)
 
       // 将queryParams中的所有字段添加到params数组
       Object.keys(this.queryParams).forEach(key => {
@@ -1051,14 +1045,12 @@ export default {
           // 当data_mode为latest时，跳过历史数据相关参数
           if (this.queryParams.data_mode === 'latest' &&
               ['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(key)) {
-            console.log(`跳过历史数据参数 ${key}，因为当前模式是最新数据`)
             return
           }
 
           // 对于数据标识key，优先使用selectedMetric中的完整信息
           if (key === 'key') {
             if (this.selectedMetric) {
-              console.log('使用selectedMetric生成params:', this.selectedMetric)
               // 添加数据标识的基本信息
               this.dataForm.config.params.push({
                 key: 'key',
@@ -1089,7 +1081,6 @@ export default {
               )
 
               if (metricInfo) {
-                console.log('从allMetrics找到匹配的数据标识:', metricInfo)
                 // 添加数据标识的基本信息
                 this.dataForm.config.params.push({
                   key: 'key',
@@ -1137,11 +1128,9 @@ export default {
 
     // 保存 - 简化逻辑，移除自动执行
     save(formName, ignoreFill = false) {
-      console.log('表单验证开始')
       if (!this.validateForm()) {
         return false
       }
-      console.log('表单验证通过，可以保存了')
 
       // 确保字段列表保存到config中
       if (this.dataForm && this.dataForm.config) {
@@ -1150,14 +1139,12 @@ export default {
 
         // 确保config中含有字段列表
         this.dataForm.config.fieldList = this.outputFieldList
-        console.log('保存前的字段列表:', this.outputFieldList)
 
         // 确保当data_mode为latest时，移除所有历史数据相关参数
         if (this.queryParams.data_mode === 'latest' && this.dataForm.config.params) {
           this.dataForm.config.params = this.dataForm.config.params.filter(param =>
             !['time_range', 'start_ts', 'end_ts', 'aggregate_window', 'aggregate_function'].includes(param.key)
           )
-          console.log('过滤后的参数列表:', this.dataForm.config.params)
         }
 
         // 将数据查询参数配置转换为对象并存储到userDefinedJson
@@ -1168,7 +1155,6 @@ export default {
           method: this.dataForm.config.method,
           responseScript: this.dataForm.config.responseScript
         }
-        console.log('已保存数据查询参数配置到userDefinedJson:', this.dataForm.config.userDefinedJson)
       }
       
       // Ensure requestType is always saved as frontend
@@ -1194,7 +1180,6 @@ export default {
       }
 
       // 确保数据传递正确
-      console.log('最终的保存数据:', form)
 
       // 判断是新增还是更新
       const datasetSave = this.dataForm.id === '' ? datasetAdd : datasetUpdate
@@ -1308,7 +1293,6 @@ export default {
           this.dataForm.config.fieldList = this.outputFieldList
           // 更新字段描述到config.fieldDesc
           this.buildFieldDesc()
-          console.log('已将字段列表和描述更新到config中:', this.outputFieldList)
         }
       } else {
         this.outputFieldList = []
@@ -1408,7 +1392,6 @@ export default {
     // 继续保存
     toSave() {
       // 方法已移除，保存逻辑已删除
-      console.log('保存方法已被禁用')
       this.$refs.fieldFillDialog.close()
     },
 
@@ -1420,7 +1403,6 @@ export default {
 
     handleOutputConfirm(outputFieldList) {
       // 方法已移除，保存逻辑已删除
-      console.log('输出字段确认逻辑已被禁用')
       this.outputFieldList = outputFieldList
       this.$refs.outputFieldDialog.close()
     },
@@ -1449,13 +1431,11 @@ export default {
 
     // 处理MetricsSelect组件的选择事件
     handleMetricsSelect(key) {
-      console.log('收到数据标识选择:', key)
 
       // 设置selectedMetric
       if (typeof key === 'object' && key !== null) {
         // 如果接收到的是对象，直接设置
         this.selectedMetric = key
-        console.log('使用数据标识对象:', key)
 
         // 设置queryParams.key为对象中的key属性，只是为了字符串显示
         this.queryParams.key = key.key || key.name || key.id || ''
@@ -1473,14 +1453,11 @@ export default {
 
           if (foundMetric) {
             this.selectedMetric = foundMetric
-            console.log('根据key找到数据标识对象:', foundMetric)
           } else {
             this.selectedMetric = { key: key, name: key }
-            console.log('未找到完整对象，创建简单对象:', this.selectedMetric)
           }
         } else {
           this.selectedMetric = { key: key, name: key }
-          console.log('无数据标识列表，创建简单对象:', this.selectedMetric)
         }
       } else {
         // 处理空值
@@ -1495,9 +1472,6 @@ export default {
       // 更新params
       this.updateParams()
 
-      console.log('更新后的数据标识:', this.queryParams.key)
-      console.log('选中的数据标识对象:', this.selectedMetric)
-      console.log('更新后的params:', this.dataForm.config.params)
     },
 
     handleDataTypeChange(value) {
@@ -1706,7 +1680,6 @@ export default {
 
         // 获取设备列表
         const response = await getDeviceList({})
-        console.log('设备列表API响应:', response)
 
         // 处理不同格式的API响应
         let deviceListData = []
@@ -1751,7 +1724,6 @@ export default {
             this.selectedDevice = this.deviceList.find(d => d.id === this.queryParams.device_id) || null
           }
 
-          console.log('处理后的设备列表:', this.deviceList)
         } else {
           console.error('获取设备列表响应为空')
         }
@@ -1812,7 +1784,6 @@ export default {
 
         // 获取设备的数据标识
         const response = await getDeviceMetrics(deviceId)
-        console.log('设备数据标识API响应:', response)
 
         // 处理不同格式的API响应
         if (response) {
@@ -1835,7 +1806,6 @@ export default {
 
           // 设置数据标识分组
           this.metricsGroups = metricsData || {}
-          console.log('处理后的数据标识分组:', this.metricsGroups)
 
           // 构建分组名称映射
           this.groupNameMap = {}
@@ -1900,7 +1870,6 @@ export default {
                   // 设置selectedMetric
                   this.selectedMetric = foundMetric
 
-                  console.log(`找到匹配的数据标识，分组: ${groupKey}`, foundMetric)
                 }
               }
             })
@@ -1919,15 +1888,7 @@ export default {
       // 检查表单验证状态
       let valid = true
 
-      console.log('==== 表单验证信息 ====')
-      console.log('设备ID:', this.queryParams.device_id)
-      console.log('设备名称:', this.queryParams.device_name)
-      console.log('数据标识:', this.queryParams.key)
-      console.log('数据标识类型:', typeof this.queryParams.key)
-      console.log('选中的完整数据标识对象:', this.selectedMetric)
-      console.log('选中的数据标识对象类型:', this.selectedMetric ? typeof this.selectedMetric : 'null')
-      console.log('数据类型:', this.queryParams.data_type)
-      console.log('数据来源:', this.queryParams.data_mode)
+      
 
       // 检查基础信息字段 (dataForm)
       if (!this.dataForm.name) {
@@ -1966,7 +1927,6 @@ export default {
         }
       })
 
-      console.log('处理后的所有指标数据:', this.allMetrics)
 
       // 如果已经有选中的key但没有完整对象信息，尝试找到匹配的对象
       if (this.queryParams.key && !this.selectedMetric) {
@@ -1986,10 +1946,8 @@ export default {
       )
 
       if (foundMetric) {
-        console.log('找到匹配的数据标识:', foundMetric)
         this.selectedMetric = foundMetric
       } else {
-        console.log('未找到匹配的数据标识，创建基本对象')
         this.selectedMetric = { key: key, name: key }
       }
     },
@@ -2006,7 +1964,6 @@ export default {
         this.dataForm.config.responseScript = 'return resp.data.points'
       }
       
-      console.log(`数据路径已更新: ${this.pathForm.dataPath}, responseScript: ${this.dataForm.config.responseScript}`)
     },
 
     // 打开设备选择弹窗

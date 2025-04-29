@@ -219,7 +219,6 @@
                 bridge = gltf.scene;
                 scene.add(bridge);
                 
-                console.log('模型加载成功:', bridge);
                 
                 // Adjust camera for better initial view
                 fitCameraToObject(bridge);
@@ -614,7 +613,6 @@
                 updateAllData(true);
             }, 5000); // Update every 5 seconds
             updateAllData(true); // Initial random update right away
-            console.log("自动更新已启动 (每5秒)");
             }
         
         // Handle window resize

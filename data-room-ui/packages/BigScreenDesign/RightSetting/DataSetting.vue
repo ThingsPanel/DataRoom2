@@ -1043,7 +1043,6 @@ export default {
       } else {
         // 使用事件总线通知需要更新
         if (this.config && this.config.code) {
-          console.log('通过事件总线发送更新请求:', this.config.code)
           EventBus.$emit('update-chart-data', this.config.code)
         }
       }
@@ -1059,7 +1058,6 @@ export default {
       } else {
         // 使用事件总线通知需要更新
         if (this.config && this.config.code) {
-          console.log('通过事件总线发送更新请求:', this.config.code)
           EventBus.$emit('update-chart-data', this.config.code)
         }
       }
@@ -1193,37 +1191,28 @@ export default {
         getDataSetDetails(id).then(res => {
           // --- BEGIN: Augment fieldsList with binding keys if IoT type --- 
           let finalFieldsList = res.fields || [];
-          console.log('[DataSetting] Received fields from API:', JSON.parse(JSON.stringify(finalFieldsList)));
-          console.log('[DataSetting] Current datasetType:', this.config.dataSource.datasetType);
 
           if (this.config.dataSource.datasetType === 'iot') {
             try {
               const bindingKeys = Object.keys(this.config.option?.customize?.binding || {});
               const originalFieldCount = finalFieldsList.length;
               const existingNames = new Set(finalFieldsList.map(f => f.fieldName));
-              console.log(`[DataSetting] Augmenting fieldList for IoT type. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
               
               bindingKeys.forEach(key => {
                 if (!existingNames.has(key)) {
                   const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false }; // Creating the new field object
                   finalFieldsList.push(newField);
                   existingNames.add(key); // Add to set to avoid duplicates
-                  console.log(`  > Added binding key to fieldList:`, newField);
                 }
               });
-              console.log(`[DataSetting] Finished augmenting fieldList. New count: ${finalFieldsList.length}`);
             } catch (e) {
-              console.error('[DataSetting] Error augmenting fieldList:', e);
               // In case of error, potentially revert to original list? Or keep augmented?
               // Keeping augmented for now, but logging the error.
               finalFieldsList = res.fields || []; // Revert on error for safety?
             }
-          } else {
-             console.log(`[DataSetting] Skipping fieldList augmentation as datasetType is not 'iot'.`);
-          }
+          } 
           // Assign the (potentially augmented) list to this.fieldsList
           this.fieldsList = finalFieldsList;
-          console.log('[DataSetting] Final fieldsList assigned:', JSON.parse(JSON.stringify(this.fieldsList)));
           // --- END: Augment fieldsList --- 
 
           // 初始化时以组件本来的参数设置为主 (Original logic starts here)

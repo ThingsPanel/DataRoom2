@@ -254,18 +254,15 @@ export default {
     // 添加获取组件类型的方法
     getComponentType(config) {
       // --- 添加详细日志 --- 
-      console.log(`[RenderCard getComponentType] Input config: type='${config?.type}', name='${config?.name}', category='${config?.category}', chartType='${config?.chartType}'`);
       let resolvedComponentType = null;
 
       // --- 新增：最优先检查 chartType --- 
       if (config.chartType === 'threeJs') {
-        console.log('-> Resolved as ThreeComponent (based on chartType === \'threeJs\')');
         resolvedComponentType = 'ThreeComponent';
       }
 
       // 如果 chartType 不是 threeJs，再执行原来的逻辑
       else if (config.type === 'echartsComponent') {
-        console.log('1. 根据type=echartsComponent判断为Echarts组件')
         resolvedComponentType = 'EchartsComponent'
       }
       
@@ -277,7 +274,6 @@ export default {
       
       // 然后根据category判断 (作为辅助)
       else if (config.category && config.category.includes('模型')) {
-         console.log('3. 根据category包含"模型"判断为3D模型组件')
          resolvedComponentType = 'ThreeComponent'
       }
       
@@ -285,10 +281,8 @@ export default {
       else if (config.className && config.className.includes('CustomComponentChart')) {
         if (config.name) {
            if (config.name.startsWith('3D') && (config.name.includes('柱状图') || config.name.includes('图表'))) {
-              console.log('4. 根据name判断为Echarts 3D组件')
               resolvedComponentType = 'EchartsComponent'
            } else if (config.name.includes('模型') && !config.name.includes('图')) {
-              console.log('5. 根据name包含模型判断为ThreeJS 3D模型组件')
               resolvedComponentType = 'ThreeComponent'
            }
         } 
@@ -298,11 +292,7 @@ export default {
       // 最后使用默认的resolveComponentType方法 (作为最终后备)
       if (!resolvedComponentType) {
          resolvedComponentType = this.resolveComponentType(config.type);
-         console.log(`6. 使用默认resolveComponentType解析结果: ${resolvedComponentType}`);
-      } else {
-         console.log(`7. Final resolved type: ${resolvedComponentType}`);
       }
-      
       return resolvedComponentType;
     },
     // 添加 changeStyle 方法

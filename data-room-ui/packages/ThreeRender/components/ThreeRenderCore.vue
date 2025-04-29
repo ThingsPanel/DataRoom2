@@ -57,7 +57,6 @@ export default {
     // Watch the correct path for model changes
     'config.option.customize.modelPath': {
       handler(newPath, oldPath) {
-        console.log('[ThreeRenderCore] modelPath watcher triggered:', { newPath, oldPath });
         if (newPath && newPath !== oldPath) {
           this.loadModel();
         }
@@ -102,13 +101,10 @@ export default {
     'config.option.customize.modelScale': {
       handler(newValue) {
         if (this.model && typeof newValue === 'number' && newValue > 0) {
-           console.log(`[ThreeRenderCore] Updating model scale to: ${newValue}`);
            this.model.scale.set(newValue, newValue, newValue);
         } else if (this.model && typeof newValue !== 'number') {
-            console.warn(`[ThreeRenderCore] Invalid modelScale received: ${newValue}. Resetting to 1.`);
             this.model.scale.set(1, 1, 1);
         } else if (this.model && newValue <= 0) {
-             console.warn(`[ThreeRenderCore] modelScale must be positive: ${newValue}. Resetting to 1.`);
             this.model.scale.set(1, 1, 1);
         }
       }
@@ -116,10 +112,8 @@ export default {
     'config.option.customize.modelPositionY': {
        handler(newValue) {
           if (this.model && typeof newValue === 'number') {
-            console.log(`[ThreeRenderCore] Updating model Y position to: ${newValue}`);
             this.model.position.y = newValue;
           } else if (this.model) {
-            console.warn(`[ThreeRenderCore] Invalid modelPositionY received: ${newValue}. Resetting to 0.`);
             this.model.position.y = 0;
           }
        }
@@ -129,7 +123,6 @@ export default {
         handler(newPoints, oldPoints) {
              // --- GUARD against early execution --- 
              if (!this.model) {
-                 console.log('[ThreeRenderCore Watcher] Model not loaded yet, skipping dataPoints watch handler.');
                  return; // Don't do anything if model isn't ready
              }
              // -------------------------------------
@@ -142,7 +135,6 @@ export default {
             let needsRecreation = false;
             if (newPoints.length !== oldPoints.length) {
                 needsRecreation = true;
-                console.log('[ThreeRenderCore Watcher dataPoints] Label count changed. Recreating.');
             } else {
                  for (let i = 0; i < newPoints.length; i++) {
                      const np = newPoints[i];
@@ -153,19 +145,16 @@ export default {
                          np.position?.z !== op.position?.z) // Check only structural changes
                      {
                          needsRecreation = true;
-                         console.log(`[ThreeRenderCore Watcher dataPoints] Position or ID changed at index ${i}. Recreating.`);
                          break;
                      }
                  }
             }
 
             if (needsRecreation) {
-                 console.log('[ThreeRenderCore Watcher dataPoints] Triggering label recreation due to structural change.');
                  this.createHtmlLabels(); // Recreate labels fully
             } else {
                  // Structure is the same, update only static content (name, description)
                  // Values and status are handled by the config.option.data watcher
-                 console.log('[ThreeRenderCore Watcher dataPoints] Triggering static label content update (name, description).');
                  // Call the new method instead of the deleted one
                  this.updateHtmlLabelStaticContent(newPoints);
             }
@@ -187,11 +176,9 @@ export default {
     'config.option.data': {
         handler(newData, oldData) {
             if (!this.model || !this.htmlLabels || this.htmlLabels.length === 0 || !newData) {
-                console.log('[ThreeRenderCore Watcher config.option.data] Conditions not met, skipping update.');
                 return;
             }
 
-            console.log('[ThreeRenderCore Watcher config.option.data] Data changed, updating label values:', JSON.parse(JSON.stringify(newData)));
 
             if (!Array.isArray(newData)) {
                 console.warn('[ThreeRenderCore Watcher config.option.data] newData is not an array:', newData);
@@ -257,7 +244,6 @@ export default {
     }
   },
   mounted() {
-    console.log('[ThreeRenderCore] Mounted. Initial config:', JSON.parse(JSON.stringify(this.config || null)));
     this.initThree();
 
     // Add ResizeObserver
@@ -360,16 +346,13 @@ export default {
         if (customBgColor) {
              try {
                  this.scene.background = new THREE.Color(customBgColor);
-                 console.log(`[ThreeRenderCore] Set background from config: ${customBgColor}`);
              } catch (e) {
-                 console.error(`[ThreeRenderCore] Invalid background color in config: ${customBgColor}`, e);
                  // Fallback to theme-based color on error
                  this.scene.background = this.theme === 'light' ? new THREE.Color(0xeeeeee) : new THREE.Color(0x1a1a1a);
              }
         } else {
             // Fallback to theme if no custom color is set
             this.scene.background = this.theme === 'light' ? new THREE.Color(0xeeeeee) : new THREE.Color(0x1a1a1a);
-             console.log(`[ThreeRenderCore] Set background from theme: ${this.theme}`);
         }
         // Ensure renderer alpha is true if we want background to show or be transparent based on CSS
         if(this.renderer) this.renderer.setClearAlpha(1); // Use 1 to show scene background, 0 for transparent
@@ -378,7 +361,6 @@ export default {
 
     // New method to handle shadow updates
     updateShadows(enabled) {
-        console.log(`[ThreeRenderCore] Updating shadows enabled: ${enabled}`);
         if (this.renderer) {
             this.renderer.shadowMap.enabled = enabled;
         }
@@ -398,7 +380,6 @@ export default {
 
       // --- Read modelPath from the correct location --- 
       const modelPath = this.config?.option?.customize?.modelPath;
-      console.log(`[ThreeRenderCore loadModel] Attempting to load model from: ${modelPath}`);
 
       // Clear previous model if exists
       if (this.model) {
@@ -421,7 +402,6 @@ export default {
       loader.load(
         modelPath,
         (gltf) => {
-          console.log('[ThreeRenderCore loadModel] GLB loaded successfully.');
           this.model = gltf.scene;
           if (this.scene) {
           this.scene.add(this.model);
@@ -432,16 +412,13 @@ export default {
           this.applyInitialModelTransforms(); 
           this.setupInitialCameraView(this.model);
           
-          // --- Log data before creating labels --- 
-          console.log('[ThreeRenderCore loadModel Callback] DataPoints before createHtmlLabels:', 
-                       JSON.parse(JSON.stringify(this.config?.option?.customize?.dataPoints || [])));
+         
           // ---------------------------------------
 
           // Create HTML labels after model is ready (this should be the definitive initial creation)
           this.createHtmlLabels();
           }else {
         // 如果 scene 不存在，给出警告并清理
-        console.warn('GLTF 加载完成时场景已不存在，模型未添加。');
         this.model = null; // 清理模型引用
       }
           this.loading = false;
@@ -451,7 +428,6 @@ export default {
           // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         (loadError) => {
-          console.error('[ThreeRenderCore loadModel] Error loading GLB:', loadError);
           this.error = `Failed to load model: ${loadError.message || 'Unknown error'}`;
           this.loading = false;
           this.clearHtmlLabels(); // Clear any potentially half-created labels on error
@@ -481,7 +457,6 @@ export default {
     // Renamed and modified method for setting initial camera view
     setupInitialCameraView(targetModel) {
       if (!this.camera || !this.controls || !targetModel) return;
-      console.log('[ThreeRenderCore] Setting up initial camera view.');
 
       const customPos = this.config?.option?.customize?.initialCameraPosition;
       const customTarget = this.config?.option?.customize?.initialCameraTarget;
@@ -492,7 +467,6 @@ export default {
           customTarget && typeof customTarget === 'object' && 'x' in customTarget && 'y' in customTarget && 'z' in customTarget;
 
       if (useCustomView) {
-        console.log('[ThreeRenderCore] Using custom initialCameraPosition and initialCameraTarget from config.');
         try {
             this.camera.position.set(customPos.x, customPos.y, customPos.z);
             this.controls.target.set(customTarget.x, customTarget.y, customTarget.z);
@@ -506,19 +480,16 @@ export default {
              this.fitCameraToModelFallback(targetModel);
         }
       } else {
-         console.log('[ThreeRenderCore] No valid custom camera view found in config. Using automatic fitting.');
          this.fitCameraToModelFallback(targetModel);
       }
       
       this.camera.updateProjectionMatrix();
       this.controls.update(); // IMPORTANT: Update controls after setting position/target
-      console.log('[ThreeRenderCore] Initial camera view setup complete.');
     },
 
     // Renamed the original fitting logic to be used as a fallback
     fitCameraToModelFallback(targetModel) {
         if (!this.camera || !this.controls || !targetModel) return;
-        console.log('[ThreeRenderCore] Executing fallback camera fitting logic.');
 
         const box = new THREE.Box3().setFromObject(targetModel);
         const size = box.getSize(new THREE.Vector3());
@@ -533,14 +504,8 @@ export default {
         // Apply initialZoomFactor from config if available
         const zoomFactor = this.config?.option?.customize?.initialZoomFactor;
         if (typeof zoomFactor === 'number' && zoomFactor > 0) {
-            console.log(`[ThreeRenderCore] Applying initialZoomFactor: ${zoomFactor}`);
             distance /= zoomFactor; // Divide distance by zoom factor (smaller factor = closer zoom)
-        } else {
-             console.log('[ThreeRenderCore] No valid initialZoomFactor found, using default distance.');
-             // Apply a default offset multiplier if no zoom factor specified (like original code)
-             // distance *= 1.5; // Example default offset
-        }
-
+        } 
         // Ensure distance is reasonable
         distance = Math.max(distance, 0.1); // Prevent zero or negative distance
 
@@ -592,7 +557,6 @@ export default {
       const newHeight = container.clientHeight;
 
       if (newWidth !== this.containerWidth || newHeight !== this.containerHeight) {
-        console.log(`[ThreeRenderCore] Resizing from ${this.containerWidth}x${this.containerHeight} to ${newWidth}x${newHeight}`);
         this.containerWidth = newWidth;
         this.containerHeight = newHeight;
 
@@ -605,7 +569,6 @@ export default {
     },
 
     cleanup() {
-      console.log('[ThreeRenderCore] Cleaning up...');
       if (this.animationId) {
         cancelAnimationFrame(this.animationId);
         this.animationId = null;
@@ -646,13 +609,7 @@ export default {
        try {
          const configString = JSON.stringify(this.config, null, 2);
          navigator.clipboard.writeText(configString)
-           .then(() => {
-             console.log('[ThreeRenderCore] Config copied to clipboard.');
-             // Maybe a small visual temporary feedback?
-           })
-           .catch(err => {
-             console.error('[ThreeRenderCore] Failed to copy config: ', err);
-           });
+        
        } catch (e) {
          console.error('[ThreeRenderCore] Error stringifying config: ', e);
        }
@@ -663,13 +620,11 @@ export default {
         if (!element || !styleObject || typeof styleObject !== 'object') {
             return;
         }
-        console.log(`[applyStyles] Applying to element:`, element, ` Styles:`, styleObject);
         for (const prop in styleObject) {
             if (Object.prototype.hasOwnProperty.call(styleObject, prop)) {
                 try {
                     // Directly assign camelCase or kebab-case (browser handles most)
                     element.style[prop] = styleObject[prop];
-                     console.log(`    Applied ${prop}: ${styleObject[prop]}`);
                 } catch (e) {
                     console.warn(`[applyStyles] Failed to apply style ${prop}: ${styleObject[prop]}`, e);
                 }
@@ -680,7 +635,6 @@ export default {
 
     // --- HTML Label Methods ---
     clearHtmlLabels() {
-      console.log('[ThreeRenderCore] Clearing HTML labels.');
       const container = this.$refs.htmlLabelContainer;
       if (!container) return; // Add guard
       this.htmlLabels.forEach(labelInfo => {

@@ -196,7 +196,6 @@ export default {
               this.$emit('updateSetting', { ...val, type: this.config.type, code: this.config.code, theme: this.config.theme, parentCode: this.config?.parentCode })
             }
           } else {
-            console.log('RightSetting 触发 updateDataSetting, 数据集类型:', this.config.dataSource?.datasetType)
             this.$emit('updateDataSetting', this.config)
           }
           if (!this.isOperationRollback) {
@@ -274,7 +273,6 @@ export default {
       })
     },
     handleThreeComponentUpdate (config) {
-      console.log('RightSetting收到ThreeComponent更新事件:', config.name)
       this.$emit('updateSetting', {
         ...config,
         _timestamp: Date.now()

@@ -106,13 +106,11 @@ export default {
     value: {
       immediate: true,
       handler(newVal) {
-        console.log('MetricsSelect received value:', newVal)
 
         // 处理不同类型的值
         if (typeof newVal === 'object' && newVal !== null) {
           // 如果收到的是对象，直接设置为选中项
           this.selectedKey = newVal
-          console.log('MetricsSelect 设置选中对象:', this.selectedKey)
         } else if (newVal) {
           // 如果是字符串类型的key，尝试在keyList中查找对应的对象
           if (this.keyList && this.keyList.length > 0) {
@@ -123,7 +121,6 @@ export default {
 
             if (foundMetric) {
               this.selectedKey = foundMetric
-              console.log('MetricsSelect 找到匹配对象:', this.selectedKey)
             } else {
               // 如果找不到匹配项，创建一个临时对象
               this.selectedKey = {
@@ -131,7 +128,6 @@ export default {
                 name: newVal,
                 uniqueId: `temp_${newVal}`
               }
-              console.log('MetricsSelect 未找到匹配对象，创建临时对象:', this.selectedKey)
             }
           } else {
             // 如果还没有加载选项列表，创建一个临时对象
@@ -158,7 +154,6 @@ export default {
           
           if (foundMetric) {
             this.selectedKey = foundMetric
-            console.log('MetricsSelect keyList更新后找到匹配对象:', this.selectedKey)
           }
         }
       }
@@ -179,15 +174,12 @@ export default {
       this.loading = true
 
       try {
-        console.log('获取设备指标数据, 设备ID:', this.deviceId)
         const res = await getDeviceMetrics(this.deviceId)
-        console.log('设备指标数据响应:', res)
 
         // 处理分组格式的数据，如示例中的 telemetry, attributes, event, command 分组
         if (res && typeof res === 'object' && !Array.isArray(res)) {
           // 如果是分组数据格式 {telemetry: [...], attributes: [...], ...}
           if (Object.keys(res).some(key => Array.isArray(res[key]))) {
-            console.log('处理分组格式数据')
             this.metricsDataByType = {}
             this.keyList = []
 
@@ -204,7 +196,6 @@ export default {
                 this.keyList = [...this.keyList, ...this.metricsDataByType[groupKey]]
               }
             })
-            console.log('指标数据分组:', this.metricsDataByType)
             return
           }
 
@@ -233,7 +224,6 @@ export default {
           // 如果metricsData本身就是分组格式
           if (metricsData && typeof metricsData === 'object' && !Array.isArray(metricsData) &&
               Object.keys(metricsData).some(key => Array.isArray(metricsData[key]))) {
-            console.log('在响应内找到分组格式数据')
             this.metricsDataByType = {}
             this.keyList = []
 
@@ -250,7 +240,6 @@ export default {
                 this.keyList = [...this.keyList, ...this.metricsDataByType[groupKey]]
               }
             })
-            console.log('指标数据分组:', this.metricsDataByType)
             return
           }
         }
@@ -273,7 +262,6 @@ export default {
           return
         }
 
-        console.log('指标数据:', metricsData)
 
         if (metricsData && Array.isArray(metricsData)) {
           this.metricsDataByType = {}
@@ -301,8 +289,6 @@ export default {
               })
             }
           })
-
-          console.log('指标数据分组:', this.metricsDataByType)
         } else {
           console.warn('未获取到指标数据')
           this.metricsDataByType = {}
@@ -316,7 +302,6 @@ export default {
       }
     },
     handleChange(value) {
-      console.log('数据标识选择变更:', value)
 
       // 确保不会传递undefined
       const selectedValue = value || ''
@@ -326,7 +311,6 @@ export default {
         ? selectedValue.key  // 只传递 key 值
         : selectedValue
       
-      console.log('向父组件发送值:', emitValue)
       
       // 发出事件通知父组件
       this.$emit('input', emitValue)

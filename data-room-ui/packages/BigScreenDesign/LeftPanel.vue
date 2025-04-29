@@ -286,27 +286,15 @@ export default {
             const type = node.getAttribute('data-type')
             const name = node.getAttribute('data-name')
             
-            console.log('开始拖拽组件:', {type, name})
             
             // 从menuList中获取当前拖拽的组件
             const menuItem = this.menuList.find((item) => item.name === this.activeName)
-            console.log('当前活动菜单:', this.activeName, menuItem ? menuItem.title : '未找到')
             
             const element = menuItem?.components.find(
               (item) => item.type === type && item.name === name
             )
             
-            if (element) {
-              console.log('找到拖拽组件详情:', {
-                type: element.type,
-                name: element.name,
-                category: element.category,
-                className: element.className,
-                title: element.title
-              })
-            } else {
-              console.warn('未找到拖拽组件详情')
-            }
+       
             
             /* 设置拖拽传输数据 */
             const dragData = {
@@ -320,7 +308,6 @@ export default {
               customSerialize(dragData)
             )
             
-            console.log('拖拽数据已设置:', dragData)
           })
         })
         // 阻止默认动作

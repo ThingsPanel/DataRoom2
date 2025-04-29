@@ -3,13 +3,8 @@ import axios from 'axios'
 // import _ from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
 export default function axiosFormatting (customConfig) {
-  console.log('axiosFormatting 被调用，数据集类型:', customConfig.datasetType)
   const newCustomConfig = replaceParams(customConfig)
-  console.log('处理后的请求配置:', {
-    url: newCustomConfig.url,
-    method: newCustomConfig.method,
-    datasetType: newCustomConfig.datasetType
-  })
+
   // 将请求头和请求参数的值转化为对象形式
   const httpConfig = {
     timeout: 1000 * 30,
@@ -54,14 +49,8 @@ export default function axiosFormatting (customConfig) {
   const body = newCustomConfig?.body.replace(/: ,/g, ':undefined,').replace(/, }/g, ',undefined}')
   /** 发送请求  **/
   return new Promise((resolve, reject) => {
-    console.log('准备发送请求:', {
-      method: newCustomConfig.method,
-      url: newCustomConfig.url,
-      params: newCustomConfig.params,
-      datasetType: newCustomConfig.datasetType
-    })
+  
     // === Add diagnostic log ===
-    console.log('axiosFormatting - method value before request:', newCustomConfig.method, 'Type:', typeof newCustomConfig.method);
     // === End diagnostic log ===
     instance({
       method: newCustomConfig.method,

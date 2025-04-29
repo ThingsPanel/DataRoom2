@@ -42,7 +42,7 @@ const typeList = [
   'video', // 视频
   'iframeChart', // Iframe嵌入图表
   'customHtml', // 自定义HTML
-
+  'weatherIcon', 
   // 5. 数据展示类 - 表格和滚动列表
   'tables', // 表格
   'screenScrollBoard', // 滚动面板
@@ -53,6 +53,7 @@ const typeList = [
   'indicatorCard2', // 指标卡2
   'indexCard', // 指数卡
   'indexCard2', // 指数卡2
+  'multiMetricCard', // 添加多指标卡片
 
   // 7. 图表类
   'candlestick', // K线图

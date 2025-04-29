@@ -51,29 +51,24 @@ export default {
      * @returns {*}
      */
     getCoverPicture (url) {
-      console.log('传入的URL:', url);
       
       // 判断是否为 require 引入的本地图片
       if (typeof url === 'object' && url.default) {
-        console.log('require图片:', url.default);
         return url.default
       }
 
       // 判断是否为完整的 http(s) 链接
       if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
-        console.log('http链接:', url);
         return url
       }
 
       // 判断是否为本地静态资源路径
       if (url && url.startsWith('/static/')) {
-        console.log('本地静态资源:', url);
         return url
       }
 
       // 其他情况使用 getFileUrl 处理
       const result = getFileUrl(url);
-      console.log('getFileUrl处理后:', result);
       return result
     },
   }

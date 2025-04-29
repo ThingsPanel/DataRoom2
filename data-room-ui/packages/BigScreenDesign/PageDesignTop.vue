@@ -445,7 +445,7 @@ export default {
     // 保存
     async save (type, hasPageTemplateId = false, isAutoSave = false) {
       const pageInfo = cloneDeep(this.handleSaveData())
-      console.log(pageInfo, type, isAutoSave, "pageInfo1")
+   
 
       // 保存时判断tabs组件里面的元素是否符合要求
       const flag = this.validateTabs(pageInfo?.chartList)
@@ -538,13 +538,13 @@ export default {
     },
     // 自动保存方法
     async autoSave () {
-      console.log('执行自动保存...')
+   
       try {
         const success = await this.save(null, false, true) // 调用静默保存
         if (success) {
           const now = new Date()
           this.lastAutoSaveTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
-          console.log(`自动保存成功于 ${this.lastAutoSaveTime}`)
+ 
         }
       } catch (error) {
         // 错误已在 save 方法内部处理（仅记录日志）
@@ -555,14 +555,14 @@ export default {
       // 清除可能已存在的定时器
       this.stopAutoSave()
       this.autoSaveIntervalId = setInterval(this.autoSave, this.autoSaveInterval)
-      console.log(`自动保存已启动，间隔 ${this.autoSaveInterval / 1000} 秒`)
+
     },
     // 停止自动保存定时器
     stopAutoSave () {
       if (this.autoSaveIntervalId) {
         clearInterval(this.autoSaveIntervalId)
         this.autoSaveIntervalId = null
-        console.log('自动保存已停止')
+   
       }
     },
     goBack (path) {
@@ -616,10 +616,7 @@ export default {
         }
         return chart
       })
-      console.log(cloneDeep({
-        ...this.pageInfo,
-        chartList: newChartList
-      }),"pageInfo3")
+ 
       return cloneDeep({
         ...this.pageInfo,
         chartList: newChartList
@@ -742,7 +739,7 @@ export default {
                 tenantId: currentTenantId // 确保使用当前的 tenantId
               })
               // --- DEBUG LOG --- 
-              console.log('State after changePageInfo in importJson:', cloneDeep(this.$store.state.bigScreen.pageInfo));
+           
               // --- END DEBUG LOG ---
               this.$message.success('JSON 文件导入成功')
               // 可以在这里触发一次保存历史记录

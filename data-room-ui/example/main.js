@@ -15,10 +15,10 @@ import { registerConfig } from '@gcpaas/data-room-ui'
 import remoteComponents from '@/remoteComponents/exports.js'
 import customDatasetComponents from '@/customDatasetComponents/exports.js'
 import { Column } from '@antv/g2plot'
+import 'qweather-icons/font/qweather-icons.css' 
 // import customPlots from '@/customPlots/exports'
 Vue.use(ElementUI, { size: 'mini' })
 Vue.prototype.Column = Column
-console.log('window.CONFIG', window.CONFIG)
 registerConfig(
   {
     routers: {

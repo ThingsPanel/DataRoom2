@@ -167,19 +167,15 @@ export default {
             let fieldList = res.fieldList || [];
             const originalFieldCount = fieldList.length;
             const existingNames = new Set(fieldList.map(f => f.fieldName));
-            console.log(`[changeDataByCode] Augmenting fieldList. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
             bindingKeys.forEach(key => {
               if (!existingNames.has(key)) {
                 const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false };
                 fieldList.push(newField);
                 existingNames.add(key); // Add to set to prevent duplicates if binding key appears later
-                console.log(`  > Added binding key to fieldList:`, newField);
               }
             });
             // Update the fieldList in the response object (assuming this is used later)
             res.fieldList = fieldList;
-            console.log(`[changeDataByCode] Finished augmenting fieldList. New count: ${fieldList.length}`);
-            console.log('Augmented fieldList:', JSON.parse(JSON.stringify(res.fieldList))); // Log the result
           } catch (e) {
             console.error('[changeDataByCode] Error augmenting fieldList:', e);
           }
@@ -188,11 +184,9 @@ export default {
           // 如果是http数据集或iot数据集的前端代理，则需要调封装的axios请求
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
-              console.log('9999999', res.data)
               if (res.data.datasetType === 'iot') {
                 // 使用 httpRequest.js 中的 sendRequest 方法
                 const userConfig = res.data.userDefinedJson || {}
-                console.log('IoT数据集配置:', userConfig)
                 const requestConfig = {
                   url: userConfig.url,
                   method: userConfig.method,
@@ -201,14 +195,13 @@ export default {
                   componentId: config.code,
                   pollingInterval: 6000 // 设置轮询间隔为6秒
                 }
-                console.log('请求配置:', requestConfig)
+             
 
                 // 如果是最新数据模式，删除历史数据相关参数
                 if (requestConfig.params && requestConfig.params.data_mode === 'latest') {
                   delete requestConfig.params.time_range
                   delete requestConfig.params.aggregate_window
                   delete requestConfig.params.aggregate_function
-                  console.log('最新数据模式，删除历史参数后:', requestConfig.params)
                 }
 
                 // 转换headers格式
@@ -224,18 +217,15 @@ export default {
                   // 确保至少有 x-api-key
                   requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
                 }
-                console.log('设置headers后:', requestConfig.headers)
 
                 // 在预览模式下使用轮询
                 if (this.isPreview) {
                   // 先停止之前的轮询
                   stopPolling(config.code)
-                  console.log('开始轮询, 组件ID:', config.code)
                   
                   // 启动新的轮询
                   startPolling(requestConfig, 
                     (result) => {
-                      console.log('轮询收到数据:', result)
                       if (!result || !result.data) {
                         console.error('IoT数据返回格式错误:', result)
                         return
@@ -249,7 +239,6 @@ export default {
                       
                       // 使用与普通请求相同的数据格式化方法
                       const formattedData = this.apiDataFormatting({ success: true, columnData: res.columnData }, responseData)
-                      console.log('轮询数据处理后:', formattedData)
 
                       // 更新到vuex
                       this.updateDataset({ 
@@ -260,11 +249,6 @@ export default {
 
                       // 使用 nextTick 确保在 Vuex 更新后再处理数据
                       this.$nextTick(() => {
-                        console.log('已更新到Vuex, 组件码:', config.code)
-                        console.log('轮询更新后的Vuex数据:', {
-                          当前组件数据: this.dataset[config.code],
-                          所有数据: this.dataset
-                        })
 
                         // 使用最新的 Vuex 数据更新组件配置
                         const newConfig = cloneDeep(config)
@@ -279,12 +263,6 @@ export default {
                     },
                     (error) => {
                       console.error('IoT数据轮询出错:', error)
-                      console.log('出错时的请求配置:', {
-                        url: requestConfig.url,
-                        method: requestConfig.method,
-                        params: requestConfig.params,
-                        headers: requestConfig.headers
-                      })
                       // 如果是认证错误，尝试更新token
                       if (error.response && error.response.status === 401) {
                         requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
@@ -294,9 +272,7 @@ export default {
                 }
 
                 // 发送请求获取初始数据
-                console.log('发送初始请求...')
                 _res = await sendRequest(requestConfig)
-                console.log('初始请求返回:', _res)
 
                 // 根据responseScript处理返回数据
                 if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
@@ -304,7 +280,6 @@ export default {
                 } else {
                   _res = _res.data
                 }
-                console.log('初始数据处理后:', _res)
               } else {
                 _res = await axiosFormatting(res.data)
               }
@@ -334,11 +309,6 @@ export default {
           // 将后端返回的数据保存
           if (_res.success) {
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
-            console.log('数据已更新到Vuex, 组件码:', config.code, '数据:', _res?.data)
-            console.log('更新后的Vuex数据:', {
-              当前组件数据: this.dataset[config.code],
-              所有数据: this.dataset
-            })
           }
           config = this.dataFormatting(config, _res)
 
@@ -357,7 +327,6 @@ export default {
      * @param {Array} filterList
      */
     changeData (config, filterList) {
-      console.log('changeData 开始执行, 配置:', config)
       const list = config?.paramsList?.map((item) => {
         if (item.value === '$' + '{level}') {
           return { ...item, value: config.customize?.level }
@@ -387,7 +356,6 @@ export default {
       return new Promise((resolve) => {
         config.loading = true
         getUpdateChartInfo(params).then(async res => {
-          console.log('getUpdateChartInfo 返回数据:', res)
           config.loading = false
           let _res = cloneDeep(res)
 
@@ -397,19 +365,15 @@ export default {
             let fieldList = res.fieldList || [];
             const originalFieldCount = fieldList.length;
             const existingNames = new Set(fieldList.map(f => f.fieldName));
-            console.log(`[changeData] Augmenting fieldList. Original count: ${originalFieldCount}, Binding keys:`, bindingKeys);
             bindingKeys.forEach(key => {
               if (!existingNames.has(key)) {
                 const newField = { fieldName: key, fieldDesc: `${key} (绑定)`, required: false };
                 fieldList.push(newField);
                 existingNames.add(key); // Add to set
-                console.log(`  > Added binding key to fieldList:`, newField);
               }
             });
             // Update the fieldList in the response object
             res.fieldList = fieldList;
-            console.log(`[changeData] Finished augmenting fieldList. New count: ${fieldList.length}`);
-             console.log('Augmented fieldList:', JSON.parse(JSON.stringify(res.fieldList))); // Log the result
           } catch (e) {
             console.error('[changeData] Error augmenting fieldList:', e);
           }
@@ -417,7 +381,6 @@ export default {
 
           if (res.executionByFrontend) {
             if (res.data.datasetType === 'http' || res.data.datasetType === 'iot') {
-              console.log('9999999', res.data)
               if (res.data.datasetType === 'iot') {
                 // 使用 httpRequest.js 中的 sendRequest 方法
                 const userConfig = res.data.userDefinedJson || {}
@@ -502,16 +465,13 @@ export default {
           }
 
           if (_res.success) {
-            console.log('更新到Vuex的数据:', _res?.data)
             this.updateDataset({ code: config.code, title: config.title, data: _res?.data })
           }
           
           config = this.dataFormatting(config, _res)
-          console.log('dataFormatting 处理后的配置:', config)
           
           resolve(config)
         }).catch(err => {
-          console.error('getUpdateChartInfo 错误:', err)
           config.loading = false
           resolve(config)
         })
@@ -523,7 +483,6 @@ export default {
     },
     // http前台代理需要对返回的数据进行重新组装
     apiDataFormatting (chartRes, apiRes) {
-      console.log('apiDataFormatting 输入数据:', { chartRes, apiRes })
       // 确保返回的数据是数组格式
       const formattedData = Array.isArray(apiRes) ? apiRes : [apiRes]
       const result = {
@@ -531,7 +490,6 @@ export default {
         data: formattedData,
         success: chartRes.success
       }
-      console.log('apiDataFormatting 输出数据:', result)
       return result
     },
     dataFormatting (config, data) {

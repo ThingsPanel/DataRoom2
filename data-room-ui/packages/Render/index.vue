@@ -253,24 +253,15 @@ export default {
       this.$emit('openDataViewDialog', config)
     },
     drop (e) {
-      console.log('接收到拖放事件')
       try {
         const jsonData = e.dataTransfer.getData('dragComponent')
         if (!jsonData) {
-          console.warn('未获取到拖放数据')
           return
         }
         
-        console.log('拖放数据原始JSON:', jsonData)
         
         const component = customDeserialize(jsonData)
-        console.log('解析后的拖放数据:', {
-          type: component.type,
-          name: component.name,
-          category: component.category,
-          className: component.className,
-          title: component.title
-        })
+    
         
         this.addChart(jsonData, {
           x: e.clientX,
@@ -391,21 +382,12 @@ export default {
     },
     // 新增元素
     addChart (chart, position, isComponent) {
-      console.log('添加新组件:', {
-        chartType: typeof chart,
-        position,
-        isComponent
-      })
+    
       
       const { left, top } = this.$el.getBoundingClientRect()
       const _chart = !chart.code ? customDeserialize(chart) : chart
       
-      console.log('解析后的组件数据:', {
-        type: _chart.type,
-        name: _chart.name,
-        category: _chart.category,
-        className: _chart.className
-      })
+   
       
       let option = _chart.option
       
@@ -417,12 +399,9 @@ export default {
       } 
       // --- 如果 chartType 不为 threeJs，再检查 type 是否为 customComponent --- 
       else if (_chart.type === 'customComponent') {
-        console.log('检测到 type=customComponent 且 chartType!=threeJs，尝试识别为G2Plot');
         
         // G2Plot处理逻辑
-        console.log('检测到普通自定义组件，查找Plot配置');
         const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name);
-        console.log('找到的Plot配置:', plotConfig ? plotConfig.name : '未找到');
         
         // 只有找到对应的Plot配置时才应用
         if (plotConfig) {
@@ -434,17 +413,7 @@ export default {
            console.warn(`未找到名为 ${_chart.name} 的 G2Plot 配置，将使用原始 option`);
         }
       } 
-      // --- 处理明确的 echartsComponent 类型 --- 
-      else if (_chart.type === 'echartsComponent') {
-         console.log('检测到 echartsComponent 类型');
-         // Echarts 可能有自己的默认配置或主题处理逻辑
-      } 
-      // --- 处理其他类型 --- 
-      else {
-         console.log(`检测到其他类型: ${_chart.type}`);
-         // 其他类型的处理逻辑
-      }
-
+     
       const config = {
         ..._chart,
         x: parseInt(!chart.code
@@ -467,13 +436,7 @@ export default {
         config.theme = settingToTheme(config, 'light')
       }
       
-      console.log('最终添加的组件配置:', {
-        type: config.type,
-        name: config.name,
-        category: config.category,
-        className: config.className,
-        code: config.code
-      })
+
       
       this.addItem(config)
     },

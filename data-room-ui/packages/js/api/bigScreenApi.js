@@ -22,7 +22,6 @@ export function saveScreen (data) {
         console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=threeJs)`);
       } else {
         // 只保留 field 和 value
-        console.log(`[saveScreen] 简化 ${item.name || item.code} 的 setting`);
         item.setting = item.setting?.map((x) => {
           const { field, value } = x
           return { field, value }
