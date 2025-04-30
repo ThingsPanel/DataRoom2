@@ -59,15 +59,9 @@ export default {
           if (fetchedCode != null) {
              newIconCode = String(fetchedCode);
              console.log(`[WeatherIcon] Fetched iconCode '${newIconCode}' from dataset field '${metricField}'.`);
-          } else {
-             console.warn(`[WeatherIcon] Field '${metricField}' has null or undefined value in the first data record.`);
           }
-        } else {
-           console.warn("[WeatherIcon] Dataset returned successfully but data array is empty or missing.");
-        }
-      } else if (config.dataSource?.source === 'dataset') {
-         console.warn("[WeatherIcon] Configured for dataset but fetch failed, metricField missing, or data source not selected.");
-      }
+        } 
+      } 
 
       this.$set(config.customize, 'iconCode', newIconCode);
       

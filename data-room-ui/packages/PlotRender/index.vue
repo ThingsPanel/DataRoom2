@@ -182,7 +182,6 @@ export default {
     },
     dataFormatting (config, data) {
        // --- Add Log: Identify component ---
-       console.log(`[PlotRender dataFormatting] Processing for: ${config?.title || config?.name || config?.code}`);
        // --- End Log ---
 
       // 数据返回成功则赋值
@@ -217,7 +216,6 @@ export default {
                       if (typeof rawValue === 'object' && rawValue !== null && rawValue.hasOwnProperty('value')) {
                          rawValue = rawValue.value;
                       } else if (typeof rawValue === 'object' && rawValue !== null) {
-                         console.warn('YiBiaoPan dataHandler: rawValue is an object but lacks a .value property. Using 0.');
                          rawValue = 0;
                       }
                       if (rawValue !== undefined) {
@@ -247,7 +245,6 @@ export default {
                // --- Add Final Check for option.percent (Gauge) --- 
                if (config.name === 'YiBiaoPan') {
                   if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
-                    console.warn(`[PlotRender dataFormatting] Invalid option.percent detected for YiBiaoPan after handler:`, option.percent, '. Forcing to 0.');
                     option.percent = 0;
                   }
                }
@@ -258,7 +255,6 @@ export default {
              // --- Add Final Check for option.percent (Gauge) even on error --- 
              if (config.name === 'YiBiaoPan') {
                 if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
-                  console.warn(`[PlotRender dataFormatting] Invalid option.percent detected for YiBiaoPan after handler error:`, option.percent, '. Forcing to 0.');
                   option.percent = 0;
                 }
              }
@@ -277,7 +273,6 @@ export default {
                   const originalValue = newItem[yField];
                   let numericValue = typeof originalValue === 'number' ? originalValue : parseFloat(originalValue);
                   if (isNaN(numericValue)) {
-                      // console.warn(...) // 保留之前的警告
                       newItem[yField] = 0;
                   } else {
                       newItem[yField] = numericValue;

@@ -93,10 +93,7 @@ export default {
           if (config && config.setting) { // 检查 config 和 config.setting
               // 确保调用的是 this 上的方法，并且重新赋值 config
               config = this.transformSettingToOption(config, 'data');
-          } else {
-              console.warn('[dataFormatting] config 或 config.setting 缺失，无法同步 bindingConfig。');
-              // 如果 setting 缺失，bindingConfig 肯定不会被更新
-          }
+          } 
       } catch (e) {
           console.error('[dataFormatting] 调用 transformSettingToOption 时出错:', e);
       }
@@ -244,7 +241,6 @@ export default {
     transformSettingToOption (config, tabName) {
       try {
         if (!config || !config.setting) {
-            console.warn(`[transformSettingToOption] config 或 config.setting 不存在，返回原始 config。`); // <-- 新增日志
             return config
         }
 

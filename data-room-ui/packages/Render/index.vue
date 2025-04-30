@@ -409,9 +409,7 @@ export default {
             ...(plotConfig.option || {}),
             theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
           }
-        } else {
-           console.warn(`未找到名为 ${_chart.name} 的 G2Plot 配置，将使用原始 option`);
-        }
+        } 
       } 
      
       const config = {

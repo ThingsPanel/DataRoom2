@@ -206,7 +206,6 @@ export default {
   methods: {
     init() {
       if (!this.config || !this.config.option) {
-        console.warn('[ThreeComponent] Init called with invalid config:', this.config)
         this.config = { option: { customize: {} }, setting: [] }
       } 
       if (!this.config.setting) {

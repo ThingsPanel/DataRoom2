@@ -202,9 +202,7 @@ if(data && data.length > 0){ // 检查 data 是否存在且有长度
       item.cableForce = 0;
     }
   });
-} else {
-   console.warn('[dataHandler] Input data is null or empty array.');
-}
+} 
 
 
 `

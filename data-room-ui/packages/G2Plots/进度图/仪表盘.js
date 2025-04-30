@@ -229,7 +229,6 @@ const dataHandler = `
         if (typeof rawValue === 'object' && rawValue !== null && rawValue.hasOwnProperty('value')) {
            rawValue = rawValue.value;
         } else if (typeof rawValue === 'object' && rawValue !== null) {
-           console.warn('YiBiaoPan dataHandler: rawValue is an object but lacks a .value property. Using 0.');
            rawValue = 0; // Or handle as error / default
         }
 
@@ -245,19 +244,15 @@ const dataHandler = `
              }
              if (value < 0) value = 0; // Cap at 0%
            } else {
-               console.warn('YiBiaoPan dataHandler: Could not parse rawValue to float:', rawValue, '. Using 0.');
                value = 0;
            }
         } else {
-            console.warn('YiBiaoPan dataHandler: rawValue is undefined for fieldName:', fieldName, '. Using 0.');
             value = 0;
         }
       } else {
-         console.warn('YiBiaoPan dataHandler: Input data is not a valid non-empty array. Using 0.');
          value = 0; // data is invalid
       }
     } else {
-       console.warn('YiBiaoPan dataHandler: Could not find valid fieldName from settings for "percent". Using 0.');
        value = 0; // fieldName not found
     }
   } catch (scriptError) {

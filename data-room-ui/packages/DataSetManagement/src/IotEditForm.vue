@@ -890,7 +890,6 @@ export default {
                   }
                 } else {
                    // Fallback/Old logic (might be removable if userDefinedJson is always present)
-                   console.warn('userDefinedJson.queryParams not found in config, attempting fallback.');
                    // ... (keep old logic here if needed as a fallback) ...
                     if (config.data_type) this.queryParams.data_type = config.data_type;
                     if (config.data_mode) this.queryParams.data_mode = config.data_mode;

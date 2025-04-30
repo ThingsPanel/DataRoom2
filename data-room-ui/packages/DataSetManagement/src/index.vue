@@ -548,7 +548,6 @@ export default {
     // 获取选中数据集信息
     getSelectDs () {
       if (!this.isDialog) {
-        console.warn('当前不在对话框模式')
         return null
       }
       if (this.multiple) {

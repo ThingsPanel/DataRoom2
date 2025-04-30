@@ -503,8 +503,6 @@ export default {
             const componentRef = renderCardRef[0].$refs[config.code];
             if (componentRef && typeof componentRef.changeStyle === 'function') {
               componentRef.changeStyle(cloneDeep(config), true);
-            } else {
-              console.warn(`组件 ${config.code} 没有 changeStyle 方法`);
             }
           }
         } catch (error) {

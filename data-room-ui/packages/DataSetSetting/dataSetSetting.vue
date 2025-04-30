@@ -169,7 +169,6 @@ export default {
     },
     sure () {
       if (!this.componentInstance) {
-        console.warn('组件实例未初始化')
         return
       }
       this.dataSetVisible = false
@@ -178,9 +177,7 @@ export default {
         this.dataSetId = getSelectDs.id
         this.$emit('getDsId', this.dataSetId)
         this.$emit('getSelectDs', getSelectDs)
-      } else {
-        console.warn('未选择有效的数据集')
-      }
+      } 
     }
   }
 }

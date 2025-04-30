@@ -109,14 +109,11 @@ const actions = {
    */
   freshSensors ({ state }, sensorData) {
     if (!state.scene || !state.isLoaded) {
-      console.warn('场景未初始化，无法更新传感器数据')
       return
     }
     
     if (typeof state.scene.freshSensors === 'function') {
       state.scene.freshSensors(sensorData)
-    } else {
-      console.warn('场景实例不支持freshSensors方法')
     }
   },
   
@@ -127,15 +124,12 @@ const actions = {
    */
   freshAttributes ({ state }, attributesObj) {
     if (!state.scene || !state.isLoaded) {
-      console.warn('场景未初始化，无法更新属性数据')
       return
     }
     
     if (typeof state.scene.freshAttributes === 'function') {
       state.scene.freshAttributes(attributesObj)
-    } else {
-      console.warn('场景实例不支持freshAttributes方法')
-    }
+    } 
   }
 }
 

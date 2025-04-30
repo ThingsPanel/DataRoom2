@@ -358,7 +358,6 @@ export default {
 
         // 确保mapList存在且有当前层级的数据
         if (!this.mapList || !this.mapList[this.currentDeep]) {
-          console.warn('地图数据不完整')
           return
         }
 

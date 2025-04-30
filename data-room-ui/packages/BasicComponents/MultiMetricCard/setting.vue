@@ -166,7 +166,6 @@ export default {
       }
        if (nextIndex >= this.config.dataSource.dimensionFieldList.length) {
          // Optionally alert user or just default to 0
-         console.warn("All available field indices might be mapped already.");
          nextIndex = 0; // Or handle differently
        }
 

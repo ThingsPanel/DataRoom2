@@ -206,7 +206,6 @@ export function initPointsFromConfig(config) {
  */
 export function savePoints(points, config, emitUpdateConfig, changeChartConfig) {
   if (!points || points.length < 2) {
-    console.warn('Points array is empty or has less than 2 points');
     return;
   }
 

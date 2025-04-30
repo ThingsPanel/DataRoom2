@@ -229,9 +229,7 @@ export const stopPolling = (componentId) => {
     if (vuexTimer) {
       clearInterval(vuexTimer)
       store.commit('CLEAR_POLLING_TIMER', componentId)
-    } else {
-      console.warn('在Vuex中未找到对应的轮询定时器:', componentId)
-    }
+    } 
   } 
   
   // 检查内存中是否有存储的定时器

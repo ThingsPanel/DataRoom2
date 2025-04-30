@@ -232,7 +232,6 @@ export default {
           padding: this.getPadding()
         }
       } catch (error) {
-        console.warn('Style calculation error:', error)
         return {}
       }
     },

@@ -54,11 +54,6 @@ const yData = [300, 1230, 425, 300]
 const option = {
   animation: false,
   // grid: { // 移除 grid 配置
-  //   left: '12%',
-  //   right: '8%',
-  //   bottom: '20%',
-  //   containLabel: false,
-  // },
   xAxis: [ // 简化 xAxis
     {
       type: 'category',

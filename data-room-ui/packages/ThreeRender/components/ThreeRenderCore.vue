@@ -181,7 +181,6 @@ export default {
 
 
             if (!Array.isArray(newData)) {
-                console.warn('[ThreeRenderCore Watcher config.option.data] newData is not an array:', newData);
                 return;
             }
 
@@ -231,8 +230,6 @@ export default {
                         if (statusOrder[itemStatus] > statusOrder[overallWorstStatus]) {
                             overallWorstStatus = itemStatus;
                         }
-                    } else {
-                        console.warn(`[ThreeRenderCore Watcher] Could not find value element for bindingKey ${bindingKey} in label ${labelInfo.id}`);
                     }
                 });
 
@@ -257,7 +254,6 @@ export default {
     if (this.config?.option?.customize?.modelPath) {
       this.loadModel(); 
     } else {
-      console.warn('[ThreeRenderCore] No initial modelPath found...');
       this.error = 'Model path not specified in configuration.';
     }
   },
@@ -651,7 +647,6 @@ export default {
       const dataPoints = this.config?.option?.customize?.dataPoints;
 
       if (!container || !Array.isArray(dataPoints)) {
-        console.warn('[ThreeRenderCore] Label container or dataPoints missing for createHtmlLabels.');
         return;
       }
       console.log(`[ThreeRenderCore] Recreating ${dataPoints.length} HTML labels...`);
@@ -661,7 +656,6 @@ export default {
 
       dataPoints.forEach((point, index) => {
         if (!point || typeof point.position !== 'object') {
-            console.warn(`[ThreeRenderCore] Skipping invalid dataPoint at index ${index}`);
             return;
         }
         const pointId = point.id || `label-${index}`;
@@ -724,7 +718,6 @@ export default {
         } else {
             // Fallback if no dataStructure (simple value)
             valueContainerElement.textContent = '--'; // Or use point.value if it exists?
-            console.warn(`[ThreeRenderCore createHtmlLabels] Point ${pointId} has no dataStructure.`);
         }
 
         const descriptionElement = document.createElement('div');
@@ -758,7 +751,6 @@ export default {
                 dataPointRef: point
             });
         } else {
-             console.warn(`[ThreeRenderCore] Label for ${point.name} measured zero size. Hiding.`);
              if(labelElement.parentNode === container) {
                  container.removeChild(labelElement);
              }
@@ -943,7 +935,6 @@ export default {
     // Method to update static content AND styles
     updateHtmlLabelStaticContent(newDataPoints) {
         if (!this.htmlLabels || this.htmlLabels.length === 0) {
-            console.warn('[ThreeRenderCore] updateHtmlLabelStaticContent called but no labels exist.');
             return;
         }
 
@@ -980,9 +971,7 @@ export default {
 
                  labelInfo.dataPointRef = point; // Update ref
 
-            } else {
-                 console.warn(`[ThreeRenderCore] updateHtmlLabelStaticContent: Could not find label info for ID ${pointId}`);
-            }
+            } 
         });
          console.log('[ThreeRenderCore] Finished updating static label content and styles.');
     },

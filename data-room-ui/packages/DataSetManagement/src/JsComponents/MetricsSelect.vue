@@ -256,7 +256,6 @@ export default {
         } else if (res && res.result && Array.isArray(res.result)) {
           metricsData = res.result
         } else {
-          console.warn('无法识别的指标数据格式:', res)
           this.metricsDataByType = {}
           this.keyList = []
           return
@@ -290,7 +289,6 @@ export default {
             }
           })
         } else {
-          console.warn('未获取到指标数据')
           this.metricsDataByType = {}
           this.keyList = []
         }

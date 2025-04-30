@@ -11,7 +11,6 @@
  */
 export default function speak ({ text, speechRate, lang, volume, pitch }, endEvent, startEvent) {
   if (!window.SpeechSynthesisUtterance) {
-    console.warn('当前浏览器不支持文字转语音服务')
     return
   }
 

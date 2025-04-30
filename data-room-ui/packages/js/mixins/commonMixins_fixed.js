@@ -3,7 +3,6 @@
  */
 const setupPolling = (config, makeRequest, interval) => {
   if (!interval || interval < 1000) {
-    console.warn('轮询间隔无效，使用默认值5000ms')
     interval = 5000
   }
   
@@ -31,7 +30,6 @@ const setupPolling = (config, makeRequest, interval) => {
             this.chart.changeData(updatedConfig.option.data)
           }
         } catch (error) {
-          console.warn('轮询更新图表失败，尝试使用update方法:', error.message)
           this.chart.update(updatedConfig.option)
         }
       }

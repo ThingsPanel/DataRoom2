@@ -457,9 +457,7 @@
                     attempts++;
                 }
 
-                if (attempts >= maxAttempts) {
-                    console.warn("Max attempts reached for label collision avoidance:", data.name);
-                }
+              
 
                 // --- Final Placement (check bounds using cached dimensions) --- 
                 const finalTop = targetY - labelHeight / 2;    // Use cached height
