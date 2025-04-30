@@ -51,6 +51,7 @@ import { dataInit, destroyedEvent } from 'data-room-ui/js/utils/eventBus'
 import CustomComponent from '../PlotRender/index.vue'
 import EchartsComponent from '../EchartsRender/index.vue'
 import ThreeComponent from '../ThreeRender/index.vue'
+import VchartCustomComponent from '../VchartRender/index.vue'
 import Svgs from '../Svgs/index.vue'
 import RemoteComponent from 'data-room-ui/RemoteComponents/index.vue'
 const components = {}
@@ -68,7 +69,8 @@ export default {
     Svgs,
     RemoteComponent,
     EchartsComponent,
-    ThreeComponent
+    ThreeComponent,
+    VchartCustomComponent
   },
   props: {
     // 卡片的属性
@@ -259,6 +261,11 @@ export default {
       // --- 新增：最优先检查 chartType --- 
       if (config.chartType === 'threeJs') {
         resolvedComponentType = 'ThreeComponent';
+      }
+
+      // --- 添加对 vchartComponent 的判断 ---
+      else if (config.type === 'vchartComponent') {
+        resolvedComponentType = 'VchartCustomComponent'
       }
 
       // 如果 chartType 不是 threeJs，再执行原来的逻辑

@@ -150,6 +150,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import basicComponents from 'data-room-ui/js/config/basicComponentsConfig'
 import g2PlotComponents, { getCustomPlots } from '../G2Plots/plotList'
 import echartsComponents from '../Echarts/echartList'
+import vchartComponents from '../Vcharts/vchartList'
 import threeComponents from '../ThreeComponents/threeList'
 import borderComponents from 'data-room-ui/js/config/borderComponentsConfig'
 import decorationComponents from 'data-room-ui/js/config/decorationComponentsConfig'
@@ -178,6 +179,7 @@ export default {
       echartsComponents,
       g2PlotComponents,
       threeComponents,
+      vchartComponents,
       activeName: 'chart', // 设置左侧tab栏的默认值
       fold: false, // 控制左侧菜单栏伸缩
       currentTab: 'basic',
@@ -209,6 +211,13 @@ export default {
           title: '3D模型',
           icon: 'icon-jichushuju',
           components: this.threeComponents
+        },
+             {
+          id: 10,
+          name: 'vchart',
+          title: 'VChart图表',
+          icon: 'icon-jichushuju',
+          components: this.vchartComponents
         },
         {
           id: 3,
@@ -270,11 +279,13 @@ export default {
     this.g2PlotComponents = [...this.g2PlotComponents, ...getCustomPlots()]
     this.menuList[1].components = this.g2PlotComponents
     this.menuList[2].components = this.echartsComponents
-    
     this.menuList[3].components = this.threeComponents
+    this.menuList[4].components = this.vchartComponents
   },
   mounted () {
     this.nodeDrag()
+    console.log(this.menuList,"menuList")
+    console.log(this.menuList,"menuList")
   },
   methods: {
     ...mapMutations('bigScreen', ['changeActiveCode']),

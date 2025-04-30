@@ -1,4 +1,4 @@
-import { dataConfig, settingConfig } from '../VchartRender/settingConfig'
+// import { dataConfig, settingConfig } from '../VchartRender/settingConfig' // 暂时注释掉依赖
 import cloneDeep from 'lodash/cloneDeep'
 import sortList from './vchartListSort'
 
@@ -40,12 +40,12 @@ function getVchartList (files) {
       loading: false,
       option: {
         ...config.option,
-        ...cloneDeep(settingConfig)
+        // ...cloneDeep(settingConfig) // 暂时注释掉合并
       },
       setting: config.setting,
       dataHandler: config.dataHandler,
       optionHandler: config.optionHandler,
-      ...cloneDeep(dataConfig)
+      // ...cloneDeep(dataConfig) // 暂时注释掉合并
     }
   }
   return list.filter(item => item !== undefined && item !== null)

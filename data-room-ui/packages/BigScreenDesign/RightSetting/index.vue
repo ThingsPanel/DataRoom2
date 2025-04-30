@@ -41,7 +41,7 @@
         name="second"
       >
         <component
-          :is="resolveComponentType(config.type)"
+          :is="settingComponentName"
           ref="customSetting"
           :key="config.code"
           :config="config"
@@ -55,7 +55,7 @@
       class="bs-setting-wrap bs-scrollbar"
     >
       <component
-        :is="resolveComponentType(config.type)"
+        :is="settingComponentName"
         ref="customSetting"
         :key="config.code"
         :config="config"
@@ -72,6 +72,7 @@ import DataSetting from './DataSetting.vue'
 import rightSetting from 'data-room-ui/js/utils/rightSettingImport'
 import CustomComponent from './G2CustomSetting.vue'
 import EchartsCustomSetting from './EchartsCustomSetting.vue'
+import VchartCustomSetting from './VchartCustomSetting.vue'
 import ThreeComponent from './ThreeComponent.vue'
 import Svgs from 'data-room-ui/Svgs/setting.vue'
 import DynamicDataConfig from './DynamicDataConfig/index.vue'
@@ -98,6 +99,7 @@ export default {
     DynamicDataConfig,
     RemoteComponent: CustomComponent,
     EchartsComponent: EchartsCustomSetting,
+    VchartCustomComponent: VchartCustomSetting,
     ThreeComponent: ThreeComponent
   },
   data () {
@@ -150,6 +152,19 @@ export default {
         dateFormat: this.config?.dateFormat,
         endTime: this.config?.endTime
       }
+    },
+    settingComponentName() {
+      const type = this.config?.type;
+      if (type === 'vchartComponent') {
+        return 'VchartCustomComponent';
+      } else if (type === 'echartsComponent') {
+        return 'EchartsComponent';
+      } else if (type === 'threeJs' || this.config?.chartType === 'threeJs') {
+        return 'ThreeComponent';
+      } else if (type === 'customComponent') {
+        return 'CustomComponent';
+      }
+      return resolveComponentType(type);
     }
   },
   watch: {
@@ -211,7 +226,6 @@ export default {
     handleClick (val) {
       this.$set(this, 'activeName', val.name)
     },
-    resolveComponentType,
     getFormPromise (form) {
       return new Promise((resolve) => {
         form.validate((res) => {

@@ -10,6 +10,7 @@
 // 动态导入组件
 import EchartsComponent from 'data-room-ui/EchartsRender/index.vue'
 import ThreeComponent from 'data-room-ui/ThreeRender/index.vue'
+import VchartCustomComponent from 'data-room-ui/VchartRender/index.vue'
 
 const modules = {}
 // 排除的组件
@@ -40,5 +41,6 @@ importComponents(require.context('data-room-ui/BorderComponents', true, /\index.
 // 手动添加额外组件
 modules.EchartsComponent = EchartsComponent
 modules.ThreeComponent = ThreeComponent
+modules.VchartCustomComponent = VchartCustomComponent
 
 export default modules
