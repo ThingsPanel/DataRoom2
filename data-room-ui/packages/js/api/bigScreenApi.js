@@ -15,17 +15,22 @@ export function saveScreen (data) {
         a.data = []
       }
       item.option = JSON.stringify(a)
-      
-      // 根据组件类型判断是否需要简化 setting
-      if (item.chartType === 'threeJs') {
+
+      // 关键：优先用 option.comType 判断
+      const optionComType = a.comType
+      if (optionComType === 'vchartComponent' || item.chartType === 'threeJs') {
         // 保留完整 setting 结构
-        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=threeJs)`);
+        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (comType=${optionComType}, chartType=${item.chartType})`);
       } else {
+        // 打印简化前的完整 setting 结构
+        console.log(`[saveScreen] 简化前 ${item.name || item.code} 的 setting:`, item.setting);
         // 只保留 field 和 value
         item.setting = item.setting?.map((x) => {
           const { field, value } = x
           return { field, value }
         }) || [] // 确保如果 setting 不存在或为 null，返回空数组
+        // 打印简化后的 setting 结构
+        console.log(`[saveScreen] 简化后 ${item.name || item.code} 的 setting:`, item.setting);
       }
     }
   })

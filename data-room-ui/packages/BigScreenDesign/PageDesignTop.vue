@@ -616,7 +616,8 @@ export default {
         }
         return chart
       })
- 
+      // 打印保存前的 chartList，调试用
+      console.log('handleSaveData 保存前 chartList:', chartList)
       return cloneDeep({
         ...this.pageInfo,
         chartList: newChartList

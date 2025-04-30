@@ -33,8 +33,8 @@ const setting = [
   {
     label: '柱子宽度',
     type: 'inputNumber', // 设置组件类型
-    field: 'seriesCustom_barWidth', // 字段
-    optionField: 'seriesCustom.barWidth', // 对应options中的字段
+    field: 'bar.barWidth', // 字段
+    optionField: 'bar.barWidth', // 对应options中的字段
     value: 30,
     tabName: 'custom',
     groupName: 'graph'
@@ -47,53 +47,33 @@ const optionHandler = ''
 // 数据处理脚本 (保持不变)
 const dataHandler = ''
 
-// 图表配置 (简化)
-const xData = ['本年话务总量', '本年人工话务量', '每万客户呼入量', '本年话务总量']
-const yData = [300, 1230, 425, 300]
-// const maxData = [1500, 1500, 1500, 1500] // 不再需要 maxData
+// VChart 规范的数据
+const data = [
+  { x: '本年话务总量', y: 300 },
+  { x: '本年人工话务量', y: 1230 },
+  { x: '每万客户呼入量', y: 425 },
+  { x: '本年话务总量', y: 300 }
+]
 
 const option = {
-  animation: false,
-  // grid: { // 移除 grid 配置
-  xAxis: [ // 简化 xAxis
-    {
-      type: 'category',
-      data: xData,
-      axisLabel: { show: true }, // 保留基本显示
-      axisLine: { show: true },
-      axisTick: { show: true }
+  type: 'bar',
+  data,
+  xField: 'x',
+  yField: 'y',
+  bar: {
+    barWidth: 30,
+    style: {
+      fill: '#5B8FF9'
     }
+  },
+  axes: [
+    { orient: 'bottom', type: 'band', visible: true },
+    { orient: 'left', type: 'linear', visible: true }
   ],
-  yAxis: { // 简化 yAxis
-    type: 'value',
-    axisLabel: { show: true }, // 保留基本显示
-    axisLine: { show: true },
-    axisTick: { show: true },
-    splitLine: { show: true } // 保留分隔线基本显示
-  },
-  
-  seriesCustom: { // 只保留 barWidth
-    barWidth: 30
-    // 移除其他 seriesCustom 颜色配置
-  },
-  series: [ // 简化 series，只保留一个基础 bar
-    {
-      id: 'barColor', // 可以保留 id 用于可能的 dataHandler/optionHandler
-      type: 'bar',
-      // barWidth 通过 seriesCustom.barWidth 控制，这里不需要重复设置
-      // barWidth: 30, // 移除
-      // z: 10, // 移除 z
-      // color: '#115ba6', // 颜色可以由默认主题或后续配置控制，移除硬编码
-      label: { // 保留基本标签显示
-        show: true,
-        position: 'inside',
-        color: '#fff',
-        fontSize: 12
-      },
-      data: yData
-    }
-    // 移除 pictorialBar 和 shadow 系列
-  ]
+  legends: [
+    { visible: false }
+  ],
+  animation: false
 }
 
 // 图表类型标识

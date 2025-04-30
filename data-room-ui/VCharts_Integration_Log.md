@@ -51,6 +51,9 @@
 4.  **vchartList.js 处理**: vchartList.js 在组装每个图表配置时，需自动补齐 chartType 和 comType 字段，优先使用组件自身导出的值，无则使用默认值，保证每个图表对象都具备这两个字段。
 5.  **渲染时转换**: 渲染组件 (`VchartRender`) 需从配置对象的 `option` 字段读取 VChart 规格，并将其赋给 VChart 实例的 `spec` 属性 (e.g., `vchartInstance.updateSpec(config.option)`)。
 6.  **配置联动**: 图表配置中 `setting` 数组里的 `optionField` 必须准确指向 `option` 对象中对应的路径，以保证右侧面板修改生效。
+7.  **类型判断优先用 option.comType 字段**  
+    *   在所有涉及 VChart 组件类型判断的业务逻辑中，必须优先使用配置对象 `option.comType` 字段（如 `vchartComponent`）进行判断，**不得仅依赖 chartType 字段**。  
+    *   例如，后端保存、前端渲染、右侧面板等场景，均应以 `option.comType` 为主，确保类型识别的准确性和兼容性。
 
 ## 当前状态
 
@@ -75,6 +78,9 @@
     *   显示"数据处理脚本"输入框。
     *   VChart 在设置面板的行为与 Echarts 完全对齐。
 6.  **渲染组件准备**: 清理并注释了 `VchartRender/index.vue`，移除了旧的 Echarts 渲染逻辑，当前仅用于显示原始 `config` 对象，并添加了复制功能，为下一步实现 VChart 渲染做准备。
+- **2024-06-09 类型判断规范化**  
+  - 修正了保存大屏（`saveScreen`）时 VChart 组件类型的判断逻辑，**由原先的 chartType === 'Column' 改为优先读取 option.comType 字段**（如 `vchartComponent`），确保所有 VChart 组件的 setting 字段能被完整保留，避免因类型判断不准确导致的配置丢失。
+  *   该规范已同步至所有相关业务代码，后续如需扩展 VChart 组件类型，仅需在 comType 维度进行维护。
 
 ## 下一步计划 (修订)
 
