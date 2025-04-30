@@ -5,7 +5,7 @@ const title = 'V基础柱状图'
 // 用于标识，唯一，和文件夹名称一致 - 修改
 const name = 'V基础柱状图'
 // 组件类型标识 - 修改
-const type = 'vchartComponent'
+const type = 'customComponent'
 // 右侧配置项 (简化)
 const setting = [
   {
@@ -95,6 +95,12 @@ const option = {
     // 移除 pictorialBar 和 shadow 系列
   ]
 }
+
+// 图表类型标识
+const chartType = 'Column'
+// 组件大类标识
+const comType = 'vchartComponent'
+
 export default {
   version,
   title, // 已修改
@@ -103,5 +109,7 @@ export default {
   option, // 已简化
   setting, // 已简化
   optionHandler,
-  dataHandler
+  dataHandler,
+  chartType, // 新增
+  comType    // 新增
 } 

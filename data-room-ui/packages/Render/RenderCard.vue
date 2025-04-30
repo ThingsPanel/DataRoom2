@@ -254,50 +254,41 @@ export default {
     },
     // 添加获取组件类型的方法
     getComponentType(config) {
-      // --- 添加详细日志 --- 
+      const optionComType = config.option?.comType;
+      if (optionComType === 'vchartComponent') {
+        return 'VchartCustomComponent';
+      }
+      // 其余类型保持原有逻辑
+      const comType = config.comType;
+      if (comType === 'vchartComponent') {
+        return 'VchartCustomComponent';
+      } else if (comType === 'echartsComponent') {
+        return 'EchartsComponent';
+      } else if (comType === 'threeComponent') {
+        return 'ThreeComponent';
+      } else if (comType === 'customComponent') {
+        return 'CustomComponent';
+      }
       let resolvedComponentType = null;
-
-      // --- 新增：最优先检查 chartType --- 
       if (config.chartType === 'threeJs') {
         resolvedComponentType = 'ThreeComponent';
-      }
-
-      // --- 添加对 vchartComponent 的判断 ---
-      else if (config.type === 'vchartComponent') {
-        resolvedComponentType = 'VchartCustomComponent'
-      }
-
-      // 如果 chartType 不是 threeJs，再执行原来的逻辑
-      else if (config.type === 'echartsComponent') {
-        resolvedComponentType = 'EchartsComponent'
-      }
-      
-      // --- type === 'threeJs' 的判断可以保留作为后备，或者移除 --- 
-      // else if (config.type === 'threeJs') { 
-      //   console.log('2. 根据type=threeJs判断为3D模型组件')
-      //   resolvedComponentType = 'ThreeComponent'
-      // }
-      
-      // 然后根据category判断 (作为辅助)
-      else if (config.category && config.category.includes('模型')) {
-         resolvedComponentType = 'ThreeComponent'
-      }
-      
-      // 再根据className和名称/标题判断 (处理 type 可能为 customComponent 的情况)
-      else if (config.className && config.className.includes('CustomComponentChart')) {
+      } else if (config.type === 'vchartComponent') {
+        resolvedComponentType = 'VchartCustomComponent';
+      } else if (config.type === 'echartsComponent') {
+        resolvedComponentType = 'EchartsComponent';
+      } else if (config.category && config.category.includes('模型')) {
+        resolvedComponentType = 'ThreeComponent';
+      } else if (config.className && config.className.includes('CustomComponentChart')) {
         if (config.name) {
-           if (config.name.startsWith('3D') && (config.name.includes('柱状图') || config.name.includes('图表'))) {
-              resolvedComponentType = 'EchartsComponent'
-           } else if (config.name.includes('模型') && !config.name.includes('图')) {
-              resolvedComponentType = 'ThreeComponent'
-           }
-        } 
-        // (可以添加基于 title 的判断作为进一步后备)
+          if (config.name.startsWith('3D') && (config.name.includes('柱状图') || config.name.includes('图表'))) {
+            resolvedComponentType = 'EchartsComponent';
+          } else if (config.name.includes('模型') && !config.name.includes('图')) {
+            resolvedComponentType = 'ThreeComponent';
+          }
+        }
       }
-      
-      // 最后使用默认的resolveComponentType方法 (作为最终后备)
       if (!resolvedComponentType) {
-         resolvedComponentType = this.resolveComponentType(config.type);
+        resolvedComponentType = this.resolveComponentType(config.type);
       }
       return resolvedComponentType;
     },

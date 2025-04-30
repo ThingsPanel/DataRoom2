@@ -46,8 +46,11 @@
 ## 核心规定与注意事项
 
 1.  **配置字段名**: **所有 VChart 图表的规格定义在 `.js` 配置文件中都必须放在名为 `option` 的字段里导出**。(此为项目规定，渲染器需适配)
-2.  **渲染时转换**: 渲染组件 (`VchartRender`) 需从配置对象的 `option` 字段读取 VChart 规格，并将其赋给 VChart 实例的 `spec` 属性 (e.g., `vchartInstance.updateSpec(config.option)`)。
-3.  **配置联动**: 图表配置中 `setting` 数组里的 `optionField` 必须准确指向 `option` 对象中对应的路径，以保证右侧面板修改生效。
+2.  **chartType 字段**: 每个 VChart 图表配置文件必须导出 `chartType` 字段，标识该图表的业务类型（如 'Column'、'Bar'、'Line' 等），用于后续图表类型判断、联动、主题等高级功能。
+3.  **comType 字段**: 每个 VChart 图表配置文件必须导出 `comType` 字段，标识该组件的归属大类（如 'vchartComponent'），便于后续统一处理、类型判断、兼容性扩展等。
+4.  **vchartList.js 处理**: vchartList.js 在组装每个图表配置时，需自动补齐 chartType 和 comType 字段，优先使用组件自身导出的值，无则使用默认值，保证每个图表对象都具备这两个字段。
+5.  **渲染时转换**: 渲染组件 (`VchartRender`) 需从配置对象的 `option` 字段读取 VChart 规格，并将其赋给 VChart 实例的 `spec` 属性 (e.g., `vchartInstance.updateSpec(config.option)`)。
+6.  **配置联动**: 图表配置中 `setting` 数组里的 `optionField` 必须准确指向 `option` 对象中对应的路径，以保证右侧面板修改生效。
 
 ## 当前状态
 

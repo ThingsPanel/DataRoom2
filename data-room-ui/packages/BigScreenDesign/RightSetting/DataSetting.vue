@@ -82,7 +82,7 @@
           </div>
         </div>
         <div
-          v-if="['customComponent','marquee', 'echartsComponent', 'vchartComponent'].includes(config.type)"
+          v-if="['customComponent','marquee', 'echartsComponent'].includes(config.type)"
           class="data-setting-data-box"
         >
           <div class="lc-field-head">
@@ -115,7 +115,7 @@
             </div>
           </div>
           <!--  基础组件数据配置  -->
-          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick', 'vchartComponent'].includes(config.type) && config.option && config.option.displayOption">
+          <template v-if="!['customComponent', 'remoteComponent','echartsComponent','candlestick'].includes(config.type) && config.option && config.option.displayOption">
             <!--维度多选-->
             <el-form-item
               v-if="config.option.displayOption.dimensionField && config.option.displayOption.dimensionField.enable"

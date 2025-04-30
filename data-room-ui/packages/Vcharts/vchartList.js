@@ -88,6 +88,8 @@ function getVchartList (files) {
     }
 
     // 4. Assemble the final config object
+    // 嵌入comType到option里
+    finalOption.comType = componentConfig.comType || 'vchartComponent';
     const finalConfig = {
       version: componentConfig.version || 'unknown',
       category: configMapKey,
@@ -113,12 +115,13 @@ function getVchartList (files) {
       perspective: componentConfig.perspective ?? 0,
       skewX: componentConfig.skewX ?? 0,
       skewY: componentConfig.skewY ?? 0,
-      type: 'vchartComponent', // Correct type
+      type: componentConfig.type || 'customComponent', // 这里用组件自身的type
       loading: false,
       option: finalOption,        // Use the processed finalOption
       setting: componentSetting,  // Use the cloned componentSetting
       dataHandler: componentConfig.dataHandler || '',
       optionHandler: componentConfig.optionHandler || '',
+      chartType: componentConfig.chartType , // 新增，优先用组件自身
       // 2c. Merge global dataConfig properties to the top level
       ...( (typeof globalDataConf === 'object' && globalDataConf !== null) ? globalDataConf : {} )
     };

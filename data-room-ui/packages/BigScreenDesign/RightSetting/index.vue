@@ -154,6 +154,21 @@ export default {
       }
     },
     settingComponentName() {
+      const optionComType = this.config?.option?.comType;
+      if (optionComType === 'vchartComponent') {
+        return 'VchartCustomComponent';
+      }
+      // 其余类型保持原有逻辑
+      const comType = this.config?.comType;
+      if (comType === 'vchartComponent') {
+        return 'VchartCustomComponent';
+      } else if (comType === 'echartsComponent') {
+        return 'EchartsComponent';
+      } else if (comType === 'threeComponent') {
+        return 'ThreeComponent';
+      } else if (comType === 'customComponent') {
+        return 'CustomComponent';
+      }
       const type = this.config?.type;
       if (type === 'vchartComponent') {
         return 'VchartCustomComponent';

@@ -162,8 +162,6 @@ export default {
         })
       }
     },
-    // newChart 方法已被移除
-    // observeChart 方法已被移除
 
     // 注册图表事件的方法 (依赖 this.chart 实例，当前版本下无法正常工作)
     registerEvent () {
