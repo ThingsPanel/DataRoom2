@@ -18,6 +18,7 @@ const setting = [
     value: '',
     tabName: 'data'
   },
+
   {
     label: '指标',
     type: 'select', // 设置组件类型
@@ -70,6 +71,7 @@ const option = {
     axisTick: { show: true },
     splitLine: { show: true } // 保留分隔线基本显示
   },
+  
   seriesCustom: { // 只保留 barWidth
     barWidth: 30
     // 移除其他 seriesCustom 颜色配置

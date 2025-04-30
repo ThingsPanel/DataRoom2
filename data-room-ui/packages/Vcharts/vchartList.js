@@ -1,4 +1,4 @@
-import { dataConfig, settingConfig } from '../VchartRender/settingConfig' // 暂时注释掉依赖
+import { dataConfig, settingConfig } from '../VchartRender/settingConfig' // 1. Ensure uncommented
 import cloneDeep from 'lodash/cloneDeep'
 import sortList from './vchartListSort'
 
@@ -8,47 +8,130 @@ const vchartList = getVchartList(files)
 function getVchartList (files) {
   const configMapList = {}
   files.keys().forEach((key) => {
-    const configName = key.split('/')[2].replace('.js', '')
-    configMapList[configName] = files(key).default
+    const parts = key.split('/');
+    if (parts.length > 2) {
+      const configName = parts[parts.length - 1].replace('.js', '');
+      try {
+        const module = files(key);
+        if (module && module.default) {
+          configMapList[configName] = module.default;
+        } else {
+          console.warn(`Module or default export not found for key: ${key}`);
+        }
+      } catch (error) {
+        console.error(`Error loading module for key ${key}:`, error);
+      }
+    } else {
+      console.warn(`Unexpected key format in require.context: ${key}`);
+    }
   })
+
   const list = []
   for (const configMapKey in configMapList) {
     const index = sortList.findIndex((item) => item === configMapKey)
-    const config = configMapList[configMapKey]
+    const componentConfig = configMapList[configMapKey] // Original component config
 
-    list[index] = {
-      version: config.version,
+    if (!componentConfig) {
+      console.warn(`Skipping invalid config for key: ${configMapKey}`);
+      continue;
+    }
+
+    // --- Configuration Assembly --- 
+    // Use deep clones to prevent cross-component pollution
+    const baseOption = componentConfig.option ? cloneDeep(componentConfig.option) : {};
+    const componentSetting = componentConfig.setting ? cloneDeep(componentConfig.setting) : [];
+    const globalSettingConf = cloneDeep(settingConfig); // 2a. Clone global settingConfig
+    const globalDataConf = cloneDeep(dataConfig);       // 2a. Clone global dataConfig
+
+    // 2b. Merge base option with global settingConfig (contains initial displayOption)
+    // Start with global, overlay with component-specific options
+    let finalOption = {
+      ...globalSettingConf,
+      ...baseOption
+    };
+
+    // Ensure finalOption.displayOption exists and is an object
+    if (!finalOption.displayOption || typeof finalOption.displayOption !== 'object') {
+        finalOption.displayOption = {}; // Initialize if missing
+    }
+     // Ensure it merges correctly if baseOption also had displayOption (unlikely but safe)
+     finalOption.displayOption = { ...(globalSettingConf.displayOption || {}), ...(baseOption.displayOption || {}), ...finalOption.displayOption };
+
+    // 3. *Override* displayOption.multiple based on componentSetting
+    if (Array.isArray(componentSetting)) {
+      componentSetting.forEach(settingItem => {
+        if (settingItem.tabName === 'data' && settingItem.optionField && settingItem.multiple !== undefined) {
+          let displayOptionKey = null;
+          // Map component setting optionField to displayOption key
+          switch (settingItem.optionField) {
+            case 'xField':         displayOptionKey = 'dimensionField'; break;
+            case 'yField':         displayOptionKey = 'metricField';    break;
+            case 'seriesField':    displayOptionKey = 'seriesField';    break;
+            // Add other mappings if necessary
+          }
+
+          if (displayOptionKey && finalOption.displayOption[displayOptionKey]) {
+            // Ensure the target object within displayOption exists
+            if (typeof finalOption.displayOption[displayOptionKey] !== 'object') {
+                 finalOption.displayOption[displayOptionKey] = {};
+            }
+            // Override the 'multiple' property
+            finalOption.displayOption[displayOptionKey].multiple = settingItem.multiple;
+            // console.log(`vchartList (${configMapKey}): Overrode ${displayOptionKey}.multiple to ${settingItem.multiple}`); // Optional debug log
+          } else if (displayOptionKey) {
+              // If the key (e.g., dimensionField) doesn't exist in displayOption yet, create it.
+              finalOption.displayOption[displayOptionKey] = { multiple: settingItem.multiple };
+              // console.log(`vchartList (${configMapKey}): Initialized ${displayOptionKey} with multiple: ${settingItem.multiple}`); // Optional debug log
+          }
+        }
+      });
+    }
+
+    // 4. Assemble the final config object
+    const finalConfig = {
+      version: componentConfig.version || 'unknown',
       category: configMapKey,
-      name: config.name,
-      title: config.title,
-      border: { type: '', titleHeight: 60, fontSize: 30, color: ['#5B8FF9', '#61DDAA', '#5D7092', '#F6BD16', '#6F5EF9'], padding: [16, 16, 16, 16] },
-      icon: null,
-      img: require(`../Vcharts/images/${config.title}.png`),
-      className:
-        'com.gccloud.dataroom.core.module.chart.components.CustomComponentChart',
-      w: config?.option?.width || 450,
-      h: config?.option?.height || 320,
-      x: 0,
-      y: 0,
-      rotateX: config.rotateX || 0,
-      rotateY: config.rotateY || 0,
-      rotateZ: config.rotateZ || 0,
-      perspective: config.perspective || 0,
-      skewX: config.skewX || 0,
-      skewY: config.skewY || 0,
-      type: 'vchartComponent',
+      name: componentConfig.name || configMapKey,
+      title: componentConfig.title || configMapKey,
+      border: componentConfig.border || { type: '', titleHeight: 60, fontSize: 30, color: ['#5B8FF9'], padding: [16] }, // Simplified default
+      icon: componentConfig.icon || null,
+      img: (() => {
+          try {
+             const imgName = componentConfig.title || componentConfig.name || configMapKey;
+             return require(`../Vcharts/images/${imgName}.png`);
+           }
+          catch (e) { /* console.warn(`Image not found for ${imgName}`); */ return null; }
+      })(),
+      className: componentConfig.className || 'com.gccloud.dataroom.core.module.chart.components.CustomComponentChart',
+      w: componentConfig.w ?? baseOption?.width ?? 450,
+      h: componentConfig.h ?? baseOption?.height ?? 320,
+      x: componentConfig.x ?? 0,
+      y: componentConfig.y ?? 0,
+      rotateX: componentConfig.rotateX ?? 0,
+      rotateY: componentConfig.rotateY ?? 0,
+      rotateZ: componentConfig.rotateZ ?? 0,
+      perspective: componentConfig.perspective ?? 0,
+      skewX: componentConfig.skewX ?? 0,
+      skewY: componentConfig.skewY ?? 0,
+      type: 'vchartComponent', // Correct type
       loading: false,
-      option: {
-        ...config.option,
-        ...cloneDeep(settingConfig) // 暂时注释掉合并
-      },
-      setting: config.setting,
-      dataHandler: config.dataHandler,
-      optionHandler: config.optionHandler,
-      ...cloneDeep(dataConfig) // 暂时注释掉合并
+      option: finalOption,        // Use the processed finalOption
+      setting: componentSetting,  // Use the cloned componentSetting
+      dataHandler: componentConfig.dataHandler || '',
+      optionHandler: componentConfig.optionHandler || '',
+      // 2c. Merge global dataConfig properties to the top level
+      ...( (typeof globalDataConf === 'object' && globalDataConf !== null) ? globalDataConf : {} )
+    };
+
+    // Add to list respecting sort order
+    if (index !== -1) {
+      while (list.length <= index) { list.push(undefined); }
+      list[index] = finalConfig;
+    } else {
+      list.push(finalConfig);
     }
   }
-  return list.filter(item => item !== undefined && item !== null)
+  return list.filter(item => !!item); // Filter out empty slots more concisely
 }
 
 export default vchartList 

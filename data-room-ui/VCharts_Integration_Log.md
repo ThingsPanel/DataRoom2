@@ -57,3 +57,29 @@
 
 1.  处理 `vchartList.js` 对 `VchartRender/settingConfig` 的依赖。
 2.  实现 VChart 渲染组件 `VchartRender/index.vue`，包括处理 `option` 到 `spec` 的读取与应用逻辑。 
+
+## 进展更新 (YYYY-MM-DD)
+
+1.  **配置对齐分析**: 深入分析了 Echarts 与现有的 `DataSetting.vue` 的交互方式，确认 Echarts 能正确显示单选维度和数据处理脚本是因为 `DataSetting.vue` 内部对 `echartsComponent` 类型有特殊的处理分支。
+2.  **VChart 问题定位**: 确认了 VChart 无法正确显示单选维度和数据处理脚本，是因为其 `vchartComponent` 类型在 `DataSetting.vue` 中走了不同的渲染路径，该路径依赖 `config.option.displayOption` 并且没有动态处理 `setting` 数组中的所有数据项。
+3.  **解决方案决策**: 经过讨论，决定**必须修改** `DataSetting.vue` 以实现 VChart 与 Echarts 的完全平等对待，确保用户体验和配置方式的一致性。
+4.  **`DataSetting.vue` 修改**: 对 `DataSetting.vue` 进行了两处关键修改：
+    *   将 `'vchartComponent'` 添加到第一个数据配置模板的 `v-if` **排除**列表中，使其与 Echarts 一样进入根据 `config.setting` 动态渲染的 `v-else` 分支。
+    *   将 `'vchartComponent'` 添加到"数据处理脚本"区域的 `v-if` **包含**列表中。
+5.  **结果**: VChart 现在可以在设置面板中：
+    *   正确根据其 `setting` 数组渲染所有 `tabName: 'data'` 的配置项（包括自定义添加的，如"维度2"）。
+    *   正确根据 `setting` 数组中对应项的 `multiple` 属性显示单选或多选。
+    *   显示"数据处理脚本"输入框。
+    *   VChart 在设置面板的行为与 Echarts 完全对齐。
+6.  **渲染组件准备**: 清理并注释了 `VchartRender/index.vue`，移除了旧的 Echarts 渲染逻辑，当前仅用于显示原始 `config` 对象，并添加了复制功能，为下一步实现 VChart 渲染做准备。
+
+## 下一步计划 (修订)
+
+1.  **实现 VChart 渲染逻辑**: 在 `VchartRender/index.vue` 中引入 VChart 库，并实现核心渲染逻辑：
+    *   在 `mounted` 或数据更新后创建 VChart 实例。
+    *   从 `this.config.option` 读取 VChart 规格 (spec)。
+    *   使用 `vchartInstance.updateSpec(this.config.option)` 更新图表。
+    *   处理图表销毁。
+    *   (可选) 适配 VChart 的事件，用于数据联动 (`registerEvent`)
+2.  **数据流对接**: 确保 `dataFormatting` 方法能够正确处理从后端获取的数据，并将其格式化为 VChart `option` (spec) 中 `data` 字段所需的格式。
+3.  **样式处理**: 确认 `transformSettingToOption` 和 `changeStyle` 能否正确地将样式配置应用到 VChart 的 `option` (spec) 中，或者是否需要针对 VChart 的 spec 结构进行调整。 
