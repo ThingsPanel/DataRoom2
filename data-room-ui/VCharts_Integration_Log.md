@@ -64,31 +64,31 @@
 1.  处理 `vchartList.js` 对 `VchartRender/settingConfig` 的依赖。
 2.  实现 VChart 渲染组件 `VchartRender/index.vue`，包括处理 `option` 到 `spec` 的读取与应用逻辑。 
 
-## 进展更新 (YYYY-MM-DD)
+## 进展更新 (YYYY-MM-DD) - 渲染组件与配置联动初步实现
 
-1.  **配置对齐分析**: 深入分析了 Echarts 与现有的 `DataSetting.vue` 的交互方式，确认 Echarts 能正确显示单选维度和数据处理脚本是因为 `DataSetting.vue` 内部对 `echartsComponent` 类型有特殊的处理分支。
-2.  **VChart 问题定位**: 确认了 VChart 无法正确显示单选维度和数据处理脚本，是因为其 `vchartComponent` 类型在 `DataSetting.vue` 中走了不同的渲染路径，该路径依赖 `config.option.displayOption` 并且没有动态处理 `setting` 数组中的所有数据项。
-3.  **解决方案决策**: 经过讨论，决定**必须修改** `DataSetting.vue` 以实现 VChart 与 Echarts 的完全平等对待，确保用户体验和配置方式的一致性。
-4.  **`DataSetting.vue` 修改**: 对 `DataSetting.vue` 进行了两处关键修改：
-    *   将 `'vchartComponent'` 添加到第一个数据配置模板的 `v-if` **排除**列表中，使其与 Echarts 一样进入根据 `config.setting` 动态渲染的 `v-else` 分支。
-    *   将 `'vchartComponent'` 添加到"数据处理脚本"区域的 `v-if` **包含**列表中。
-5.  **结果**: VChart 现在可以在设置面板中：
-    *   正确根据其 `setting` 数组渲染所有 `tabName: 'data'` 的配置项（包括自定义添加的，如"维度2"）。
-    *   正确根据 `setting` 数组中对应项的 `multiple` 属性显示单选或多选。
-    *   显示"数据处理脚本"输入框。
-    *   VChart 在设置面板的行为与 Echarts 完全对齐。
-6.  **渲染组件准备**: 清理并注释了 `VchartRender/index.vue`，移除了旧的 Echarts 渲染逻辑，当前仅用于显示原始 `config` 对象，并添加了复制功能，为下一步实现 VChart 渲染做准备。
-- **2024-06-09 类型判断规范化**  
-  - 修正了保存大屏（`saveScreen`）时 VChart 组件类型的判断逻辑，**由原先的 chartType === 'Column' 改为优先读取 option.comType 字段**（如 `vchartComponent`），确保所有 VChart 组件的 setting 字段能被完整保留，避免因类型判断不准确导致的配置丢失。
-  *   该规范已同步至所有相关业务代码，后续如需扩展 VChart 组件类型，仅需在 comType 维度进行维护。
+1.  **渲染组件拆分**: 将 VChart 渲染逻辑拆分到独立的子组件 `VchartRender/VchartCore/index.vue`。
+    *   `VchartCore` 负责接收 `spec` prop 并执行 VChart 渲染。
+    *   实现了基本的渲染逻辑，并包含 "No Data" (暂无数据) 状态的 UI 处理。
+    *   通过 `watch` 监听 `spec` prop 的变化以更新图表。
+2.  **父组件管理 Spec**: 父组件 `VchartRender/index.vue` 负责管理图表配置。
+    *   引入并使用 `VchartCore` 子组件。
+    *   通过 `internalSpec` data 属性维护传递给子组件的 `spec`。
+    *   添加 `updateInternalSpec` 方法，用于根据父组件接收的 `config` 更新 `internalSpec` (当前暂时使用硬编码 spec)。
+    *   添加了对 `config` prop 的 `watch`，并在 `mounted` 和 `config` 变化时调用 `updateInternalSpec`。
+3.  **性能优化**: 在 `VchartRender/index.vue` 中对 `config` 的 `watch` 添加了 `lodash.debounce` 防抖处理，避免因 `config` 频繁变化导致的性能问题。
+4.  **配置文件标准化与丰富 (`V基础柱状图.js`)**:
+    *   大幅丰富了 `setting` 配置项，增加了图表标题、Tooltip、坐标轴标题/网格线、配色方案、柱子圆角、堆叠等通用和特定配置。
+    *   更新了默认 `option` (spec) 以匹配新的 `setting`，使其结构更符合 VChart 规范。
+    *   修正 `chartType` 为 `'bar'`，移除了不必要的配置（如 `seriesField`, `comType`）。
+5.  **设置面板适配 (`VchartCustomSetting.vue`)**:
+    *   更新了 `groupSetting` 方法和 `filterGroupName` 过滤器，以支持和正确显示 `V基础柱状图.js` 中新增的配置分组 (如 `title`, `label`, `axis`, `animation`, `tooltip`)。
 
 ## 下一步计划 (修订)
 
-1.  **实现 VChart 渲染逻辑**: 在 `VchartRender/index.vue` 中引入 VChart 库，并实现核心渲染逻辑：
-    *   在 `mounted` 或数据更新后创建 VChart 实例。
-    *   从 `this.config.option` 读取 VChart 规格 (spec)。
-    *   使用 `vchartInstance.updateSpec(this.config.option)` 更新图表。
-    *   处理图表销毁。
-    *   (可选) 适配 VChart 的事件，用于数据联动 (`registerEvent`)
-2.  **数据流对接**: 确保 `dataFormatting` 方法能够正确处理从后端获取的数据，并将其格式化为 VChart `option` (spec) 中 `data` 字段所需的格式。
-3.  **样式处理**: 确认 `transformSettingToOption` 和 `changeStyle` 能否正确地将样式配置应用到 VChart 的 `option` (spec) 中，或者是否需要针对 VChart 的 spec 结构进行调整。 
+1.  **实现 `config` 到 `spec` 的转换**: 完善 `VchartRender/index.vue` 中的 `updateInternalSpec` 方法，实现根据传入的 `config` (包含 `setting` 和 `option`) 动态生成最终传递给 `VchartCore` 的 VChart `spec` 对象的逻辑。
+    *   需要处理 `setting` 配置如何覆盖或修改基础 `option` (spec)。
+    *   需要考虑数据 (`config.data`) 如何正确注入到 `spec.data` 中。
+2.  **完善数据流对接**: 确保 `dataFormatting` 方法 (或类似逻辑) 能正确处理后端数据，并将其整合到 `updateInternalSpec` 生成的 `spec` 中。
+3.  **样式与主题处理**: 确认 `changeStyle` 方法与 VChart 主题和样式配置的兼容性，必要时进行调整。
+4.  **事件处理**: (可选) 在 `VchartCore` 或 `VchartRender` 中添加 VChart 事件监听，以支持如图表点击联动等交互功能 (`registerEvent`)。
+5.  **测试与扩展**: 对接实际数据进行测试，并逐步添加更多 VChart 图表类型及其配置文件。 

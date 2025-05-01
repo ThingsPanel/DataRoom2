@@ -206,9 +206,13 @@ export default {
         xAxis: 'X轴',
         yAxis: 'Y轴',
         padding: '边距',
+        label: '标签',
+        axis: '坐标轴',
+        animation: '动画',
+        tooltip: '提示信息',
         other: '其他'
       }
-      return settingGroup[val]
+      return settingGroup[val] || val
     }
   },
   computed: {
@@ -263,18 +267,19 @@ export default {
         graph: [],
         grid: [],
         legend: [],
-        xAxis: [],
-        yAxis: [],
+        axis: [],
+        label: [],
+        animation: [],
         tooltip: []
-        // ... 其他可能的分组
       }
       this.config?.setting.forEach(set => {
         // 只分组 custom 标签页的配置项
         if (set.tabName === 'custom' && set.groupName) {
-          if (!settingGroup[set.groupName]) {
-            settingGroup[set.groupName] = []
+          const groupKey = (set.groupName === 'xAxis' || set.groupName === 'yAxis') ? 'axis' : set.groupName;
+          if (!settingGroup[groupKey]) {
+            settingGroup[groupKey] = []
           }
-          settingGroup[set.groupName].push(set)
+          settingGroup[groupKey].push(set)
         }
       })
       // 将分组后的配置转换为数组形式以便 v-for 循环

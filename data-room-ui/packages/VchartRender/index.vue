@@ -10,7 +10,7 @@
     >
       {{ copyButtonText }}
     </button>
-    <pre style="color: red; white-space: pre-wrap; word-wrap: break-word; height: 100%; overflow: auto;">{{ config }}</pre>
+    <VchartCore :spec="internalSpec" />
   </div>
 </template>
 <script>
@@ -28,11 +28,80 @@ import { mapState, mapMutations } from 'vuex'
 import { settingToTheme } from 'data-room-ui/js/utils/themeFormatting'
 // 导入 lodash 库，提供各种工具函数
 import _ from 'lodash'
+// !! 1. 确保 VchartCore 子组件被引入 !!
+import VchartCore from './VchartCore/index.vue'
+// 导入 lodash 的 debounce 方法
+import debounce from 'lodash/debounce' // 引入 debounce
+
+// 辅助函数：安全地设置深层嵌套对象的值
+function setDeepValue (obj, path, value) {
+  if (!obj || typeof path !== 'string') {
+    // console.error('Invalid arguments for setDeepValue');
+    return
+  }
+  const keys = path.split('.')
+  let current = obj
+
+  try { // 添加 try...catch 块增加健壮性
+    for (let i = 0; i < keys.length - 1; i++) {
+      const key = keys[i]
+      const nextKey = keys[i + 1]
+      const isNextKeyNumeric = /^\d+$/.test(nextKey) // 检查下一个键是否是数字（数组索引）
+
+      // 如果当前键不存在或不是对象/数组，则创建它
+      if (current[key] === undefined || current[key] === null || typeof current[key] !== 'object') {
+        current[key] = isNextKeyNumeric ? [] : {}
+      }
+
+      current = current[key]
+
+      // 如果路径期望的是数组但实际不是，或反之，尝试修正 (简化)
+      if (isNextKeyNumeric && !Array.isArray(current)) {
+         // console.warn(`Path expects array at ${key}, but found ${typeof current}. Attempting to correct.`);
+         // 尝试从当前对象中找到之前的键来重新创建数组
+         // 这个逻辑很复杂，暂时跳过深度修正，依赖于初始 spec 结构基本正确
+         // 或者，如果 current 是空对象，可以直接替换为数组
+         if (Object.keys(current).length === 0) {
+           current = [];
+           // 需要将这个新数组重新赋值给上一级
+           let parent = obj;
+           for(let j = 0; j < i; j++) parent = parent[keys[j]];
+           parent[key] = current;
+         } else {
+            // console.error(`Cannot automatically correct path type mismatch at ${key}`);
+             return; // 无法修正，提前退出
+         }
+
+      } else if (!isNextKeyNumeric && Array.isArray(current)) {
+        // console.warn(`Path expects object at ${key}, but found array. This might lead to errors.`);
+        // 同样，自动修正很复杂，暂时跳过
+      }
+    }
+
+    const lastKey = keys[keys.length - 1]
+    if (current && typeof current === 'object') {
+       // 特殊处理数字键，确保它们被正确地用作数组索引或对象键
+       if (/^\d+$/.test(lastKey) && Array.isArray(current)) {
+         current[parseInt(lastKey, 10)] = value;
+       } else {
+         current[lastKey] = value;
+       }
+    } else {
+       // console.error(`Cannot set property ${lastKey} on non-object target:`, current);
+    }
+  } catch (error) {
+     // console.error(`Error setting deep value for path "${path}":`, error);
+  }
+}
 
 // 导出 Vue 组件定义
 export default {
-  // 组件名称 (注意：这里应与文件名和期望的功能一致，可能需要改为 VchartRender)
-    name: 'VchartCustomComponent',
+  // !! 1. 确保组件名称正确 !!
+  name: 'VchartRender',
+  // !! 1. 确保 VchartCore 组件被注册 !!
+  components: {
+    VchartCore
+  },
   // 混入 mixins，继承它们的方法和属性
   mixins: [commonMixins, linkageMixins],
   // 定义组件接收的 props
@@ -40,7 +109,7 @@ export default {
     // config 对象包含了组件的所有配置信息
     config: {
       type: Object, // 类型为对象
-      default: () => ({}) // 默认值为空对象
+      required: true
     }
   },
   // 定义组件的响应式数据
@@ -51,7 +120,10 @@ export default {
       // 标记是否有有效数据，用于控制渲染 (当前未使用)
       hasData: false,
       // 复制按钮的显示文本
-      copyButtonText: 'Copy Config'
+      copyButtonText: 'Copy Config',
+      // !! 将 internalSpec 清空 !!
+      internalSpec: null, // 设置为 null
+      isNoData: true // 新增 isNoData 标志
     }
   },
   // 计算属性
@@ -73,22 +145,21 @@ export default {
   },
   // 监听器
   watch: {
-    // 监听 config 对象中 option.theme 属性的变化
-    'config.option.theme': {
-      // 处理器函数
-      handler (val) {
-        // 如果 theme 发生变化
-        if (val) {
-          // 调用 changeStyle 方法更新样式，并标记这是主题更新 (isUpdateTheme = true)
-          this.changeStyle(this.config, true)
-        }
-      }
+    // 深度监听 config 对象的变化
+    config: {
+      handler: debounce(function (newConfig) { // 使用 debounce 防抖
+        // 在这里调用处理 config 变化的函数，例如生成新的 spec
+        // console.log('Config changed (debounced):', newConfig);
+        this.updateInternalSpec(newConfig); // 调用 spec 更新方法
+      }, 300), // 300ms 延迟
+      deep: true // 深度监听
     }
     // 对 config 对象的深度监听已被移除
   },
   // 组件挂载到 DOM 后的生命周期钩子
   mounted () {
-    // 此处通常会初始化 ECharts 实例并设置 ResizeObserver，但当前版本逻辑已被移除
+    // !! 打印传入的 config prop !!
+    this.updateInternalSpec(this.config)
   },
   // 组件销毁前的生命周期钩子
   // beforeDestroy () {
@@ -124,7 +195,143 @@ export default {
       }
     },
 
-    // 初始化图表及数据的核心方法 (部分逻辑可能已移除)
+    // 新增：生成 VChart Spec 的核心逻辑
+    generateVChartSpec (config) {
+      if (!config || !config.option) {
+        // console.error('Cannot generate spec: config or config.option is missing.')
+        return null
+      }
+
+      // 1. 深拷贝基础 option 作为 spec 起点
+      // !! 注意: 必须深拷贝，否则后续修改会影响原始 config prop !!
+      const spec = cloneDeep(config.option)
+
+      // 2. 处理数据
+      // a. 确定 xField 和 yField (优先使用 setting 中的值)
+      const xFieldSetting = config.setting?.find(s => s.field === 'xField' && s.tabName === 'data');
+      const yFieldSetting = config.setting?.find(s => s.field === 'yField' && s.tabName === 'data');
+      const finalXField = xFieldSetting?.value || spec.xField;
+      const finalYField = yFieldSetting?.value || spec.yField;
+
+      // b. 更新 spec 中的 xField 和 yField
+      spec.xField = finalXField;
+      spec.yField = finalYField;
+
+      // c. 处理 rawData
+      let currentDataValues = spec.data?.values || []; // 保留默认数据以防 rawData 无效
+      if (config.option.rawData && Array.isArray(config.option.rawData) && config.option.rawData.length > 0 && finalXField && finalYField) {
+          // 使用 rawData 映射新数据
+          currentDataValues = config.option.rawData.map(item => ({
+              // 根据最终确定的 xField 和 yField 从 rawData 中取值
+              [finalXField]: item[finalXField],
+              [finalYField]: item[finalYField],
+              // 可以考虑将其他原始字段也带上，供 tooltip 或其他地方使用
+              // ...item
+          }));
+      }
+
+      // d. 将处理后的数据更新回 spec
+      // 确保 spec.data 是一个数组，并且包含至少一个数据源对象
+      if (!spec.data || !Array.isArray(spec.data) || spec.data.length === 0) {
+        // 如果 spec.data 不存在、不是数组或为空，则创建一个包含默认数据源的新数组
+        spec.data = [{ id: 'dataDefault', values: currentDataValues }]; // 可以考虑使用 config.option.data[0]?.id
+      } else {
+        // 如果 spec.data 已存在且是数组，则更新第一个数据源对象的 values
+        // (更健壮的方式是根据 id 查找，但这里简化处理)
+        spec.data[0].values = currentDataValues;
+      }
+
+      // 3. 应用 setting 中的配置到 spec
+      if (config.setting && Array.isArray(config.setting)) {
+        config.setting.forEach(settingItem => {
+          // 只处理 tabName 为 'custom' 或 'data' 且有 optionField 的设置项
+          if (settingItem.optionField && (settingItem.tabName === 'custom' || settingItem.tabName === 'data')) {
+             // 对 'data' 类型，只应用 xField 和 yField (因为它们的值直接来自 setting)
+             const isDataFieldSetting = settingItem.tabName === 'data' && (settingItem.field === 'xField' || settingItem.field === 'yField');
+             // 对 'custom' 类型，或非字段选择的 'data' 类型（如果未来有的话）应用值
+             const shouldApplyValue = settingItem.tabName === 'custom' ||
+                                      (settingItem.tabName === 'data' && !isDataFieldSetting && settingItem.value !== undefined && settingItem.value !== null && settingItem.value !== '');
+
+             if (isDataFieldSetting) {
+                 // xField 和 yField 已经在步骤 2 中处理过，这里跳过，避免覆盖
+             } else if (shouldApplyValue) {
+                 // 使用辅助函数安全地设置值
+                 setDeepValue(spec, settingItem.optionField, settingItem.value)
+             }
+          }
+        })
+      } else {
+         // console.warn('Config.setting is missing or not an array.');
+      }
+
+      // 4. 处理特殊配置
+      // a. 主题 (从 customize 或 pageInfo 获取)
+      spec.theme = config.customize?.theme || this.customTheme || 'light'
+
+      // b. 处理堆叠配置 (VChart spec 中 stack 通常在顶层，但也可能在 series 内)
+      const stackSetting = config.setting?.find(s => s.field === 'stack');
+      if (stackSetting && stackSetting.optionField === 'stack') { // 确保 optionField 正确
+        spec.stack = stackSetting.value;
+         // 同步 series 内的 stack (如果 series 存在且是 bar 类型)
+         if (Array.isArray(spec.series)) {
+             spec.series.forEach(s => {
+                 if(s.type === 'bar'){ // 假设仅对 bar series 设置 stack
+                     s.stack = stackSetting.value;
+                 }
+             });
+         }
+      } else {
+          // 如果 setting 中没有 stack 配置，确保 spec 中没有残留的 stack: true/false
+          // delete spec.stack; // 或者根据默认 option 决定是否删除
+      }
+
+      // c. 修正之前发现的 barCornerRadius 问题
+      const cornerRadiusSetting = config.setting?.find(s => s.field === 'barCornerRadius');
+      if (cornerRadiusSetting && cornerRadiusSetting.optionField === 'series.0.bar.style.cornerRadius') {
+          // 确保 series[0].label.cornerRadius 不存在或被删除 (如果之前误加了)
+           if (spec.series && spec.series[0] && spec.series[0].label && spec.series[0].label.cornerRadius !== undefined) {
+               delete spec.series[0].label.cornerRadius;
+           }
+           // 使用 setDeepValue 确保路径存在并赋值
+           setDeepValue(spec, 'series.0.bar.style.cornerRadius', cornerRadiusSetting.value);
+      }
+
+      // 5. 清理非 VChart spec 属性
+      delete spec.displayOption // 这个通常是配置面板使用的
+      delete spec.comType // 这是我们内部逻辑用的类型标识
+      delete spec.rawData // 原始数据，不需要在最终 spec 里
+      // delete spec.stack; // 根据 VChart 文档，stack 可以在顶层，按需保留或删除
+
+      // !! 在返回前打印最终的 spec 对象 (格式化输出) !!
+      console.log('Generated VChart Spec:', JSON.stringify(spec, null, 2));
+      return spec
+    },
+
+    // 更新 internalSpec 的方法
+    updateInternalSpec (config) {
+      const newSpec = this.generateVChartSpec(config) // 调用 spec 生成函数
+      if (newSpec) {
+        this.internalSpec = newSpec
+        // 根据生成后的 spec 数据更新无数据状态
+        this.isNoData = !newSpec.data || !newSpec.data.values || newSpec.data.values.length === 0;
+      } else {
+        // 处理生成失败的情况
+        this.isNoData = true; // 无法生成 spec，标记为无数据
+        this.internalSpec = null; // 清空 spec
+      }
+       // console.log('Update internal spec called with:', config); // 临时打印，待 generateVChartSpec 实现后替换
+       // 暂时将原始 option 赋给 internalSpec 用于基础测试
+       // if (config && config.option) {
+       //     this.internalSpec = cloneDeep(config.option);
+       //     // 简单的数据检查
+       //     this.isNoData = !this.internalSpec.data || !this.internalSpec.data.values || this.internalSpec.data.values.length === 0;
+       // } else {
+       //     this.internalSpec = null;
+       //     this.isNoData = true;
+       // }
+    },
+
+    // 初始化图表及数据的核心方法 (需要适配 VChart, 数据加载逻辑待恢复)
     chartInit () {
       // 获取当前 config (注意：这里直接引用 this.config，后续修改应使用克隆)
       let config = this.config
@@ -342,6 +549,11 @@ export default {
       }
       // 返回修改后的 config 对象
       return config
+    },
+
+    // 新增方法：将配置数据转换为图表数据
+    makeSpecData(config, data) {
+      // 实现将配置数据转换为图表数据的逻辑
     }
   }
 }
