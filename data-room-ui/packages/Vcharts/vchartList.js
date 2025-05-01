@@ -2,7 +2,7 @@ import { dataConfig, settingConfig } from '../VchartRender/settingConfig' // 1. 
 import cloneDeep from 'lodash/cloneDeep'
 import sortList from './vchartListSort'
 
-const files = require.context('./', true, /[\u4e00-\u9fa5]+.js$/)
+const files = require.context('./', true, /[一-龥]+.js$/)
 const vchartList = getVchartList(files)
 
 function getVchartList (files) {
@@ -49,6 +49,22 @@ function getVchartList (files) {
       ...globalSettingConf,
       ...baseOption
     };
+
+    // !! New logic: Store default data in rawData !!
+    let defaultDataValues = [];
+    let defaultDataId = 'defaultDataId'; // Fallback ID
+    if (baseOption.data && Array.isArray(baseOption.data) && baseOption.data.length > 0) {
+        // Clone values to prevent mutation issues if baseOption wasn't deep cloned perfectly earlier
+        defaultDataValues = baseOption.data[0].values ? cloneDeep(baseOption.data[0].values) : [];
+        defaultDataId = baseOption.data[0].id || defaultDataId;
+        // Set finalOption.data to only contain the ID
+        finalOption.data = [{ id: defaultDataId }];
+    } else {
+        // If baseOption.data is missing or invalid, initialize data structure
+         finalOption.data = [{ id: defaultDataId }];
+    }
+    // Assign default values (or empty array) to rawData
+    finalOption.rawData = defaultDataValues;
 
     // Ensure finalOption.displayOption exists and is an object
     if (!finalOption.displayOption || typeof finalOption.displayOption !== 'object') {
@@ -117,7 +133,7 @@ function getVchartList (files) {
       skewY: componentConfig.skewY ?? 0,
       type: componentConfig.type || 'customComponent', // 这里用组件自身的type
       loading: false,
-      option: finalOption,        // Use the processed finalOption
+      option: finalOption,        // Use the processed finalOption (contains rawData)
       setting: componentSetting,  // Use the cloned componentSetting
       dataHandler: componentConfig.dataHandler || '',
       optionHandler: componentConfig.optionHandler || '',

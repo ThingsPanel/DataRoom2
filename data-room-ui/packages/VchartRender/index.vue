@@ -197,14 +197,54 @@ export default {
 
     // 新增：生成 VChart Spec 的核心逻辑
     generateVChartSpec (config) {
-      if (!config || !config.option) {
-        // console.error('Cannot generate spec: config or config.option is missing.')
+      if (!config || !config.option || !config.chartType) { // 添加对 chartType 的检查
+        // console.error('Cannot generate spec: config, config.option or config.chartType is missing.')
         return null
       }
 
       // 1. 深拷贝基础 option 作为 spec 起点
-      // !! 注意: 必须深拷贝，否则后续修改会影响原始 config prop !!
       const spec = cloneDeep(config.option)
+
+      // !! 强制使用 config.chartType 更新 spec 类型 !!
+      spec.type = config.chartType;
+      if (spec.series && Array.isArray(spec.series) && spec.series.length > 0) {
+        // 假设是单系列，更新第一个系列的类型
+        spec.series[0].type = config.chartType;
+        // 如果是面积图，确保 area 和 line 也存在于 series[0]
+        if (config.chartType === 'area' && !spec.series[0].area) {
+            spec.series[0].area = { style: {} }; // 初始化 area 结构
+        }
+        if (config.chartType === 'area' && !spec.series[0].line) {
+            spec.series[0].line = { style: {} }; // 初始化 line 结构
+        }
+         // 如果是柱状图，确保 bar 也存在于 series[0]
+         if (config.chartType === 'bar' && !spec.series[0].bar) {
+             spec.series[0].bar = { style: {} }; // 初始化 bar 结构
+         }
+          // 如果是折线图，确保 line 和 point 也存在于 series[0]
+         if (config.chartType === 'line' && !spec.series[0].line) {
+             spec.series[0].line = { style: {} }; // 初始化 line 结构
+         }
+         if (config.chartType === 'line' && !spec.series[0].point) {
+             spec.series[0].point = { style: {} }; // 初始化 point 结构
+         }
+      } else {
+           // 如果 series 不存在，可能需要根据 chartType 初始化一个基础 series 结构
+           spec.series = [{ type: config.chartType, id: 'series0' }];
+           // 根据类型添加必要的子结构
+           if(config.chartType === 'bar') spec.series[0].bar = { style: {} };
+           if(config.chartType === 'line') {
+                spec.series[0].line = { style: {} };
+                spec.series[0].point = { style: {} };
+           }
+           if(config.chartType === 'area') {
+                spec.series[0].area = { style: {} };
+                spec.series[0].line = { style: {} };
+                spec.series[0].point = { style: {} };
+           }
+           // console.warn('spec.series was missing or invalid, initialized based on chartType.');
+      }
+
 
       // 2. 处理数据
       // a. 确定 xField 和 yField (优先使用 setting 中的值)
@@ -217,29 +257,42 @@ export default {
       spec.xField = finalXField;
       spec.yField = finalYField;
 
-      // c. 处理 rawData
-      let currentDataValues = spec.data?.values || []; // 保留默认数据以防 rawData 无效
-      if (config.option.rawData && Array.isArray(config.option.rawData) && config.option.rawData.length > 0 && finalXField && finalYField) {
-          // 使用 rawData 映射新数据
-          currentDataValues = config.option.rawData.map(item => ({
-              // 根据最终确定的 xField 和 yField 从 rawData 中取值
-              [finalXField]: item[finalXField],
-              [finalYField]: item[finalYField],
-              // 可以考虑将其他原始字段也带上，供 tooltip 或其他地方使用
-              // ...item
-          }));
+      // c. Process data ONLY from config.option.rawData
+      let currentDataValues = []; // Initialize as empty
+      // Data now *always* comes from rawData (either default or bound)
+      if (config.option.rawData && Array.isArray(config.option.rawData) && finalXField && finalYField) {
+          // Map data using selected fields
+          // Check rawData length
+          if (config.option.rawData.length > 0) {
+            currentDataValues = config.option.rawData.map(item => ({
+                [finalXField]: item[finalXField],
+                [finalYField]: item[finalYField]
+            }));
+          } else {
+             // rawData is an empty array, currentDataValues remains []
+          }
+      } else {
+        // rawData is missing, null, or not an array, currentDataValues remains []
+        // console.warn('config.option.rawData is missing or invalid. Data values will be empty.');
       }
 
-      // d. 将处理后的数据更新回 spec
-      // 确保 spec.data 是一个数组，并且包含至少一个数据源对象
-      if (!spec.data || !Array.isArray(spec.data) || spec.data.length === 0) {
-        // 如果 spec.data 不存在、不是数组或为空，则创建一个包含默认数据源的新数组
-        spec.data = [{ id: 'dataDefault', values: currentDataValues }]; // 可以考虑使用 config.option.data[0]?.id
-      } else {
-        // 如果 spec.data 已存在且是数组，则更新第一个数据源对象的 values
-        // (更健壮的方式是根据 id 查找，但这里简化处理)
-        spec.data[0].values = currentDataValues;
+      // d. Assign processed data back to spec.data
+      // Ensure spec.data structure is correct: [{ id: '...', values: [...] }]
+      // Get ID from config.option.data (which was set up in vchartList.js)
+      const originalDataId = config.option.data?.[0]?.id || 'dataDefault'; // Get the ID
+
+      // Ensure spec.data is an array
+      if (!spec.data || !Array.isArray(spec.data)) {
+          spec.data = [];
       }
+      // Ensure spec.data has at least one element
+      if (spec.data.length === 0) {
+          spec.data.push({}); // Add an empty object if array is empty
+      }
+
+      // Update the first data source object definitively
+      spec.data[0].id = originalDataId;
+      spec.data[0].values = currentDataValues; // Assign the processed values
 
       // 3. 应用 setting 中的配置到 spec
       if (config.setting && Array.isArray(config.setting)) {
@@ -265,8 +318,8 @@ export default {
       }
 
       // 4. 处理特殊配置
-      // a. 主题 (从 customize 或 pageInfo 获取)
-      spec.theme = config.customize?.theme || this.customTheme || 'light'
+      // a. 主题 - 现在由 setting 和 setDeepValue 处理，移除下面这行
+      // spec.theme = config.customize?.theme || this.customTheme || 'light'
 
       // b. 处理堆叠配置 (VChart spec 中 stack 通常在顶层，但也可能在 series 内)
       const stackSetting = config.setting?.find(s => s.field === 'stack');
@@ -298,9 +351,24 @@ export default {
 
       // 5. 清理非 VChart spec 属性
       delete spec.displayOption // 这个通常是配置面板使用的
-      delete spec.comType // 这是我们内部逻辑用的类型标识
+      // delete spec.comType // 这个是我们内部逻辑用的类型标识, 但 setDeepValue 可能需要它？检查一下
       delete spec.rawData // 原始数据，不需要在最终 spec 里
-      // delete spec.stack; // 根据 VChart 文档，stack 可以在顶层，按需保留或删除
+
+      // !! 确保 series 结构完整性 (补充可能因 clone 或 setDeepValue 丢失的部分) !!
+      // 再次检查 series 类型和必要结构 (基于上面强制类型设置后的补充)
+      if (spec.series && Array.isArray(spec.series) && spec.series.length > 0) {
+          const series0 = spec.series[0];
+          if (series0.type === 'area') {
+              if (!series0.area) series0.area = { style: {} };
+              if (!series0.line) series0.line = { style: {} };
+              if (!series0.point) series0.point = { style: {} }; // 面积图也可能有 point
+          } else if (series0.type === 'line') {
+              if (!series0.line) series0.line = { style: {} };
+              if (!series0.point) series0.point = { style: {} };
+          } else if (series0.type === 'bar') {
+              if (!series0.bar) series0.bar = { style: {} };
+          }
+      }
 
       // !! 在返回前打印最终的 spec 对象 (格式化输出) !!
       console.log('Generated VChart Spec:', JSON.stringify(spec, null, 2));

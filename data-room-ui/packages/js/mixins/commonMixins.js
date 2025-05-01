@@ -119,7 +119,7 @@ export default {
   },
 
   mounted () {
-    if (!['tables', 'flyMap', 'map'].includes(this.config.type)) {
+    if (this.config && typeof this.config.type === 'string' && !['tables', 'flyMap', 'map'].includes(this.config.type)) {
       this.chartInit()
     }
     this.watchCacheData()

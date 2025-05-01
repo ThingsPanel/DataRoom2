@@ -1,21 +1,21 @@
 // 配置版本号
-const version = '2024050101' // 使用当前日期作为示例版本
+const version = '2024050102' // 更新版本号
 // 标题
-const title = 'V基础折线图'
+const title = 'V基础面积图'
 // 用于标识，唯一，和文件夹名称一致
-const name = 'V基础折线图'
+const name = 'V基础面积图'
 // 组件类型标识
 const type = 'customComponent'
 // 图表类型标识 (VChart type)
-const chartType = 'line'
-// 右侧配置项
+const chartType = 'area' // 类型改为 area
+// 右侧配置项 (基于折线图调整)
 const setting = [
   // 数据配置
   {
     label: 'X轴字段',
     type: 'select',
     field: 'xField',
-    optionField: 'xField', // 直接映射 VChart spec 的 xField
+    optionField: 'xField',
     multiple: false,
     value: '',
     tabName: 'data'
@@ -24,7 +24,7 @@ const setting = [
     label: 'Y轴字段',
     type: 'select',
     field: 'yField',
-    optionField: 'yField', // 直接映射 VChart spec 的 yField
+    optionField: 'yField',
     multiple: false,
     value: '',
     tabName: 'data'
@@ -44,17 +44,29 @@ const setting = [
     type: 'input',
     field: 'titleText',
     optionField: 'title.text',
-    value: '基础折线图', // 默认标题
+    value: '基础面积图', // 默认标题
     tabName: 'custom',
     groupName: 'title'
   },
-  // 图表样式配置 - 线条
+  // 图表样式配置 - 区域/线条
   {
-    label: '线条颜色',
+    label: '区域颜色',
     type: 'colorSelect',
-    field: 'lineColor',
-    optionField: 'color', // 映射到顶层 color 影响所有系列，或 series.0.line.style.stroke
-    value: ['#5B8FF9'], // VChart 默认色板的第一个颜色
+    field: 'areaColor',
+    optionField: 'color', // 映射到顶层 color
+    value: ['#5B8FF9'], // 默认颜色
+    tabName: 'custom',
+    groupName: 'graph'
+  },
+   {
+    label: '区域透明度',
+    type: 'slider', // 使用滑块控制透明度
+    field: 'areaOpacity',
+    optionField: 'series.0.area.style.fillOpacity', // 控制区域填充透明度
+    value: 0.4, // 默认半透明
+    min: 0,
+    max: 1,
+    step: 0.01,
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -62,7 +74,7 @@ const setting = [
     label: '曲线类型',
     type: 'select',
     field: 'curveType',
-    optionField: 'series.0.line.style.curveType', // 控制线条形状
+    optionField: 'series.0.line.style.curveType', // 线条形状
     options: [
       { label: '直线', value: 'linear' },
       { label: '平滑', value: 'monotone' },
@@ -70,7 +82,7 @@ const setting = [
       { label: '阶梯(中)', value: 'step' },
       { label: '阶梯(后)', value: 'stepAfter' }
     ],
-    value: 'linear', // 默认直线
+    value: 'linear',
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -79,8 +91,8 @@ const setting = [
     label: '显示数据点',
     type: 'switch',
     field: 'showPoint',
-    optionField: 'series.0.point.visible', // 控制数据点显隐
-    value: true, // 默认显示数据点
+    optionField: 'series.0.point.visible',
+    value: false, // 面积图默认不显示点
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -88,32 +100,32 @@ const setting = [
     label: '数据点大小',
     type: 'inputNumber',
     field: 'pointSize',
-    optionField: 'series.0.point.style.size', // 控制数据点大小
+    optionField: 'series.0.point.style.size',
     value: 4,
     min: 0,
     tabName: 'custom',
     groupName: 'graph'
   },
-  // 图表主题配置 (新加)
+   // 图表主题配置
   {
     label: '图表主题',
     type: 'select',
     field: 'chartTheme',
-    optionField: 'theme', // 直接映射到 VChart spec 的顶层 theme
+    optionField: 'theme',
     options: [
       { label: '亮色', value: 'light' },
       { label: '暗色', value: 'dark' }
     ],
-    value: 'dark', // 默认暗色主题
+    value: 'dark', // 默认暗色
     tabName: 'custom',
-    groupName: 'graph' // 放在图表分组下
+    groupName: 'graph'
   },
   // 坐标轴配置
   {
     label: 'X轴显隐',
     type: 'switch',
     field: 'xAxisVisible',
-    optionField: 'axes.0.visible', // 第一个轴通常是 X 轴
+    optionField: 'axes.0.visible',
     value: true,
     tabName: 'custom',
     groupName: 'axis'
@@ -122,7 +134,7 @@ const setting = [
     label: 'Y轴显隐',
     type: 'switch',
     field: 'yAxisVisible',
-    optionField: 'axes.1.visible', // 第二个轴通常是 Y 轴
+    optionField: 'axes.1.visible',
     value: true,
     tabName: 'custom',
     groupName: 'axis'
@@ -131,8 +143,8 @@ const setting = [
     label: 'Y轴网格线',
     type: 'switch',
     field: 'yAxisGridVisible',
-    optionField: 'axes.1.grid.visible', // Y 轴网格线
-    value: true, // 通常 Y 轴网格线默认需要显示
+    optionField: 'axes.1.grid.visible',
+    value: true,
     tabName: 'custom',
     groupName: 'axis'
   },
@@ -156,7 +168,7 @@ const dataHandler = ''
 
 // 示例数据 (来自用户提供)
 const data = {
-  id: 'lineData', // 给数据源一个 ID
+  id: 'areaData', // 更新 ID
   values: [
     { time: '2:00', value: 8 },
     { time: '4:00', value: 9 },
@@ -172,51 +184,57 @@ const data = {
 
 // 默认 VChart option
 const option = {
-  type: 'line',
-  data: [data], // 使用包含ID的数据源数组格式
+  type: 'area', // 类型改为 area
+  data: [data], // 使用包含ID的数据源数组
   xField: 'time',
   yField: 'value',
   title: {
     visible: false,
-    text: '基础折线图'
+    text: '基础面积图'
   },
-  legends: { // 图例对于单折线图通常不需要
+  legends: {
     visible: false
   },
-  axes: [ // 定义坐标轴
+  axes: [
     {
       orient: 'bottom',
-      type: 'band', // 对于时间类别，'band' 轴适用；如果 time 是时间戳，可用 'time'
+      type: 'band',
       visible: true,
-      grid: { visible: false } // X 轴网格线通常不需要
+      grid: { visible: false }
     },
     {
       orient: 'left',
       type: 'linear',
       visible: true,
-      grid: { visible: true } // Y 轴网格线默认开启
+      grid: { visible: true }
     }
   ],
-  series: [ // 系列配置
+  series: [
     {
-      id: 'series0', // 添加默认 ID
-      type: 'line', // 确保系列类型是 line
+      id: 'series0', // 添加系列 ID
+      type: 'area', // 系列类型改为 area
       line: { // 线条样式
         style: {
-          curveType: 'linear' // 默认直线
+          curveType: 'linear'
+        }
+      },
+      area: { // 区域样式
+        style: {
+          fillOpacity: 0.4 // 默认透明度
         }
       },
       point: { // 数据点样式
-        visible: true, // 默认显示
+        visible: false, // 面积图默认不显示点
         style: {
-          size: 4 // 默认大小
+          size: 4
         }
       }
     }
   ],
-  tooltip: { // 提示信息
-    visible: true // 默认显示
-  }
+  tooltip: {
+    visible: true
+  },
+  theme: 'dark' // 默认暗色主题
 }
 
 // 导出模块

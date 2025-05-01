@@ -210,6 +210,20 @@ const setting = [
     value: true,
     tabName: 'custom',
     groupName: 'animation'
+  },
+  // 图表主题配置 (新加)
+  {
+    label: '图表主题',
+    type: 'select',
+    field: 'chartTheme',
+    optionField: 'theme', // 直接映射到 VChart spec 的顶层 theme
+    options: [
+      { label: '亮色', value: 'light' },
+      { label: '暗色', value: 'dark' }
+    ],
+    value: 'dark', // 默认暗色主题
+    tabName: 'custom',
+    groupName: 'graph' // 放在图表分组下
   }
 ]
 
@@ -231,7 +245,7 @@ const data = {
 // 更新后的默认 VChart option
 const option = {
   type: 'bar',
-  data: data,
+  data: [data],
   xField: 'x',
   yField: 'y',
   title: {
