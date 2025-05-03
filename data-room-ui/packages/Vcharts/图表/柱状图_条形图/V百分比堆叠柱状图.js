@@ -11,12 +11,33 @@ const chartType = 'bar';
 
 // 右侧配置项 (简化版 + seriesField)
 const setting = [
-  { label: '类别轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
-  { label: '值轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
-  { label: '堆叠/颜色字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
+  { label: 'X轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
+  // 堆叠配置
+  {
+    label: '启用堆叠',
+    type: 'switch',
+    field: 'stack',
+    optionField: 'stack',
+    value: true,
+    tabName: 'custom',
+    groupName: 'stack'
+  },
+  {
+    label: '启用百分比',
+    type: 'switch',
+    field: 'percent',
+    optionField: 'percent',
+    value: true,
+    tabName: 'custom',
+    groupName: 'stack'
+  },
+  // 样式配置
   { label: '柱子宽度', type: 'inputNumber', field: 'barWidth', optionField: 'series.0.barWidth', value: 20, tabName: 'custom', groupName: 'graph' },
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+  // 通用配置
+  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'basic' },
+  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'basic' }
 ];
 
 // 示例数据 (来自参考 spec)
@@ -61,4 +82,4 @@ const optionHandler = ``;
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};
