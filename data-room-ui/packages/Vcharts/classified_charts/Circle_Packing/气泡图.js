@@ -1,0 +1,32 @@
+const spec = {
+  data: [
+    {
+      id: 'data',
+      values: data
+    }
+  ],
+  type: 'circlePacking',
+  categoryField: 'name',
+  valueField: 'value',
+  drill: true,
+  // padding for each bubble
+  // layoutPadding: 0,
+  layoutPadding: 5,
+  label: {
+    style: {
+      fontSize: 10,
+      visible: d => {
+        return d.depth === 0;
+      }
+    }
+  },
+  animationEnter: {
+    easing: 'cubicInOut'
+  },
+  animationExit: {
+    easing: 'cubicInOut'
+  },
+  animationUpdate: {
+    easing: 'cubicInOut'
+  }
+};

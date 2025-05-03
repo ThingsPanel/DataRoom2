@@ -2,7 +2,7 @@ import { dataConfig, settingConfig } from '../VchartRender/settingConfig' // 1. 
 import cloneDeep from 'lodash/cloneDeep'
 import sortList from './vchartListSort'
 
-const files = require.context('./', true, /[一-龥]+.js$/)
+const files = require.context('./图表', true, /[一-龥]+.js$/)
 const vchartList = getVchartList(files)
 
 function getVchartList (files) {
@@ -14,7 +14,10 @@ function getVchartList (files) {
       try {
         const module = files(key);
         if (module && module.default) {
-          configMapList[configName] = module.default;
+          configMapList[configName] = {
+            config: module.default,
+            category: parts[1] // 获取分类名称
+          };
         } else {
           console.warn(`Module or default export not found for key: ${key}`);
         }
@@ -27,13 +30,20 @@ function getVchartList (files) {
   })
 
   const list = []
-  for (const configMapKey in configMapList) {
-    const index = sortList.findIndex((item) => item === configMapKey)
-    const componentConfig = configMapList[configMapKey] // Original component config
+  // 直接使用sortList数组
+  sortList.forEach((chartName) => {
+    const chartInfo = configMapList[chartName];
+    if (!chartInfo) {
+      console.warn(`Chart not found: ${chartName}`);
+      return;
+    }
+    
+    const componentConfig = chartInfo.config; // 获取图表配置
+    const category = chartInfo.category; // 获取分类名称
 
     if (!componentConfig) {
-      console.warn(`Skipping invalid config for key: ${configMapKey}`);
-      continue;
+      console.warn(`Skipping invalid config for key: ${chartName}`);
+      return;
     }
 
     // --- Configuration Assembly --- 
@@ -108,14 +118,14 @@ function getVchartList (files) {
     finalOption.comType = componentConfig.comType || 'vchartComponent';
     const finalConfig = {
       version: componentConfig.version || 'unknown',
-      category: configMapKey,
-      name: componentConfig.name || configMapKey,
-      title: componentConfig.title || configMapKey,
+      category: category, // 使用分类名称
+      name: componentConfig.name || chartName,
+      title: componentConfig.title || chartName,
       border: componentConfig.border || { type: '', titleHeight: 60, fontSize: 30, color: ['#5B8FF9'], padding: [16] }, // Simplified default
       icon: componentConfig.icon || null,
       img: (() => {
           try {
-             const imgName = componentConfig.title || componentConfig.name || configMapKey;
+             const imgName = componentConfig.title || componentConfig.name || chartName;
              return require(`../Vcharts/images/${imgName}.png`);
            }
           catch (e) { /* console.warn(`Image not found for ${imgName}`); */ return null; }
@@ -142,15 +152,11 @@ function getVchartList (files) {
       ...( (typeof globalDataConf === 'object' && globalDataConf !== null) ? globalDataConf : {} )
     };
 
-    // Add to list respecting sort order
-    if (index !== -1) {
-      while (list.length <= index) { list.push(undefined); }
-      list[index] = finalConfig;
-    } else {
-      list.push(finalConfig);
-    }
-  }
-  return list.filter(item => !!item); // Filter out empty slots more concisely
+    // 添加到列表
+    list.push(finalConfig);
+  });
+  
+  return list;
 }
 
 export default vchartList 

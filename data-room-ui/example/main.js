@@ -4,6 +4,10 @@ import promise from 'es6-promise'
 import Vue from 'vue'
 import ElementUI from 'element-ui'
 
+// !! 新增 VChart 及主题包导入 !!
+import VChart from '@visactor/vchart';
+import { allThemeMap } from '@visactor/vchart-theme';
+
 import App from './App'
 import store from './store'
 import router from './router'
@@ -19,6 +23,12 @@ import 'qweather-icons/font/qweather-icons.css'
 // import customPlots from '@/customPlots/exports'
 Vue.use(ElementUI, { size: 'mini' })
 Vue.prototype.Column = Column
+
+// !! 新增 VChart 主题注册 !!
+allThemeMap.forEach((theme, name) => {
+  VChart.ThemeManager.registerTheme(name, theme);
+});
+
 registerConfig(
   {
     routers: {
