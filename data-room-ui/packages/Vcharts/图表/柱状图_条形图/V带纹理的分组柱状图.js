@@ -11,10 +11,10 @@ const chartType = 'bar'; // 柱状图
 
 // 右侧配置项
 const setting = [
-  { label: '类别字段1', type: 'select', field: 'xFieldOuter', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' }, // 对应 type
-  { label: '类别字段2/系列', type: 'select', field: 'xFieldInner', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' }, // 对应 company (也作为 seriesField)
-  { label: '数值字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 value
-  { label: '系列字段 (纹理)', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 company (用于纹理映射)
+  { label: 'X轴第一层字段', type: 'select', field: 'xField1', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' },
+  { label: 'X轴第二层字段', type: 'select', field: 'xField2', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' },
+  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
   // 样式配置
   {
     label: '纹理类型',
@@ -123,4 +123,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

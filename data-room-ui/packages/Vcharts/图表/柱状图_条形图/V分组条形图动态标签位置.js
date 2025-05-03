@@ -11,29 +11,25 @@ const chartType = 'bar'; // 分组条形图
 
 // 右侧配置项
 const setting = [
-  { label: '类别字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 year
-  { label: '数值字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 value
-  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 type
-  // 样式配置
+  { label: '类别字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '数值字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
   { label: '显示标签', type: 'switch', field: 'labelVisible', optionField: 'label.visible', value: true, tabName: 'custom', groupName: 'label' },
-  { label: '标签偏移', type: 'inputNumber', field: 'labelOffset', optionField: 'label.offset', value: 0, tabName: 'custom', groupName: 'label' },
-  // 动态标签位置逻辑复杂，建议通过 optionOverride 实现
+  { label: '标签偏移', type: 'inputNumber', field: 'labelOffset', optionField: 'label.offset', value: 0, min: -100, max: 100, tabName: 'custom', groupName: 'label' },
   { label: '显示图例', type: 'switch', field: 'legendVisible', optionField: 'legends.0.visible', value: true, tabName: 'custom', groupName: 'legend' },
-  // 通用配置
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { 
-    label: 'Option 覆盖 (JSON)', 
-    type: 'textarea', 
-    field: 'optionOverride', 
-    optionField: '', 
-    // 提供动态标签位置示例
+  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [{label: '浅色', value: 'light'}, {label: '深色', value: 'dark'}], value: 'light', tabName: 'custom', groupName: 'graph' },
+  {
+    label: 'Option覆盖',
+    type: 'textarea',
+    field: 'optionOverride',
+    optionField: '',
     value: JSON.stringify({
       label: {
         position: `datum => { return datum.year === '2000' ? 'top-right' : 'bottom-right'; }`
       }
     }, null, 2),
-    tabName: 'custom', 
-    groupName: 'graph' 
+    tabName: 'custom',
+    groupName: 'graph'
   }
 ];
 
@@ -61,7 +57,7 @@ const option = {
     visible: true,
     offset: 0,
     // 默认标签位置，动态位置通过 override 实现
-    position: 'right' 
+    position: 'right'
   },
   legends: { visible: true },
   axes: [
@@ -80,4 +76,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

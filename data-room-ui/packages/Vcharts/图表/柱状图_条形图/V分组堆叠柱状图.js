@@ -11,13 +11,14 @@ const chartType = 'bar';
 
 // 右侧配置项 (简化版 + seriesField + bandField)
 const setting = [
-  { label: '类别轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 State
-  { label: '值轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 population
-  { label: '堆叠/颜色字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 age
-  { label: '分组字段', type: 'select', field: 'bandField', optionField: 'axes.0.bandField', multiple: false, value: '', tabName: 'data' }, // **新增**: 对应 type, 映射到X轴的bandField
-  { label: '柱子宽度', type: 'inputNumber', field: 'barWidth', optionField: 'series.0.barWidth', value: 20, tabName: 'custom', groupName: 'graph' },
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+  { label: '类别轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: '值轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '堆叠字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
+  { label: '分组字段', type: 'select', field: 'bandField', optionField: 'axes.0.bandField', multiple: false, value: '', tabName: 'data' },
+  { label: '显示百分比', type: 'switch', field: 'showPercentage', optionField: 'label.formatMethod', value: false, tabName: 'custom', groupName: 'label' },
+  { label: '柱子宽度', type: 'inputNumber', field: 'barWidth', optionField: 'series.0.barWidth', value: 20, min: 1, max: 50, tabName: 'custom', groupName: 'style' },
+  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [{label: '浅色', value: 'light'}, {label: '深色', value: 'dark'}], value: 'light', tabName: 'custom', groupName: 'graph' },
+  { label: 'Option覆盖', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
 ];
 
 // 示例数据 (来自参考 spec, 截取部分)
@@ -60,4 +61,4 @@ const optionHandler = ``;
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

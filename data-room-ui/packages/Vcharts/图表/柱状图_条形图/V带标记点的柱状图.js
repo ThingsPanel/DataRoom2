@@ -11,8 +11,8 @@ const chartType = 'bar';
 
 // 右侧配置项 (简化版，标记点通过 override 配置)
 const setting = [
-  { label: '类别轴字段 (X)', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 time
-  { label: '值轴字段 (Y)', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 cost
+  { label: 'X轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
   // 样式配置
   { label: '显示柱子标签', type: 'switch', field: 'labelVisible', optionField: 'label.visible', value: true, tabName: 'custom', groupName: 'label' },
   { label: '柱子颜色', type: 'color', field: 'barFill', optionField: 'bar.style.fill', value: 'rgb(85,208,93)', tabName: 'custom', groupName: 'graph' },
@@ -64,7 +64,7 @@ const option = {
         text: {
           text: '示例标记', // 标记文本
           style: { fill: 'white', fontSize: 12 },
-          labelBackground: { 
+          labelBackground: {
             padding: [4, 8, 4, 8],
             style: { fill: '#000', cornerRadius: 3 }
           }
@@ -103,4 +103,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

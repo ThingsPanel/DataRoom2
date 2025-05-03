@@ -30,7 +30,7 @@ const setting = [
     tabName: 'data'
   },
   {
-    label: '堆叠/颜色字段', // 对应 Age
+    label: '堆叠字段',
     type: 'select',
     field: 'seriesField',
     optionField: 'seriesField',
@@ -39,26 +39,37 @@ const setting = [
     tabName: 'data'
   },
   {
+    label: '显示百分比',
+    type: 'switch',
+    field: 'showPercentage',
+    optionField: 'label.formatMethod',
+    value: false,
+    tabName: 'custom',
+    groupName: 'label'
+  },
+  {
     label: '柱子宽度',
     type: 'inputNumber',
     field: 'barWidth',
-    optionField: 'series.0.barWidth', // 堆叠柱状图宽度通常也在系列里
-    value: 20, // 默认值
+    optionField: 'series.0.barWidth',
+    value: 20,
+    min: 1,
+    max: 50,
     tabName: 'custom',
-    groupName: 'graph'
+    groupName: 'style'
   },
   {
     label: '主题选择',
     type: 'select',
     field: 'chartTheme',
     optionField: 'theme',
-    options: [],
+    options: [{label: '浅色', value: 'light'}, {label: '深色', value: 'dark'}],
     value: 'light',
     tabName: 'custom',
     groupName: 'graph'
   },
   {
-    label: 'Option 覆盖 (JSON)',
+    label: 'Option覆盖',
     type: 'textarea',
     field: 'optionOverride',
     optionField: '',
@@ -125,4 +136,4 @@ export default {
   setting,
   dataHandler,
   optionHandler
-}; 
+};

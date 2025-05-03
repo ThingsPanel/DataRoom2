@@ -11,32 +11,49 @@ const chartType = 'bar'; // 百分比堆叠柱状图
 
 // 右侧配置项
 const setting = [
-  { label: '类别字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 State
-  { label: '数值字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 Population
-  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 Age
-  // 样式配置
-  { label: '启用堆叠', type: 'switch', field: 'stack', optionField: 'stack', value: true, tabName: 'custom', groupName: 'graph' }, // 必须
-  { label: '启用百分比', type: 'switch', field: 'percent', optionField: 'percent', value: true, tabName: 'custom', groupName: 'graph' }, // 必须
-  { label: '基础纹理类型', type: 'select', field: 'baseTexture', optionField: 'bar.style.texture', 
-    options: [ // 提供一些基础选项，动态的在 override 里
-      { label: '无', value: undefined }, 
-      { label: '方形', value: 'square' }, 
-      { label: '圆形', value: 'circle' }, 
+  { label: 'X轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
+  // 堆叠配置
+  {
+    label: '启用堆叠',
+    type: 'switch',
+    field: 'stack',
+    optionField: 'stack',
+    value: true,
+    tabName: 'custom',
+    groupName: 'stack'
+  },
+  {
+    label: '启用百分比',
+    type: 'switch',
+    field: 'percent',
+    optionField: 'percent',
+    value: true,
+    tabName: 'custom',
+    groupName: 'stack'
+  },
+  // 纹理配置
+  { label: '基础纹理类型', type: 'select', field: 'baseTexture', optionField: 'bar.style.texture',
+    options: [
+      { label: '无', value: undefined },
+      { label: '方形', value: 'square' },
+      { label: '圆形', value: 'circle' },
       { label: '线条', value: 'line' }
-    ], 
+    ],
     value: 'square', // 参考 spec 用了 square
-    tabName: 'custom', groupName: 'graph' 
+    tabName: 'custom', groupName: 'graph'
   },
   { label: '纹理大小', type: 'inputNumber', field: 'textureSize', optionField: 'bar.style.textureSize', value: 10, min: 1, tabName: 'custom', groupName: 'graph' },
   { label: '纹理间距', type: 'inputNumber', field: 'texturePadding', optionField: 'bar.style.texturePadding', value: 1, min: 0, tabName: 'custom', groupName: 'graph' },
   { label: '显示图例', type: 'switch', field: 'legendVisible', optionField: 'legends.0.visible', value: true, tabName: 'custom', groupName: 'legend' },
   // 通用配置
   { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { 
-    label: 'Option 覆盖 (JSON)', 
-    type: 'textarea', 
-    field: 'optionOverride', 
-    optionField: '', 
+  {
+    label: 'Option 覆盖 (JSON)',
+    type: 'textarea',
+    field: 'optionOverride',
+    optionField: '',
     // 提供动态纹理示例
     value: JSON.stringify({
       bar: {
@@ -44,7 +61,7 @@ const setting = [
           // 动态纹理函数非常复杂，需要用户提供完整实现
           textureOptions: `datum => {
             // 需要在此处定义 VCHART_MODULE 或相关函数
-            // const VCHART_MODULE = window.VCHART_MODULE; 
+            // const VCHART_MODULE = window.VCHART_MODULE;
             const func = datum.Age === 'Under 5 Years'
               ? (ctx, r, c, rc, cc, rat, gra) => VCHART_MODULE.randomOpacity(ctx, r, c, rc, cc, rat, gra, 0.3)
               : datum.Age === '5 to 13 Years'
@@ -68,8 +85,8 @@ const setting = [
         }
       }
     }, null, 2),
-    tabName: 'custom', 
-    groupName: 'graph' 
+    tabName: 'custom',
+    groupName: 'graph'
   }
 ];
 
@@ -121,4 +138,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

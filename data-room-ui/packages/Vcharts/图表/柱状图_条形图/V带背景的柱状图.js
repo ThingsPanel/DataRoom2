@@ -11,11 +11,11 @@ const chartType = 'bar';
 
 // 右侧配置项 (复合 X 轴 + 背景)
 const setting = [
-  { label: '类别轴字段1 (X)', type: 'select', field: 'xField1', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' }, // 对应 date
-  { label: '类别轴字段2 (X)', type: 'select', field: 'xField2', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' }, // 对应 stack
-  { label: '类别轴字段3 (X)', type: 'select', field: 'xField3', optionField: 'xField.2', multiple: false, value: '', tabName: 'data' }, // 对应 group
-  { label: '值轴字段 (Y)', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 value
-  { label: '颜色/图例字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 group
+  { label: 'X轴第一层字段', type: 'select', field: 'xField1', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' },
+  { label: 'X轴第二层字段', type: 'select', field: 'xField2', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' },
+  { label: 'X轴第三层字段', type: 'select', field: 'xField3', optionField: 'xField.2', multiple: false, value: '', tabName: 'data' },
+  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '系列字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
   // 样式配置
   { label: '启用柱子背景', type: 'switch', field: 'barBgVisible', optionField: 'barBackground.visible', value: true, tabName: 'custom', groupName: 'graph' },
   { label: '背景填充色', type: 'color', field: 'barBgFill', optionField: 'barBackground.style.fill', value: 'rgba(255,255,255,0.15)', tabName: 'custom', groupName: 'graph' },
@@ -79,4 +79,4 @@ const optionHandler = ``; // 背景色通过 setting 控制，无需 handler
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

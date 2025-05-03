@@ -11,15 +11,13 @@ const chartType = 'bar';
 
 // 右侧配置项 (分组条形图)
 const setting = [
-  { label: '类别轴字段 (Y)', type: 'select', field: 'yField', optionField: 'yField.0', multiple: false, value: '', tabName: 'data' }, // 对应 x
-  { label: '分组字段 (Y)', type: 'select', field: 'yGroupField', optionField: 'yField.1', multiple: false, value: '', tabName: 'data' }, // 对应 type (用于分组)
-  { label: '值轴字段 (X)', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 y
-  { label: '颜色/图例字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 type (用于颜色)
-  // 样式配置
+  { label: '类别字段', type: 'select', field: 'yField', optionField: 'yField.0', multiple: false, value: '', tabName: 'data' },
+  { label: '分组字段', type: 'select', field: 'yGroupField', optionField: 'yField.1', multiple: false, value: '', tabName: 'data' },
+  { label: '数值字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+  { label: '颜色字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
   { label: '图例位置', type: 'select', field: 'legendOrient', optionField: 'legends.orient', options: [ { label: '顶部', value: 'top' }, { label: '底部', value: 'bottom' }, { label: '左侧', value: 'left' }, { label: '右侧', value: 'right' } ], value: 'bottom', tabName: 'custom', groupName: 'legend' },
-  // 通用配置
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [{label: '浅色', value: 'light'}, {label: '深色', value: 'dark'}], value: 'light', tabName: 'custom', groupName: 'graph' },
+  { label: 'Option覆盖', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
 ];
 
 // 示例数据 (来自参考 spec)
@@ -70,4 +68,4 @@ const optionHandler = ``;
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};
