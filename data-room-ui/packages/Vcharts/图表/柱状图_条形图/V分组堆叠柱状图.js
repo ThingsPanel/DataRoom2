@@ -1,0 +1,63 @@
+// 配置版本号
+const version = '2024051601';
+// 标题
+const title = 'V分组堆叠柱状图';
+// 用于标识，唯一
+const name = 'V分组堆叠柱状图';
+// 组件类型标识
+const type = 'customComponent';
+// VChart 图表类型标识
+const chartType = 'bar';
+
+// 右侧配置项 (简化版 + seriesField + bandField)
+const setting = [
+  { label: '类别轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 State
+  { label: '值轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 population
+  { label: '堆叠/颜色字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 age
+  { label: '分组字段', type: 'select', field: 'bandField', optionField: 'axes.0.bandField', multiple: false, value: '', tabName: 'data' }, // **新增**: 对应 type, 映射到X轴的bandField
+  { label: '柱子宽度', type: 'inputNumber', field: 'barWidth', optionField: 'series.0.barWidth', value: 20, tabName: 'custom', groupName: 'graph' },
+  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
+  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+];
+
+// 示例数据 (来自参考 spec, 截取部分)
+const data = {
+  id: 'barData',
+  values: [
+    { State: 'AL', age: 'Under 5 Years', population: 310504, type: 'a' }, { State: 'AL', age: '5 to 13 Years', population: 552339, type: 'a' }, { State: 'AL', age: '14 to 17 Years', population: 259034, type: 'a' },
+    { State: 'AL', age: '18 to 24 Years', population: 450818, type: 'b' }, { State: 'AL', age: '25 to 44 Years', population: 1231572, type: 'c' }, { State: 'AL', age: '45 to 64 Years', population: 1215966, type: 'd' }, { State: 'AL', age: '65 Years and Over', population: 641667, type: 'd' },
+    { State: 'AK', age: 'Under 5 Years', population: 52083, type: 'a' }, { State: 'AK', age: '5 to 13 Years', population: 85640, type: 'a' }, { State: 'AK', age: '14 to 17 Years', population: 42153, type: 'a' },
+    { State: 'AK', age: '18 to 24 Years', population: 74257, type: 'b' }, { State: 'AK', age: '25 to 44 Years', population: 198724, type: 'c' }, { State: 'AK', age: '45 to 64 Years', population: 183159, type: 'd' }, { State: 'AK', age: '65 Years and Over', population: 50277, type: 'd' },
+    { State: 'AZ', age: 'Under 5 Years', population: 515910, type: 'a' }, { State: 'AZ', age: '5 to 13 Years', population: 828669, type: 'a' }, { State: 'AZ', age: '14 to 17 Years', population: 362642, type: 'a' },
+    { State: 'AZ', age: '18 to 24 Years', population: 601943, type: 'b' }, { State: 'AZ', age: '25 to 44 Years', population: 1804762, type: 'c' }, { State: 'AZ', age: '45 to 64 Years', population: 1523681, type: 'd' }, { State: 'AZ', age: '65 Years and Over', population: 862573, type: 'd' }
+    // ... more data ...
+  ]
+};
+
+// 默认 VChart Option (Spec) for Grouped Stacked Bar
+const option = {
+  type: 'bar',
+  data: [data],
+  xField: 'State',
+  yField: 'population',
+  seriesField: 'age', // 堆叠/颜色字段
+  stack: true,      // **启用堆叠**
+  axes: [
+    {
+      orient: 'bottom',
+      type: 'band',
+      visible: true,
+      bandField: 'type' // **指定X轴分组字段**
+    },
+    { orient: 'left', type: 'linear', visible: true, grid: { visible: true } }
+  ],
+  legends: { visible: true },
+  tooltip: { visible: true, mark: { content: [] }, dimension: { content: [] } }
+};
+
+const dataHandler = `return data;`;
+const optionHandler = ``;
+
+export default {
+  version, title, name, type, chartType, option, setting, dataHandler, optionHandler
+}; 

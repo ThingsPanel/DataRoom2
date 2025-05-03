@@ -1,494 +1,270 @@
 <template>
   <div class="bs-setting-wrap">
     <el-form
+      v-if="config"
       ref="form"
       :model="config"
-      :rules="customRules"
-      label-width="120px"
+      label-width="100px"
       label-position="left"
       class="setting-body bs-el-form"
     >
-      <SettingTitle>基础</SettingTitle>
+      <SettingTitle>图表样式</SettingTitle>
       <div class="lc-field-body">
-        <el-form-item
-          label="标题"
-          label-width="120px"
-        >
-          <el-input
-            v-model="config.title"
-            placeholder="请输入标题"
+        <!-- 主题选择 -->
+        <el-form-item label="主题选择">
+          <el-select
+            v-model="chartThemeValue"
+            popper-class="bs-el-select"
+            class="bs-el-select"
+            placeholder="请选择主题"
             clearable
-          />
+          >
+            <el-option
+              v-for="(opt, optIndex) in vchartThemes"
+              :key="optIndex"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
         </el-form-item>
       </div>
-      <SettingTitle>边框</SettingTitle>
-      <div class="lc-field-body">
-         <BorderSetting
-          v-if="config.border"
-          label-width="120px"
-          :config="config.border"
-          :bigTitle='config.title'
-        />
-      </div>
-      <SettingTitle>位置</SettingTitle>
-      <div class="lc-field-body">
-        <PosWhSetting
-          label-width="120px"
-          :config="config"
-        />
-      </div>
-      <SettingTitle>旋转</SettingTitle>
-          <div class="lc-field-body">
-            <RotateSetting
-              :config="config"
-            />
-          </div>
-          <SettingTitle>图表样式</SettingTitle>
-          <div class="lc-field-body">
-             <!-- 固定显示：主题选择 -->
-             <el-form-item label="主题选择">
-               <el-select
-                 v-model="themeValue" 
-                 popper-class="bs-el-select"
-                 class="bs-el-select"
-                 placeholder="请选择主题"
-                 clearable
-               >
-                 <el-option
-                   v-for="(opt, optIndex) in vchartThemes"
-                   :key="optIndex"
-                   :label="opt.label"
-                   :value="opt.value"
-                 />
-               </el-select>
-             </el-form-item>
-             
-             <!-- 固定显示：Option 覆盖 -->
-             <el-form-item label="Option 覆盖 (JSON)">
-                <el-input
-                  type="textarea"
-                  v-model="overrideValue"
-                  :rows="5" 
-                  placeholder="请输入有效的 JSON 覆盖配置"
-                />
-             </el-form-item>
-          </div>
-          <template v-for="group in groupList">
-        <div :key="group.groupName">
-          <SettingTitle>   {{ group.groupName | filterGroupName }}</SettingTitle>
-          <div class="lc-field-body">
-            <div
-              v-for="(setting, settingIndex) in group.list"
-              :key="settingIndex+1"
-            >
-              <!-- 排除已固定显示的配置 -->
-              <template v-if="setting.field !== 'chartTheme' && setting.field !== 'optionOverride'">
-                  <el-form-item
-                    :label="setting.type=== 'padding' ? '' : setting.label"
-                    :label-width="setting.type=== 'padding' ? '0px' :'120px'"
-                  >
-                    <el-input
-                      v-if="setting.type === 'input'"
-                      v-model="setting.value"
-                      :placeholder="`请输入${setting.label}`"
-                      clearable
-                    />
-                    <el-select
-                      v-else-if="setting.type === 'select'"
-                      v-model="setting.value"
-                      popper-class="bs-el-select"
-                      class="bs-el-select"
-                      :placeholder="`请选择${setting.label}`"
-                      :multiple="setting.multiple"
-                      clearable
-                    >
-                      <el-option
-                        v-for="(opt, optIndex) in setting.options"
-                        :key="optIndex"
-                        :label="opt.label"
-                        :value="opt.value"
-                      />
-                    </el-select>
-                    <template v-else-if="setting.type === 'colorSelect'">
-                      <color-select
-                        v-model="setting.value"
-                        @update="updateColorScheme"
-                      />
-                      <div
-                        style="
-                        display: flex;
-                        align-items: center;
-                        flex-wrap: wrap;
-                      "
-                        class="color-picker-box"
-                      >
-                        <el-color-picker
-                          v-for="(colorItem, colorItemIndex) in colors"
-                          :key="colorItemIndex"
-                          v-model="setting.value[colorItemIndex]"
-                          popper-class="bs-el-color-picker"
-                          show-alpha
-                          class="start-color"
-                        />
-                        <span
-                          class="el-icon-circle-plus-outline"
-                          style="color: #007aff; font-size: 20px"
-                          @click="addColor"
-                        />
-                        <span
-                          v-if="colors.length"
-                          class="el-icon-remove-outline"
-                          style="color: #ea0b30; font-size: 20px"
-                          @click="delColor()"
-                        />
-                      </div>
-                    </template>
-    
-                    <el-color-picker
-                      v-else-if="setting.type === 'colorPicker'"
-                      v-model="setting.value"
-                      popper-class="bs-el-color-picker"
-                      class="bs-el-color-picker"
-                      show-alpha
-                    />
-                    <el-input-number
-                      v-else-if="setting.type === 'inputNumber'"
-                      v-model="setting.value"
-                      class="bs-el-input-number"
-                      :step="setting.step || 1"
-                      :min="setting.min || 0"
-                      :max="setting.max || 100000"
-                    />
-                    <el-radio-group
-                      v-else-if="setting.type === 'radio'"
-                      v-model="setting.value"
-                      class="bs-el-radio-group"
-                    >
-                      <template v-for="(opt, optIndex) in setting.options"   >
-                        <el-radio-button
-                        :key="optIndex"
-                          :label="opt.value"
-                        >
-                          {{ opt.label }}
-                        </el-radio-button>
-                      </template>
-                    </el-radio-group>
-                    <el-switch
-                      v-else-if="setting.type === 'switch'"
-                      v-model="setting.value"
-                      class="bs-el-switch"
-                      :active-value="setting.active"
-                      :inactive-value="setting.inactive"
-                    />
-                    <el-slider
-                      v-else-if="setting.type === 'slider'"
-                      v-model="setting.value"
-                      :min="0"
-                      :max="1"
-                      :step="0.01"
-                    />
-                    <PaddingSetting
-                      v-else-if="setting.type === 'padding'"
-                      v-model="setting.value"
-                    />
-                     <el-form-item
-                        v-else-if="setting.type === 'textarea'"
-                       :label="setting.label"
-                       label-width="120px"
-                     >
-                       <el-input
-                         type="textarea"
-                         v-model="setting.value"
-                         :rows="5" 
-                         :placeholder="`请输入 ${setting.label}`"
-                       />
-                     </el-form-item>
-                  </el-form-item>
-              </template>
-            </div>
-          </div>
-        </div>
-      </template>
-      <!-- </div> -->
     </el-form>
+     <div v-else class="empty-tip">
+      请先选中一个 VChart 图表组件
+    </div>
   </div>
 </template>
+
 <script>
-import BorderSetting from 'data-room-ui/BigScreenDesign/RightSetting/BorderSetting.vue'
-import SettingTitle from 'data-room-ui/SettingTitle/index.vue'
-import { chartSettingMixins } from 'data-room-ui/js/mixins/chartSettingMixins'
-import ColorSelect from 'data-room-ui/ColorMultipleSelect/index.vue'
-// import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
-import PaddingSetting from 'data-room-ui/BigScreenDesign/RightSetting/PaddingSetting/index.vue'
-import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
-import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
-import cloneDeep from 'lodash/cloneDeep'
+import { mapState } from 'vuex';
+import _ from 'lodash'; // 使用 lodash 进行 debounce
+import cloneDeep from 'lodash/cloneDeep';
+import SettingTitle from 'data-room-ui/SettingTitle/index.vue';
+// 导入 element-ui 组件，如果项目使用了的话
+// import { Select, Option, Form, FormItem } from 'element-ui'; // 根据实际使用的UI库调整
+
+// VChart 主题列表 (保持不变)
+const vchartThemesList = [
+   { label: '亮色 (默认)', value: 'light' },
+   { label: '暗色', value: 'dark' },
+   { label: '大屏-火山蓝', value: 'vScreenVolcanoBlue' },
+   // ... (其他主题保持不变)
+   { label: 'Semi-暗色', value: 'semiDesignDark' },
+ ];
 
 export default {
-  name: 'VchartCustomSetting', // 修改组件名称
+  name: 'VchartCustomSetting',
+  // 注册使用的组件
   components: {
-    ColorSelect,
-    // ColorPicker,
-    PaddingSetting,
-    PosWhSetting,
-    BorderSetting,
     SettingTitle,
-    RotateSetting
+    // 如果使用 Element UI 或其他库，在此注册
+    // 'el-select': Select,
+    // 'el-option': Option,
+    // 'el-form': Form,
+    // 'el-form-item': FormItem,
   },
-  mixins: [chartSettingMixins],
-  data () {
+  data() {
     return {
-      groupList: [],
-      vchartThemes: [
-        { label: '亮色 (默认)', value: 'light' },
-        { label: '暗色', value: 'dark' },
-        { label: '大屏-火山蓝', value: 'vScreenVolcanoBlue' },
-        { label: '大屏-清新蜡笔', value: 'vScreenClean' },
-        { label: '大屏-郊外', value: 'vScreenOutskirts' },
-        { label: '大屏-汽车蓝橙', value: 'vScreenBlueOrange' },
-        { label: '大屏-金融黄', value: 'vScreenFinanceYellow' },
-        { label: '大屏-文旅青', value: 'vScreenWenLvCyan' },
-        { label: '大屏-电力绿', value: 'vScreenElectricGreen' },
-        { label: '大屏-电商紫', value: 'vScreenECommercePurple' },
-        { label: '大屏-红蓝', value: 'vScreenRedBlue' },
-        { label: '大屏-党建红', value: 'vScreenPartyRed' },
-        { label: 'Arco-亮色', value: 'arcoDesignLight' },
-        { label: 'Arco-暗色', value: 'arcoDesignDark' },
-        { label: 'Semi-亮色', value: 'semiDesignLight' },
-        { label: 'Semi-暗色', value: 'semiDesignDark' },
-        // ...可以继续添加其他主题
-      ]
-    }
-  },
-  filters: {
-    filterGroupName (val) {
-      const settingGroup = {
-        basic: '基础',
-        position: '位置',
-        graph: '图表',
-        rotate: '旋转',
-        grid: '网格线',
-        legend: '图例',
-        xAxis: 'X轴',
-        yAxis: 'Y轴',
-        padding: '边距',
-        label: '标签',
-        axis: '坐标轴',
-        animation: '动画',
-        tooltip: '提示信息',
-        other: '其他'
-      }
-      return settingGroup[val] || val
-    }
+      vchartThemes: vchartThemesList,
+      debouncedCommit: null,
+      // 用于内部操作的配置副本，避免直接修改 prop
+      internalConfig: null,
+    };
   },
   computed: {
-    config: {
-      get () {
-        return this.$store.state.bigScreen.activeItemConfig
-      },
-      set (val) {
-        this.$store.commit('bigScreen/changeActiveItemConfig', val)
-      }
+    // 从 Vuex 获取激活项配置
+    ...mapState('bigScreen', {
+      activeConfig: state => state.activeItemConfig
+    }),
+
+    // 提供给模板使用的 config，只读
+    config() {
+      return this.internalConfig;
     },
-    appCode: {
-      get () {
-        return this.$store.state.bigScreen.pageInfo.appCode
-      }
-    },
-    pageCode () {
-      return this.$route.query.code
-    },
-    // 计算属性：获取或设置主题值
-    themeValue: {
+
+    // 计算属性：处理主题值
+    chartThemeValue: {
       get() {
-        const setting = this.config?.setting?.find(s => s.field === 'chartTheme');
-        return setting ? setting.value : 'light'; // 默认 'light'
+        if (!this.internalConfig || !this.internalConfig.setting) {
+          return 'light'; // 默认值
+        }
+        // 从当前 internalConfig 的 setting 中查找主题值
+        const setting = this.internalConfig.setting.find(s => s.field === 'chartTheme');
+        return setting ? setting.value : 'light'; // 默认值
       },
       set(newValue) {
-        const newConfig = cloneDeep(this.config);
-        let setting = newConfig.setting?.find(s => s.field === 'chartTheme');
-        if (setting) {
-          setting.value = newValue;
-        } else {
-          // 如果 setting 不存在，则创建并添加到数组
-          if (!newConfig.setting) {
-              newConfig.setting = [];
-          }
-          newConfig.setting.push({
-            label: '主题选择',
-            type: 'select',
-            field: 'chartTheme',
-            optionField: 'theme',
-            value: newValue,
-            options: this.vchartThemes, // 引用完整的列表
-            tabName: 'custom',
-            groupName: 'graph'
-          });
-        }
-        this.$store.commit('bigScreen/changeActiveItemConfig', newConfig);
-      }
-    },
-    // 计算属性：获取或设置 Option 覆盖值
-    overrideValue: {
-      get() {
-        const setting = this.config?.setting?.find(s => s.field === 'optionOverride');
-        return setting ? setting.value : '{}'; // 默认 '{}'
+        // --- Log Point 1 --- 
+        console.log('[chartThemeValue set] Start - Current internalConfig.option:', JSON.stringify(this.internalConfig?.option, null, 2));
+        // 使用防抖函数提交更改
+        this.updateSettingValue('chartTheme', newValue, {
+          label: '主题选择',
+          type: 'select', // 类型信息，虽然这里不渲染，但保持一致性
+          optionField: 'theme', // 对应的 VChart Spec 字段
+          options: this.vchartThemes, // 选项列表
+          tabName: 'custom', // 分类
+          groupName: 'graph', // 分组
+        });
       },
-      set(newValue) {
-        const newConfig = cloneDeep(this.config);
-        let setting = newConfig.setting?.find(s => s.field === 'optionOverride');
-        if (setting) {
-          setting.value = newValue;
-        } else {
-          // 如果 setting 不存在，则创建并添加到数组
-          if (!newConfig.setting) {
-              newConfig.setting = [];
-          }
-          newConfig.setting.push({
-            label: 'Option 覆盖 (JSON)',
-            type: 'textarea',
-            field: 'optionOverride',
-            value: newValue,
-            tabName: 'custom',
-            groupName: 'graph'
-          });
-        }
-         this.$store.commit('bigScreen/changeActiveItemConfig', newConfig);
-      }
-    }
+    },
   },
   watch: {
-    // !! 恢复对 groupList 的 watch，以同步动态配置项的更改 !!
-    groupList: {
-      handler (newGroupList) {
-        // 从 groupList 中提取所有 setting 项
-        const currentSettings = newGroupList.flatMap(group => group.list);
-        
-        // 获取 config 的深拷贝以进行修改
-        const newConfig = cloneDeep(this.config);
-        
-        // 确保 newConfig.setting 是数组
-        if (!Array.isArray(newConfig.setting)) {
-          newConfig.setting = [];
-        }
-        
-        // 更新或添加 currentSettings 中的每一项到 newConfig.setting
-        currentSettings.forEach(currentSet => {
-          const index = newConfig.setting.findIndex(s => s.field === currentSet.field);
-          if (index !== -1) {
-            // 如果找到了，更新现有的项 (确保响应性)
-            Vue.set(newConfig.setting, index, currentSet);
-          } else {
-            // 如果没找到 (理论上不应该发生，因为 groupList 来自 config.setting)，
-            // 但为了健壮性，可以考虑添加回去，尽管这可能不是预期行为。
-            // 暂时不添加，因为 groupSetting 已过滤
-             console.warn(`Setting with field '${currentSet.field}' from groupList not found in config.setting during watch.`);
-          }
-        });
-        
-        // 提交更新后的 config 到 Vuex
-        this.$store.commit('bigScreen/changeActiveItemConfig', newConfig);
+    // 监听外部 activeConfig 的变化来更新 internalConfig
+    activeConfig: {
+      handler(newVal) {
+        // --- Log Point 2 --- 
+         console.log('[Watcher activeConfig] Received newVal.option:', JSON.stringify(newVal?.option, null, 2));
+         // 深度克隆以创建独立的内部副本
+        this.internalConfig = cloneDeep(newVal);
+         // --- Log Point 3 --- 
+         console.log('[Watcher activeConfig] Initialized internalConfig.option:', JSON.stringify(this.internalConfig?.option, null, 2));
+         // 可选：在这里添加对 internalConfig 的初始化检查，确保 setting 数组存在
+         if (this.internalConfig && !Array.isArray(this.internalConfig.setting)) {
+            this.internalConfig.setting = [];
+            console.warn('VchartCustomSetting: Initialized missing setting array.');
+         }
       },
-      deep: true // 必须深度监听才能检测到 setting.value 的变化
-    }
+      deep: true,
+      immediate: true // 立即执行以进行初始化
+    },
   },
-  mounted () {
-    // 确保在访问 config 前，config 存在
-    if (this.config) {
-       this.init()
-    } else {
-      console.warn('VchartCustomSetting mounted: this.config is initially null or undefined.');
-      // 可以考虑在这里添加一个监听器，等待 config 加载后再初始化
-      // 或者依赖 Vue 的响应式系统，在 config 更新后自动触发 computed 和 watch
-    }
-    // 移除 EchartsCustomSetting 中的遗留逻辑
-    /*
-    const groupNameList = []
-    this.config?.setting?.filter(
-      (item) => item.tabName === 'custom'
-    ).forEach(item => {
-      // ... (removed legacy grouping logic) ...
-    })
-    for (let i = 0; i < this.groupList.length; i++) {
-       // ... (removed legacy sorting logic) ...
-    }
-    */
+  created() {
+    // 创建防抖提交函数
+    this.debouncedCommit = _.debounce((newConfig) => {
+      // 获取最新的 Vuex 状态作为参照
+      const currentActiveConfig = this.$store.state.bigScreen.activeItemConfig;
+       // --- Log Point 6 --- 
+       console.log('[Debounced Commit] Start - Received newConfig.option:', JSON.stringify(newConfig?.option, null, 2));
+       console.log('[Debounced Commit] Start - Current Vuex activeConfig.option:', JSON.stringify(currentActiveConfig?.option, null, 2));
+
+      // --- 配置保留和一致性检查 ---
+      if (newConfig && currentActiveConfig) {
+        // 1. 确保 option 对象存在
+        if (!newConfig.option) {
+            console.warn('[Debounced Commit] newConfig.option was missing, initializing.');
+            newConfig.option = {};
+        }
+
+        // 2. 保留 option.data 结构
+        const currentOptionData = currentActiveConfig.option?.data;
+        if (Array.isArray(currentOptionData) && currentOptionData.length > 0) {
+          if (!Array.isArray(newConfig.option.data) || newConfig.option.data.length === 0) {
+            console.warn('[Debounced Commit] Restoring config.option.data from current Vuex state:', JSON.stringify(currentOptionData));
+            newConfig.option.data = cloneDeep(currentOptionData);
+          }
+        } else if (!Array.isArray(newConfig.option.data)) {
+           console.warn('[Debounced Commit] Vuex state has no valid option.data, ensuring newConfig.option.data is empty array.');
+           newConfig.option.data = [];
+        }
+
+        // 可选: 类似地保留 rawData
+        const currentRawData = currentActiveConfig.option?.rawData;
+        if (Array.isArray(currentRawData)) {
+            if (!Array.isArray(newConfig.option.rawData)) {
+                console.warn('[Debounced Commit] Restoring config.option.rawData from current Vuex state.');
+                newConfig.option.rawData = cloneDeep(currentRawData);
+            }
+        }
+
+        // 3. 确保 option.theme 与 setting 中的 chartTheme 一致
+        const themeSetting = newConfig.setting?.find(s => s.field === 'chartTheme');
+        const themeValueFromSetting = themeSetting ? themeSetting.value : 'light';
+        if (newConfig.option.theme !== themeValueFromSetting) {
+            console.warn(`[Debounced Commit] Forcing option.theme ('${newConfig.option.theme}') to match setting value ('${themeValueFromSetting}').`);
+            newConfig.option.theme = themeValueFromSetting;
+        }
+
+        // 4. 保留原有的 type 和 chartType 检查
+        if (!newConfig.type && currentActiveConfig.type) {
+            newConfig.type = currentActiveConfig.type;
+            console.warn('[Debounced Commit] Restored missing type from current Vuex state.');
+        }
+        if (!newConfig.chartType && currentActiveConfig.chartType) {
+            newConfig.chartType = currentActiveConfig.chartType;
+            console.warn('[Debounced Commit] Restored missing chartType from current Vuex state.');
+        }
+
+      } else {
+         console.error('[Debounced Commit] Cannot perform checks: newConfig or currentActiveConfig is missing.');
+         return;
+      }
+
+      // --- Log Point 7 --- 
+      console.log('[Debounced Commit] Committing final newConfig.option:', JSON.stringify(newConfig?.option, null, 2));
+      // --- 提交到 Vuex ---
+      this.$store.commit('bigScreen/changeActiveItemConfig', newConfig);
+
+    }, 400); // 400ms 延迟
+
+     // 组件销毁时取消 debounce
+     this.$on('hook:beforeDestroy', () => {
+       if (this.debouncedCommit) {
+         this.debouncedCommit.cancel();
+       }
+     });
   },
   methods: {
-    init () {
-      // groupSetting 内部已有 config?.setting 的检查，但再次确认 config 存在
-      if (this.config) {
-        this.groupList = this.groupSetting()
+    // 统一处理 setting 值更新并触发防抖 commit
+    updateSettingValue(field, newValue, settingTemplate) {
+       // --- Log Point 4 --- 
+      console.log('[updateSettingValue] Start - Current internalConfig.option:', JSON.stringify(this.internalConfig?.option, null, 2));
+      // 必须操作 internalConfig 的副本
+      if (!this.internalConfig) {
+          console.error('Cannot update setting: internalConfig is null.');
+          return;
+      }
+
+      // 创建一个新的副本进行修改
+      const newConfig = cloneDeep(this.internalConfig);
+
+      // 确保 setting 数组存在
+      if (!Array.isArray(newConfig.setting)) {
+          newConfig.setting = [];
+      }
+
+      let settingIndex = newConfig.setting.findIndex(s => s.field === field);
+
+      if (settingIndex !== -1) {
+        // 如果存在，直接更新值
+        newConfig.setting[settingIndex].value = newValue;
       } else {
-         console.warn('VchartCustomSetting init: Cannot group settings because this.config is null or undefined.');
-         this.groupList = []; // 重置 groupList
+        // 如果不存在，使用模板创建新设置项并添加
+        const newSetting = { ...settingTemplate, field: field, value: newValue };
+        newConfig.setting.push(newSetting);
       }
-    },
-    groupSetting () {
-      const settingGroup = {
-        graph: [],
-        grid: [],
-        legend: [],
-        axis: [],
-        label: [],
-        animation: [],
-        tooltip: []
-      }
-      // !! 确保在访问 setting 前检查 config 是否存在 !!
-      if (!this.config || !this.config.setting) {
-           console.warn('VchartCustomSetting groupSetting: this.config or this.config.setting is missing.');
-           return []; // 返回空数组，避免错误
-      }
-      
-      this.config.setting.forEach(set => {
-        // !! 新增: 过滤掉固定显示的字段 !!
-        if (set.field === 'chartTheme' || set.field === 'optionOverride') {
-            return; // 跳过这两个字段
-        }
 
-        // 只分组 custom 标签页的配置项
-        if (set.tabName === 'custom' && set.groupName) {
-          const groupKey = (set.groupName === 'xAxis' || set.groupName === 'yAxis') ? 'axis' : set.groupName;
-          if (!settingGroup[groupKey]) {
-            settingGroup[groupKey] = []
-          }
-          settingGroup[groupKey].push(set)
-        }
-      })
-      // 将分组后的配置转换为数组形式以便 v-for 循环
-      return Object.keys(settingGroup)
-        .filter(key => settingGroup[key].length > 0) // 过滤空分组
-        .map(key => ({
-          groupName: key,
-          list: settingGroup[key]
-        }))
-    },
-    updateColorScheme (val) {
-      this.config.option.colorScheme = val
-    },
-    addColor () {
-      this.setting?.find(item => item.optionField === 'colorScheme').value?.push('#007aff')
-    },
-    delColor () {
-      this.setting?.find(item => item.optionField === 'colorScheme').value?.pop()
-    }
+      // 更新内部状态，这样 getter 能立刻反映变化
+      this.internalConfig = newConfig; // 更新内部状态以反映 set 操作
 
-  }
-
-}
+      // 调用防抖提交，传递修改后的副本
+      const configToCommit = cloneDeep(newConfig);
+       // --- Log Point 5 --- 
+      console.log('[updateSettingValue] Calling debouncedCommit with config.option:', JSON.stringify(configToCommit?.option, null, 2));
+      this.debouncedCommit(configToCommit); // 传递新副本给 debounce
+    },
+  },
+};
 </script>
+
 <style lang="scss" scoped>
-@import '../../assets/style/settingWrap.scss';
-  .lc-field-body {
-    padding: 12px 16px;
-  }
-  ::v-deep .el-form-item__label {
-    color: var(--bs-el-title) !important;
-  }
-  ::v-deep .el-input-number__increase{
-    border-left: 1px solid #1a1a1a;
-  }
-  ::v-deep .el-input-number__decrease{
-     border-right: 1px solid #1a1a1a;
-  }
-</style> 
+@import '../../assets/style/settingWrap.scss'; // 引入基础样式
+.bs-setting-wrap {
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px; // 添加一些内边距
+}
+.lc-field-body {
+  padding: 12px 16px;
+}
+.bs-el-select {
+  width: 100%; // 让选择框撑满
+}
+.empty-tip {
+  text-align: center;
+  color: #999;
+  margin-top: 20px;
+}
+// 可以根据需要添加或覆盖 Element UI 的样式变量
+// ::v-deep .el-form-item__label { ... }
+// ::v-deep .el-input__inner { ... }
+</style>
+
