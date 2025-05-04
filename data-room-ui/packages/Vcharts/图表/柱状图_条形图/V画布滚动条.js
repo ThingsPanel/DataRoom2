@@ -11,28 +11,57 @@ const chartType = 'bar'; // 条形图
 
 // 右侧配置项
 const setting = [
-  { label: '类别字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 name
-  { label: '数值字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' }, // 对应 value
-  // 样式配置
-  { 
-    label: '滚动条位置', 
-    type: 'select', 
-    field: 'scrollBarOrient', 
-    optionField: 'scrollBar.0.orient', 
-    options: [{label:'底部', value:'bottom'}, {label:'顶部', value:'top'}, {label:'左侧', value:'left'}, {label:'右侧', value:'right'}], 
-    value: 'right', 
-    tabName: 'custom', 
-    groupName: 'scrollBar' 
+  // 数据配置
+  { label: '类别字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '数值字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: '', tabName: 'data' },
+
+  // 滚动条配置
+  {
+    label: '滚动条位置',
+    type: 'select',
+    field: 'scrollBarOrient',
+    optionField: 'scrollBar.0.orient',
+    options: [{label:'底部', value:'bottom'}, {label:'顶部', value:'top'}, {label:'左侧', value:'left'}, {label:'右侧', value:'right'}],
+    value: 'right',
+    tabName: 'scrollBar',
+    groupName: 'scrollBar'
   },
-  { label: '启用滚轮滚动', type: 'switch', field: 'scrollBarRoamScroll', optionField: 'scrollBar.0.roamScroll.enable', value: true, tabName: 'custom', groupName: 'scrollBar' },
-  { label: '滚轮滚动速率', type: 'inputNumber', field: 'scrollBarRoamRate', optionField: 'scrollBar.0.roamScroll.rate', value: 0.05, step: 0.01, tabName: 'custom', groupName: 'scrollBar' },
-  { label: '滚轮方向反转', type: 'switch', field: 'scrollBarRoamReverse', optionField: 'scrollBar.0.roamScroll.reverse', value: true, tabName: 'custom', groupName: 'scrollBar' },
-  { label: '起始位置(%)', type: 'inputNumber', field: 'scrollBarStart', optionField: 'scrollBar.0.start', value: 0, min: 0, max: 1, step: 0.01, tabName: 'custom', groupName: 'scrollBar' },
-  { label: '结束位置(%)', type: 'inputNumber', field: 'scrollBarEnd', optionField: 'scrollBar.0.end', value: 0.4, min: 0, max: 1, step: 0.01, tabName: 'custom', groupName: 'scrollBar' },
-  { label: '显示标签', type: 'switch', field: 'labelVisible', optionField: 'label.visible', value: true, tabName: 'custom', groupName: 'label' },
+  {
+    label: '滚动条行为',
+    type: 'group',
+    tabName: 'scrollBar',
+    groupName: 'scrollBar',
+    children: [
+      { label: '启用滚轮滚动', type: 'switch', field: 'scrollBarRoamScroll', optionField: 'scrollBar.0.roamScroll.enable', value: true },
+      { label: '滚轮滚动速率', type: 'inputNumber', field: 'scrollBarRoamRate', optionField: 'scrollBar.0.roamScroll.rate', value: 0.05, step: 0.01 },
+      { label: '滚轮方向反转', type: 'switch', field: 'scrollBarRoamReverse', optionField: 'scrollBar.0.roamScroll.reverse', value: true },
+      { label: '起始位置(%)', type: 'inputNumber', field: 'scrollBarStart', optionField: 'scrollBar.0.start', value: 0, min: 0, max: 1, step: 0.01 },
+      { label: '结束位置(%)', type: 'inputNumber', field: 'scrollBarEnd', optionField: 'scrollBar.0.end', value: 0.4, min: 0, max: 1, step: 0.01 }
+    ]
+  },
+
+  // 标签配置
+  {
+    label: '标签',
+    type: 'group',
+    tabName: 'label',
+    groupName: 'label',
+    children: [
+      { label: '显示标签', type: 'switch', field: 'labelVisible', optionField: 'label.visible', value: true }
+    ]
+  },
+
   // 通用配置
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+  {
+    label: '通用设置',
+    type: 'group',
+    tabName: 'general',
+    groupName: 'general',
+    children: [
+      { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light' },
+      { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}' }
+    ]
+  }
 ];
 
 // 示例数据 (来自参考 spec)
@@ -83,4 +112,4 @@ const optionHandler = ``; // 直接通过 optionField 更新
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

@@ -9,20 +9,39 @@ const type = 'customComponent';
 // VChart 图表类型标识
 const chartType = 'bar';
 
-// 右侧配置项 (包含分组和样式)
+// 右侧配置项
 const setting = [
-  { label: '类别轴字段 (X)', type: 'select', field: 'xField', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' }, // 对应 x
-  { label: '分组字段 (X)', type: 'select', field: 'xGroupField', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' }, // 对应 type (用于分组)
-  { label: '值轴字段 (Y)', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' }, // 对应 y
-  { label: '颜色/图例字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' }, // 对应 type (用于颜色)
+  // 数据配置
+  { label: '类别轴字段 (X)', type: 'select', field: 'xField', optionField: 'xField.0', multiple: false, value: '', tabName: 'data' },
+  { label: '分组字段 (X)', type: 'select', field: 'xGroupField', optionField: 'xField.1', multiple: false, value: '', tabName: 'data' },
+  { label: '值轴字段 (Y)', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: '', tabName: 'data' },
+  { label: '颜色/图例字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: '', tabName: 'data' },
+
   // 样式配置
-  { label: '柱子圆角', type: 'inputNumber', field: 'cornerRadius', optionField: 'bar.style.cornerRadius', value: 10, min: 0, tabName: 'custom', groupName: 'graph' },
-  { label: '启用渐变', type: 'switch', field: 'enableGradient', optionField: 'bar.style.fill.gradient', value: true, tabName: 'custom', groupName: 'graph' }, // 控制是否启用渐变
-  { label: '渐变起始色', type: 'color', field: 'gradientStartColor', optionField: 'bar.style.fill.stops.0.color', value: '#86DF6C', tabName: 'custom', groupName: 'graph' },
-  { label: '渐变结束色', type: 'color', field: 'gradientEndColor', optionField: 'bar.style.fill.stops.1.color', value: '#468DFF', tabName: 'custom', groupName: 'graph' },
+  {
+    label: '柱子样式',
+    type: 'group',
+    tabName: 'style',
+    groupName: 'style',
+    children: [
+      { label: '圆角半径', type: 'inputNumber', field: 'cornerRadius', optionField: 'bar.style.cornerRadius', value: 10, min: 0 },
+      { label: '启用渐变', type: 'switch', field: 'enableGradient', optionField: 'bar.style.fill.gradient', value: true },
+      { label: '渐变起始色', type: 'color', field: 'gradientStartColor', optionField: 'bar.style.fill.stops.0.color', value: '#86DF6C' },
+      { label: '渐变结束色', type: 'color', field: 'gradientEndColor', optionField: 'bar.style.fill.stops.1.color', value: '#468DFF' }
+    ]
+  },
+
   // 通用配置
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'graph' },
-  { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}', tabName: 'custom', groupName: 'graph' }
+  {
+    label: '通用设置',
+    type: 'group',
+    tabName: 'general',
+    groupName: 'general',
+    children: [
+      { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light' },
+      { label: 'Option 覆盖 (JSON)', type: 'textarea', field: 'optionOverride', optionField: '', value: '{}' }
+    ]
+  }
 ];
 
 // 示例数据 (来自参考 spec)
@@ -90,7 +109,7 @@ const dataHandler = `return data;`;
 const optionHandler = `
 function handleOption(option, config) {
   const enableGradient = config.setting.find(s => s.field === 'enableGradient')?.value;
-  
+
   if (option.bar?.style?.fill) {
     if (enableGradient === false) {
       // 如果禁用渐变，删除渐变配置，颜色将由 seriesField 和主题决定
@@ -120,4 +139,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};

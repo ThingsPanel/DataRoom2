@@ -20,9 +20,37 @@ const iconMap = {
 
 // 右侧配置项
 const setting = [
-  { label: 'X轴字段', type: 'select', field: 'xField', optionField: 'xField', multiple: false, value: 'day', tabName: 'data' },
-  { label: 'Y轴字段', type: 'select', field: 'yField', optionField: 'yField', multiple: false, value: 'sales', tabName: 'data' },
-  { label: '分组/颜色字段', type: 'select', field: 'seriesField', optionField: 'seriesField', multiple: false, value: 'day', tabName: 'data' },
+  // 数据配置项
+  {
+    label: 'X轴字段',
+    type: 'select',
+    field: 'xField',
+    optionField: 'xField',
+    multiple: false,
+    value: 'day',
+    tabName: 'data',
+    groupName: 'data'
+  },
+  {
+    label: 'Y轴字段',
+    type: 'select',
+    field: 'yField',
+    optionField: 'yField',
+    multiple: false,
+    value: 'sales',
+    tabName: 'data',
+    groupName: 'data'
+  },
+  {
+    label: '分组/颜色字段',
+    type: 'select',
+    field: 'seriesField',
+    optionField: 'seriesField',
+    multiple: false,
+    value: 'day',
+    tabName: 'data',
+    groupName: 'data'
+  },
   // 标签配置
   {
     label: '显示标签',
@@ -50,7 +78,16 @@ const setting = [
     groupName: 'label'
   },
   // 通用配置
-  { label: '主题选择', type: 'select', field: 'chartTheme', optionField: 'theme', options: [], value: 'light', tabName: 'custom', groupName: 'basic' },
+  {
+    label: '主题选择',
+    type: 'select',
+    field: 'chartTheme',
+    optionField: 'theme',
+    options: [],
+    value: 'light',
+    tabName: 'custom',
+    groupName: 'basic'
+  },
   {
     label: 'Option 覆盖 (JSON)',
     type: 'textarea',
@@ -142,7 +179,7 @@ function handleOption(option, config) {
   // 处理标签配置
   const labelVisible = settings.find(s => s.field === 'labelVisible')?.value;
   const labelPosition = settings.find(s => s.field === 'labelPosition')?.value;
-  
+
   if (option.label) {
     if (labelVisible !== undefined) {
       option.label.visible = labelVisible;
@@ -150,7 +187,7 @@ function handleOption(option, config) {
     if (labelPosition !== undefined) {
       option.label.position = labelPosition;
     }
-    
+
     // IMPORTANT: Ensure formatMethod uses the icon map defined within this scope
     option.label.formatMethod = (value, datum) => {
       // Check if funcIconMap is available
@@ -193,4 +230,4 @@ function handleOption(option, config) {
 
 export default {
   version, title, name, type, chartType, option, setting, dataHandler, optionHandler
-}; 
+};
