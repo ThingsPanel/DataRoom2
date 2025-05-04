@@ -60,21 +60,22 @@ function getVchartList (files) {
       ...baseOption
     };
 
-    // !! New logic: Store default data in rawData !!
+    // !! MODIFIED: Keep default data in option.data[0].values !!
     let defaultDataValues = [];
     let defaultDataId = 'defaultDataId'; // Fallback ID
-    if (baseOption.data && Array.isArray(baseOption.data) && baseOption.data.length > 0) {
-        // Clone values to prevent mutation issues if baseOption wasn't deep cloned perfectly earlier
-        defaultDataValues = baseOption.data[0].values ? cloneDeep(baseOption.data[0].values) : [];
+    
+    // Check if baseOption provides valid default data structure
+    if (baseOption.data && Array.isArray(baseOption.data) && baseOption.data.length > 0 && baseOption.data[0]) {
+        // Retain the ID from the base config
         defaultDataId = baseOption.data[0].id || defaultDataId;
-        // Set finalOption.data to only contain the ID
-        finalOption.data = [{ id: defaultDataId }];
+        // Clone values if they exist, otherwise use empty array
+        defaultDataValues = baseOption.data[0].values ? cloneDeep(baseOption.data[0].values) : [];
+        // Set finalOption.data with ID and the default values
+        finalOption.data = [{ id: defaultDataId, values: defaultDataValues }];
     } else {
-        // If baseOption.data is missing or invalid, initialize data structure
-         finalOption.data = [{ id: defaultDataId }];
+        // If baseOption.data is missing or invalid, initialize with empty values
+         finalOption.data = [{ id: defaultDataId, values: [] }];
     }
-    // Assign default values (or empty array) to rawData
-    finalOption.rawData = defaultDataValues;
 
     // Ensure finalOption.displayOption exists and is an object
     if (!finalOption.displayOption || typeof finalOption.displayOption !== 'object') {
