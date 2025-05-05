@@ -254,27 +254,26 @@ export default {
     },
     // 添加获取组件类型的方法
     getComponentType(config) {
-      const optionComType = config.option?.comType;
-      if (optionComType === 'vchartComponent') {
+      // 优先使用 chartType 判断 VChart 组件
+      if (config.chartType === 'vchartComponent') {
         return 'VchartCustomComponent';
       }
-      // 其余类型保持原有逻辑
+      
+      // 保留原有对 comType 的判断作为后备（如果其他非 VChart 组件仍使用 comType）
       const comType = config.comType;
-      if (comType === 'vchartComponent') {
-        return 'VchartCustomComponent';
-      } else if (comType === 'echartsComponent') {
+      if (comType === 'echartsComponent') {
         return 'EchartsComponent';
       } else if (comType === 'threeComponent') {
         return 'ThreeComponent';
       } else if (comType === 'customComponent') {
         return 'CustomComponent';
       }
+
+      // 其他基于 type 或 chartType 的判断逻辑 (保持不变)
       let resolvedComponentType = null;
       if (config.chartType === 'threeJs') {
         resolvedComponentType = 'ThreeComponent';
-      } else if (config.type === 'vchartComponent') {
-        resolvedComponentType = 'VchartCustomComponent';
-      } else if (config.type === 'echartsComponent') {
+      } else if (config.type === 'echartsComponent') { // 注意：这里之前可能是 vchartComponent 或 echartsComponent，保持 ECharts 优先
         resolvedComponentType = 'EchartsComponent';
       } else if (config.category && config.category.includes('模型')) {
         resolvedComponentType = 'ThreeComponent';
@@ -287,6 +286,7 @@ export default {
           }
         }
       }
+      // Fallback to default resolver if no specific type matched
       if (!resolvedComponentType) {
         resolvedComponentType = this.resolveComponentType(config.type);
       }

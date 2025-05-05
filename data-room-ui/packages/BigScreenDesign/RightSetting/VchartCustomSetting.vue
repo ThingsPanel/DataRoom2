@@ -23,11 +23,11 @@
       </div>
       <SettingTitle>边框</SettingTitle>
       <div class="lc-field-body">
-        <BorderSetting
+         <BorderSetting
           v-if="config.border"
           label-width="120px"
           :config="config.border"
-          :big-title="config.title"
+          :bigTitle='config.title'
         />
       </div>
       <SettingTitle>位置</SettingTitle>
@@ -38,11 +38,11 @@
         />
       </div>
       <SettingTitle>旋转</SettingTitle>
-      <div class="lc-field-body">
-        <RotateSetting
-          :config="config"
-        />
-      </div>
+          <div class="lc-field-body">
+            <RotateSetting
+              :config="config"
+            />
+          </div>
       <template v-for="group in groupList">
         <div :key="group.groupName">
           <SettingTitle>   {{ group.groupName | filterGroupName }}</SettingTitle>
@@ -52,8 +52,8 @@
               :key="settingIndex+1"
             >
               <el-form-item
-                :label="['padding','appendPadding'].includes(setting.type)? '' : setting.label"
-                :label-width="['padding','appendPadding'].includes(setting.type)? '0px' :'120px'"
+                :label="setting.type=== 'padding' ? '' : setting.label"
+                :label-width="setting.type=== 'padding' ? '0px' :'120px'"
               >
                 <el-input
                   v-if="setting.type === 'input'"
@@ -67,7 +67,6 @@
                   popper-class="bs-el-select"
                   class="bs-el-select"
                   :placeholder="`请选择${setting.label}`"
-                  :filterable="setting.filterable"
                   :multiple="setting.multiple"
                   clearable
                 >
@@ -112,17 +111,13 @@
                     />
                   </div>
                 </template>
+
                 <el-color-picker
                   v-else-if="setting.type === 'colorPicker'"
                   v-model="setting.value"
                   popper-class="bs-el-color-picker"
                   class="bs-el-color-picker"
                   show-alpha
-                />
-                <!-- 渐变色设置 -->
-                <GradualSetting
-                  v-else-if="setting.type === 'gradual'"
-                  v-model="setting.value"
                 />
                 <el-input-number
                   v-else-if="setting.type === 'inputNumber'"
@@ -161,7 +156,7 @@
                   :step="0.01"
                 />
                 <PaddingSetting
-                  v-else-if="setting.type === 'appendPadding'"
+                  v-else-if="setting.type === 'padding'"
                   v-model="setting.value"
                 />
               </el-form-item>
@@ -180,16 +175,14 @@ import { chartSettingMixins } from 'data-room-ui/js/mixins/chartSettingMixins'
 import ColorSelect from 'data-room-ui/ColorMultipleSelect/index.vue'
 // import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
 import PaddingSetting from 'data-room-ui/BigScreenDesign/RightSetting/PaddingSetting/index.vue'
-import GradualSetting from 'data-room-ui/BigScreenDesign/RightSetting/GradualSetting/index.vue'
 import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
 import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
 export default {
-  name: 'CustomComponentSetting',
+  name: 'EchartsCustomSetting',
   components: {
     ColorSelect,
     // ColorPicker,
     PaddingSetting,
-    GradualSetting,
     PosWhSetting,
     BorderSetting,
     SettingTitle,
@@ -207,14 +200,13 @@ export default {
         basic: '基础',
         position: '位置',
         graph: '图表',
+        rotate: '旋转',
         grid: '网格线',
         legend: '图例',
         xAxis: 'X轴',
         yAxis: 'Y轴',
         padding: '边距',
-        appendPadding: '内边距',
         other: '其他'
-
       }
       return settingGroup[val]
     }
@@ -301,56 +293,50 @@ export default {
   }
 }
 </script>
-
-<style lang="scss" scoped>
-@import '../../assets/style/settingWrap.scss';
-@import '../../assets/style/bsTheme.scss';
-
-// 筛选条件的按钮样式
-.add-filter-box {
-  position: relative;
-
-  .add-filter {
-    margin-left: 90px;
-    margin-bottom: 10px;
-  }
-
-  .add-filter-btn {
-    position: absolute;
-    top: 0;
-  }
-}
-
-.lc-field-body {
-  padding:12px 16px;
-}
-.el-form-item{
-  margin-bottom: 6px !important;
-}
-.lc-field-title {
-  position: relative;
-  padding-left: 12px;
-  line-height: 30px;
-  height: 30px;
-  margin-bottom: 12px;
-  &:after {
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    content: '';
-    width: 4px;
-    height: 14px;
-    background-color: var(--bs-el-color-primary);
-  }
-}
-
-::v-deep .el-color-picker__trigger {
-  border-color: var(--bs-el-border);
-}
-.color-picker-box{
-  ::v-deep .el-color-picker__trigger {
-    width: 27px!important;
-  }
-}
-</style>
+ <style lang="scss" scoped>
+ @import '../../assets/style/settingWrap.scss';
+ @import '../../assets/style/bsTheme.scss';
+ // 筛选条件的按钮样式
+ .add-filter-box {
+   position: relative;
+   .add-filter {
+     margin-left: 90px;
+     margin-bottom: 10px;
+   }
+   .add-filter-btn {
+     position: absolute;
+     top: 0;
+   }
+ }
+ .lc-field-body {
+   padding:12px 16px;
+ }
+ .el-form-item{
+   margin-bottom: 6px !important;
+ }
+ .lc-field-title {
+   position: relative;
+   padding-left: 12px;
+   line-height: 30px;
+   height: 30px;
+   margin-bottom: 12px;
+   &:after {
+     position: absolute;
+     left: 0;
+     top: 50%;
+     transform: translateY(-50%);
+     content: '';
+     width: 4px;
+     height: 14px;
+     background-color: var(--bs-el-color-primary);
+   }
+ }
+ ::v-deep .el-color-picker__trigger {
+   border-color: var(--bs-el-border);
+ }
+ .color-picker-box{
+   ::v-deep .el-color-picker__trigger {
+     width: 27px!important;
+   }
+ }
+ </style>

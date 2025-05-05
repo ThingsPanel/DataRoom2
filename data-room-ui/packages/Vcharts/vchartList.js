@@ -115,8 +115,8 @@ function getVchartList (files) {
     }
 
     // 4. Assemble the final config object
-    // 嵌入comType到option里
-    finalOption.comType = componentConfig.comType || 'vchartComponent';
+    // --- REMOVED: comType is no longer embedded in option --- 
+    // finalOption.comType = componentConfig.comType || 'vchartComponent'; 
     const finalConfig = {
       version: componentConfig.version || 'unknown',
       category: category, // 使用分类名称

@@ -16,11 +16,13 @@ export function saveScreen (data) {
       }
       item.option = JSON.stringify(a)
 
-      // 关键：优先用 option.comType 判断
-      const optionComType = a.comType
-      if (optionComType === 'vchartComponent' || item.chartType === 'threeJs') {
+      // 保留 comType 以备后用（如果其他地方还需要）
+      const optionComType = a.comType;
+
+      // 关键：现在主要用 chartType 判断
+      if (item.chartType === 'vchartComponent' || item.chartType === 'threeJs') {
         // 保留完整 setting 结构
-        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (comType=${optionComType}, chartType=${item.chartType})`);
+        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=${item.chartType})`);
       } else {
         // 打印简化前的完整 setting 结构
         console.log(`[saveScreen] 简化前 ${item.name || item.code} 的 setting:`, item.setting);

@@ -7,7 +7,7 @@ const name = 'V基础柱状图'; // Super Simplified Name
 // 组件类型标识
 const type = 'customComponent';
 // VChart 图表类型标识
-const chartType = 'bar'; // Keep specifying 'bar'
+const chartType = 'vchartComponent'; // Changed from 'bar'
 
 // 右侧配置项 (最最简化)
 const setting = [
@@ -19,8 +19,7 @@ const setting = [
     optionField: 'xField', // Correctly map to spec.xField
     multiple: false,
     value: 'category', // Default data field name
-    tabName: 'custom',
-    groupName: 'data'
+    tabName: 'data',
   },
   {
     label: '值轴字段 (Y轴)', // Specify axis for clarity
@@ -29,8 +28,7 @@ const setting = [
     optionField: 'yField', // Correctly map to spec.yField
     multiple: false,
     value: 'value', // Default data field name
-    tabName: 'custom',
-    groupName: 'data'
+    tabName: 'data',
   },
   // --- 移除了所有其他配置项 (方向, 样式, 坐标轴显隐, 图例, 提示等) ---
   // --- 新增：测试用 - 显示标签 --- 
