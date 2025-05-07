@@ -254,30 +254,35 @@ export default {
     },
     // 添加获取组件类型的方法
     getComponentType(config) {
-      // 优先使用 chartType 判断 VChart 组件
-      if (config.chartType === 'vchartComponent') {
+      // 优先使用 config.chartType 进行判断
+      if (config?.chartType === 'vchartComponent') {
         return 'VchartCustomComponent';
       }
-      
-      // 保留原有对 comType 的判断作为后备（如果其他非 VChart 组件仍使用 comType）
-      const comType = config.comType;
+      if (config?.chartType === 'threeJs') { // Also prioritize chartType for ThreeJs
+        return 'ThreeComponent';
+      }
+
+      // 保留原有对 comType 的判断作为后备（如果其他组件类型仍使用 comType）
+      const comType = config?.comType;
       if (comType === 'echartsComponent') {
         return 'EchartsComponent';
       } else if (comType === 'threeComponent') {
         return 'ThreeComponent';
       } else if (comType === 'customComponent') {
         return 'CustomComponent';
+      } else if (comType === 'vchartComponent') { // Fallback for comType if chartType wasn't set
+        return 'VchartCustomComponent';
       }
 
-      // 其他基于 type 或 chartType 的判断逻辑 (保持不变)
+      // 其他基于 type 的判断逻辑 (保持不变, 但在 chartType/comType 之后)
       let resolvedComponentType = null;
-      if (config.chartType === 'threeJs') {
-        resolvedComponentType = 'ThreeComponent';
-      } else if (config.type === 'echartsComponent') { // 注意：这里之前可能是 vchartComponent 或 echartsComponent，保持 ECharts 优先
+      if (config?.type === 'echartsComponent') { 
         resolvedComponentType = 'EchartsComponent';
-      } else if (config.category && config.category.includes('模型')) {
+      } else if (config?.type === 'vchartComponent') { // Fallback for type
+        resolvedComponentType = 'VchartCustomComponent';
+      } else if (config?.category?.includes('模型')) { // This seems specific to ThreeComponent
         resolvedComponentType = 'ThreeComponent';
-      } else if (config.className && config.className.includes('CustomComponentChart')) {
+      } else if (config?.className?.includes('CustomComponentChart')) {
         if (config.name) {
           if (config.name.startsWith('3D') && (config.name.includes('柱状图') || config.name.includes('图表'))) {
             resolvedComponentType = 'EchartsComponent';
@@ -286,9 +291,10 @@ export default {
           }
         }
       }
-      // Fallback to default resolver if no specific type matched
+      
+      // Fallback to default resolver if no specific type matched by above logic
       if (!resolvedComponentType) {
-        resolvedComponentType = this.resolveComponentType(config.type);
+        resolvedComponentType = this.resolveComponentType(config?.type);
       }
       return resolvedComponentType;
     },

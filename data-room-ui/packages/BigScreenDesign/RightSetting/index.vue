@@ -154,32 +154,44 @@ export default {
       }
     },
     settingComponentName() {
-      const optionComType = this.config?.option?.comType;
-      if (optionComType === 'vchartComponent') {
+      // 优先使用 config.chartType 进行判断
+      if (this.config?.chartType === 'vchartComponent') {
         return 'VchartCustomComponent';
       }
-      // 其余类型保持原有逻辑
-      const comType = this.config?.comType;
+      
+      // 保留原有对 comType 和 type 的判断作为后备（如果其他组件类型仍依赖它们）
+      const optionComType = this.config?.option?.comType;
+      if (optionComType === 'vchartComponent') { // 后备：检查 option.comType
+        return 'VchartCustomComponent';
+      }
+
+      const comType = this.config?.comType; // 后备：检查 comType
       if (comType === 'vchartComponent') {
         return 'VchartCustomComponent';
-      } else if (comType === 'echartsComponent') {
+      }
+      // 为其他类型保留原有逻辑
+      if (comType === 'echartsComponent') {
         return 'EchartsComponent';
       } else if (comType === 'threeComponent') {
         return 'ThreeComponent';
       } else if (comType === 'customComponent') {
         return 'CustomComponent';
       }
-      const type = this.config?.type;
+
+      const type = this.config?.type; // 后备：检查 type
       if (type === 'vchartComponent') {
         return 'VchartCustomComponent';
-      } else if (type === 'echartsComponent') {
+      }
+      // 为其他类型保留原有逻辑
+      if (type === 'echartsComponent') {
         return 'EchartsComponent';
-      } else if (type === 'threeJs' || this.config?.chartType === 'threeJs') {
+      } else if (type === 'threeJs' || this.config?.chartType === 'threeJs') { // threeJs 也可基于 chartType
         return 'ThreeComponent';
       } else if (type === 'customComponent') {
         return 'CustomComponent';
       }
-      return resolveComponentType(type);
+      
+      return resolveComponentType(type); // 默认解析
     }
   },
   watch: {

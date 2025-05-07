@@ -21,15 +21,7 @@
           />
         </el-form-item>
       </div>
-      <SettingTitle>边框</SettingTitle>
-      <div class="lc-field-body">
-         <BorderSetting
-          v-if="config.border"
-          label-width="120px"
-          :config="config.border"
-          :bigTitle='config.title'
-        />
-      </div>
+  
       <SettingTitle>位置</SettingTitle>
       <div class="lc-field-body">
         <PosWhSetting
@@ -37,12 +29,7 @@
           :config="config"
         />
       </div>
-      <SettingTitle>旋转</SettingTitle>
-          <div class="lc-field-body">
-            <RotateSetting
-              :config="config"
-            />
-          </div>
+  
       <template v-for="group in groupList">
         <div :key="group.groupName">
           <SettingTitle>   {{ group.groupName | filterGroupName }}</SettingTitle>
@@ -55,111 +42,133 @@
                 :label="setting.type=== 'padding' ? '' : setting.label"
                 :label-width="setting.type=== 'padding' ? '0px' :'120px'"
               >
-                <el-input
-                  v-if="setting.type === 'input'"
-                  v-model="setting.value"
-                  :placeholder="`请输入${setting.label}`"
-                  clearable
-                />
-                <el-select
-                  v-else-if="setting.type === 'select'"
-                  v-model="setting.value"
-                  popper-class="bs-el-select"
-                  class="bs-el-select"
-                  :placeholder="`请选择${setting.label}`"
-                  :multiple="setting.multiple"
-                  clearable
-                >
-                  <el-option
-                    v-for="(opt, optIndex) in setting.options"
-                    :key="optIndex"
-                    :label="opt.label"
-                    :value="opt.value"
-                  />
-                </el-select>
-                <template v-else-if="setting.type === 'colorSelect'">
-                  <color-select
-                    v-model="setting.value"
-                    @update="updateColorScheme"
-                  />
-                  <div
-                    style="
-                    display: flex;
-                    align-items: center;
-                    flex-wrap: wrap;
-                  "
-                    class="color-picker-box"
-                  >
+                <div style="display: flex; align-items: center; width: 100%;">
+                  <div style="flex-grow: 1;">
+                    <el-input
+                      v-if="setting.type === 'input'"
+                      v-model="setting.value"
+                      :placeholder="`请输入${setting.label}`"
+                      clearable
+                    />
+                    <el-input
+                      v-else-if="setting.type === 'textarea'"
+                      type="textarea"
+                      v-model="setting.value"
+                      :placeholder="`请输入${setting.label}`"
+                      :rows="setting.rows || 3" 
+                      :autosize="setting.autosize || false"
+                      clearable
+                    />
+                    <el-select
+                      v-else-if="setting.type === 'select'"
+                      v-model="setting.value"
+                      popper-class="bs-el-select"
+                      class="bs-el-select"
+                      :placeholder="`请选择${setting.label}`"
+                      :multiple="setting.multiple"
+                      clearable
+                    >
+                      <el-option
+                        v-for="(opt, optIndex) in setting.options"
+                        :key="optIndex"
+                        :label="opt.label"
+                        :value="opt.value"
+                      />
+                    </el-select>
+                    <template v-else-if="setting.type === 'colorSelect'">
+                      <color-select
+                        v-model="setting.value"
+                        @update="updateColorScheme"
+                      />
+                      <div
+                        style="
+                        display: flex;
+                        align-items: center;
+                        flex-wrap: wrap;
+                      "
+                        class="color-picker-box"
+                      >
+                        <el-color-picker
+                          v-for="(colorItem, colorItemIndex) in colors"
+                          :key="colorItemIndex"
+                          v-model="setting.value[colorItemIndex]"
+                          popper-class="bs-el-color-picker"
+                          show-alpha
+                          class="start-color"
+                        />
+                        <span
+                          class="el-icon-circle-plus-outline"
+                          style="color: #007aff; font-size: 20px"
+                          @click="addColor"
+                        />
+                        <span
+                          v-if="colors.length"
+                          class="el-icon-remove-outline"
+                          style="color: #ea0b30; font-size: 20px"
+                          @click="delColor()"
+                        />
+                      </div>
+                    </template>
+
                     <el-color-picker
-                      v-for="(colorItem, colorItemIndex) in colors"
-                      :key="colorItemIndex"
-                      v-model="setting.value[colorItemIndex]"
+                      v-else-if="setting.type === 'colorPicker'"
+                      v-model="setting.value"
                       popper-class="bs-el-color-picker"
+                      class="bs-el-color-picker"
                       show-alpha
-                      class="start-color"
                     />
-                    <span
-                      class="el-icon-circle-plus-outline"
-                      style="color: #007aff; font-size: 20px"
-                      @click="addColor"
+                    <el-input-number
+                      v-else-if="setting.type === 'inputNumber'"
+                      v-model="setting.value"
+                      class="bs-el-input-number"
+                      :step="setting.step || 1"
+                      :min="setting.min || 0"
+                      :max="setting.max || 100000"
                     />
-                    <span
-                      v-if="colors.length"
-                      class="el-icon-remove-outline"
-                      style="color: #ea0b30; font-size: 20px"
-                      @click="delColor()"
+                    <el-radio-group
+                      v-else-if="setting.type === 'radio'"
+                      v-model="setting.value"
+                      class="bs-el-radio-group"
+                    >
+                      <template v-for="(opt, optIndex) in setting.options">
+                        <el-radio-button
+                          :key="optIndex"
+                          :label="opt.value"
+                        >
+                          {{ opt.label }}
+                        </el-radio-button>
+                      </template>
+                    </el-radio-group>
+                    <el-switch
+                      v-else-if="setting.type === 'switch' && !setting.hasOwnProperty('isIncremental')"
+                      v-model="setting.value"
+                      class="bs-el-switch"
+                      :active-value="setting.active"
+                      :inactive-value="setting.inactive"
+                    />
+                    <el-slider
+                      v-else-if="setting.type === 'slider'"
+                      v-model="setting.value"
+                      :min="0"
+                      :max="1"
+                      :step="0.01"
+                    />
+                    <PaddingSetting
+                      v-else-if="setting.type === 'padding'"
+                      v-model="setting.value"
                     />
                   </div>
-                </template>
 
-                <el-color-picker
-                  v-else-if="setting.type === 'colorPicker'"
-                  v-model="setting.value"
-                  popper-class="bs-el-color-picker"
-                  class="bs-el-color-picker"
-                  show-alpha
-                />
-                <el-input-number
-                  v-else-if="setting.type === 'inputNumber'"
-                  v-model="setting.value"
-                  class="bs-el-input-number"
-                  :step="setting.step || 1"
-                  :min="setting.min || 0"
-                  :max="setting.max || 100000"
-                />
-                <el-radio-group
-                  v-else-if="setting.type === 'radio'"
-                  v-model="setting.value"
-                  class="bs-el-radio-group"
-                >
-                  <template v-for="(opt, optIndex) in setting.options">
-                    <el-radio-button
-                      :key="optIndex"
-                      :label="opt.value"
-                    >
-                      {{ opt.label }}
-                    </el-radio-button>
-                  </template>
-                </el-radio-group>
-                <el-switch
-                  v-else-if="setting.type === 'switch'"
-                  v-model="setting.value"
-                  class="bs-el-switch"
-                  :active-value="setting.active"
-                  :inactive-value="setting.inactive"
-                />
-                <el-slider
-                  v-else-if="setting.type === 'slider'"
-                  v-model="setting.value"
-                  :min="0"
-                  :max="1"
-                  :step="0.01"
-                />
-                <PaddingSetting
-                  v-else-if="setting.type === 'padding'"
-                  v-model="setting.value"
-                />
+                  <el-checkbox 
+                    v-if="setting.hasOwnProperty('isIncremental')"
+                    v-model="setting.isIncremental"
+                    style="margin-left: 10px;"
+                  >
+                    增量
+                  </el-checkbox>
+                </div>
               </el-form-item>
+
             </div>
           </div>
         </div>

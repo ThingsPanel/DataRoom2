@@ -10,33 +10,41 @@ export function getScreenInfo (code) {
 export function saveScreen (data) {
   data.chartList.forEach((item) => {
     if (item.type === 'customComponent') {
-      const a = JSON.parse(item.option)
-      if (a.data) {
-        a.data = []
+      // Attempt to parse item.option if it's a string
+      let chartOption = {};
+      if (typeof item.option === 'string') {
+        try {
+          chartOption = JSON.parse(item.option);
+        } catch (e) {
+          console.error('[saveScreen] Failed to parse item.option for', item.code, e);
+          chartOption = {}; // Default to empty object on parse error
+        }
+      } else if (typeof item.option === 'object' && item.option !== null) {
+        chartOption = item.option; // Use as is if already an object
       }
-      item.option = JSON.stringify(a)
 
-      // 保留 comType 以备后用（如果其他地方还需要）
-      const optionComType = a.comType;
+      // Clear data from chartOption if it exists, then stringify back
+      if (chartOption.data) {
+        chartOption.data = [];
+      }
+      item.option = JSON.stringify(chartOption);
 
-      // 关键：现在主要用 chartType 判断
+      // Retain full setting structure for 'vchartComponent' and 'threeJs' based on chartType
       if (item.chartType === 'vchartComponent' || item.chartType === 'threeJs') {
-        // 保留完整 setting 结构
         console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=${item.chartType})`);
+        // No change to item.setting, it remains as is
       } else {
-        // 打印简化前的完整 setting 结构
+        // For other types, simplify setting to only field and value
         console.log(`[saveScreen] 简化前 ${item.name || item.code} 的 setting:`, item.setting);
-        // 只保留 field 和 value
         item.setting = item.setting?.map((x) => {
-          const { field, value } = x
-          return { field, value }
-        }) || [] // 确保如果 setting 不存在或为 null，返回空数组
-        // 打印简化后的 setting 结构
+          const { field, value } = x;
+          return { field, value };
+        }) || []; // Ensure if setting is null/undefined, it becomes an empty array
         console.log(`[saveScreen] 简化后 ${item.name || item.code} 的 setting:`, item.setting);
       }
     }
-  })
-  return Vue.prototype.$dataRoomAxios.post('/bigScreen/design/update', data)
+  });
+  return Vue.prototype.$dataRoomAxios.post('/bigScreen/design/update', data);
 }
 
 // 根据数据集获取数据集详情

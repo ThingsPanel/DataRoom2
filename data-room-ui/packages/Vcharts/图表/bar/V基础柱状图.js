@@ -15,8 +15,8 @@ const setting = [
   {
     label: '类别轴字段 (X轴)', // Specify axis for clarity
     type: 'select',
-    field: 'xField',
-    optionField: 'xField', // Correctly map to spec.xField
+    field: 'spec_xField',
+    optionField: 'spec.xField', // Correctly map to spec.xField
     multiple: false,
     value: 'category', // Default data field name
     tabName: 'data',
@@ -24,23 +24,40 @@ const setting = [
   {
     label: '值轴字段 (Y轴)', // Specify axis for clarity
     type: 'select',
-    field: 'yField',
-    optionField: 'yField', // Correctly map to spec.yField
+    field: 'spec_yField',
+    optionField: 'spec.yField', // Correctly map to spec.yField
     multiple: false,
     value: 'value', // Default data field name
     tabName: 'data',
   },
-  // --- 移除了所有其他配置项 (方向, 样式, 坐标轴显隐, 图例, 提示等) ---
-  // --- 新增：测试用 - 显示标签 --- 
   {
-    label: '显示标签',
-    type: 'switch',
-    field: 'label_visible',
-    optionField: 'label.visible', // Maps to VChart spec: spec.label.visible
-    value: false, // Default to hidden
+    label: 'spec',
+    type: 'textarea',
+    field: 'spec',
+    optionField: 'spec', // Maps to VChart spec: spec.label.visible
+    value:  '{"type":"line"}', // Default to hidden
+    tabName: 'custom',
+    isIncremental: true,
+    groupName: 'label' // Group for UI clarity
+  },
+  {
+    label: 'spec脚本',
+    type: 'input',
+    field: 'specHandler',
+    optionField: 'specHandler', // Maps to VChart spec: spec.label.visible
+    value: '', // Default to hidden
     tabName: 'custom',
     groupName: 'label' // Group for UI clarity
-  }
+  },
+  // {
+  //   label: 'spec测试',
+  //   type: 'input',
+  //   field: 'spec_a[0]_b',
+  //   optionField: 'spec.a[0].b', // Maps to VChart spec: spec.label.visible
+  //   value: '', // Default to hidden
+  //   tabName: 'custom',
+  //   groupName: 'label' // Group for UI clarity
+  // }
 ];
 
 // 示例数据 (保持简单)
@@ -57,26 +74,29 @@ const data = {
 
 // 默认 VChart Option (Spec) - 最最简化
 const option = {
-  type: 'bar', // Specify the chart type
-  data: [data], // Provide the data
-  // direction defaults to 'vertical' in VChart
-  // --- 直接设置 xField 和 yField --- 
-  xField: 'category', // Use default from setting
-  yField: 'value',   // Use default from setting
+  id: 'minimalBarData',
+  spec: {
+    type: 'bar', // Specify the chart type
+    data: [data], // Provide the data
+    // direction defaults to 'vertical' in VChart
+    // --- 直接设置 xField 和 yField --- 
+    xField: 'category', // Use default from setting
+    yField: 'value',   // Use default from setting
   // --- 添加 label 结构，对应 setting --- 
   label: {
-    visible: false // Default corresponds to setting's value
-  }
+      visible: false // Default corresponds to setting's value
+    }
+  },
+  specHandler: `
+  // This handler is now empty.
+  `
   // All other components (axes, series, legends, tooltip, label) rely on VChart defaults
 };
 
 // 数据处理脚本 (保持不变)
 const dataHandler = `return data;`;
 
-// Option 处理脚本 (完全清空)
-const optionHandler = `
-// This handler is now empty.
-`;
+
 
 // 导出配置对象
 export default {
@@ -88,5 +108,4 @@ export default {
   option,
   setting,
   dataHandler,
-  optionHandler
 }; 
