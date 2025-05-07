@@ -4,6 +4,60 @@ import sortList from './vchartListSort'
 
 // 遍历图表目录下的所有中文命名文件
 const files = require.context('./图表', true, /[一-龥]+.js$/)
+
+const themeOptions = [
+  { label: '亮色', value: 'light' },
+  { label: '暗色', value: 'dark' },
+  { label: '移动设备亮色 (mobileLight)', value: 'mobileLight' },
+  { label: '移动设备暗色 (mobileDark)', value: 'mobileDark' },
+  { label: '简约图例亮色 (legacyLight)', value: 'legacyLight' },
+  { label: '简约图例暗色 (legacyDark)', value: 'legacyDark' },
+  { label: '大屏-火山蓝', value: 'vScreenVolcanoBlue' },
+  { label: '大屏-清新蜡笔', value: 'vScreenClean' },
+  { label: '大屏-郊外', value: 'vScreenOutskirts' },
+  { label: '大屏-汽车蓝橙', value: 'vScreenBlueOrange' },
+  { label: '大屏-金融黄', value: 'vScreenFinanceYellow' },
+  { label: '大屏-文旅青', value: 'vScreenWenLvCyan' },
+  { label: '大屏-电力绿', value: 'vScreenElectricGreen' },
+  { label: '大屏-电商紫', value: 'vScreenECommercePurple' },
+  { label: '大屏-红蓝', value: 'vScreenRedBlue' },
+  { label: '大屏-党建红', value: 'vScreenPartyRed' },
+  // { label: 'Semi Design - 亮色', value: 'semiDesignLight' },
+  // { label: 'Semi Design - 暗色', value: 'semiDesignDark' },
+  // { label: 'Arco Design - 亮色', value: 'arcoDesignLight' },
+  // { label: 'Arco Design - 暗色', value: 'arcoDesignDark' },
+  // { label: 'TT Platform - 亮色', value: 'ttPlatformLight' },
+  // { label: 'TT Platform - 暗色', value: 'ttPlatformDark' },
+  // { label: 'chartHub - 亮色', value: 'chartHubLight' },
+  // { label: 'O Design - 亮色', value: 'veODesignLight' },
+  // { label: 'O Design - 亮色 - 金融行业', value: 'veODesignLightFinance' },
+  // { label: 'O Design - 亮色 - 政府行业', value: 'veODesignLightGovernment' },
+  // { label: 'O Design - 亮色 - 大消费行业', value: 'veODesignLightConsumer' },
+  // { label: 'O Design - 亮色 - 汽车行业', value: 'veODesignLightAutomobile' },
+  // { label: 'O Design - 亮色 - 文旅行业', value: 'veODesignLightCulturalTourism' },
+  // { label: 'O Design - 亮色 - 医疗行业', value: 'veODesignLightMedical' },
+  // { label: 'O Design - 亮色 - 新能源行业', value: 'veODesignLightNewEnergy' },
+  // { label: 'O Design - 暗色', value: 'veODesignDark' },
+  // { label: 'O Design - 暗色 - 金融行业', value: 'veODesignDarkFinance' },
+  // { label: 'O Design - 暗色 - 政府行业', value: 'veODesignDarkGovernment' },
+  // { label: 'O Design - 暗色 - 大消费行业', value: 'veODesignDarkConsumer' },
+  // { label: 'O Design - 暗色 - 汽车行业', value: 'veODesignDarkAutomobile' },
+  // { label: 'O Design - 暗色 - 文旅行业', value: 'veODesignDarkCulturalTourism' },
+  // { label: 'O Design - 暗色 - 医疗行业', value: 'veODesignDarkMedical' },
+  // { label: 'O Design - 暗色 - 新能源行业', value: 'veODesignDarkNewEnergy' }
+];
+
+const newThemeSetting = {
+  label: '主题配置',
+  type: 'select',
+  field: 'spec_theme',
+  optionField: 'spec.theme',
+  value: 'light',
+  options: themeOptions,
+  tabName: 'custom',
+  groupName: 'theme'
+};
+
 const vchartList = getVchartList(files)
 
 function getVchartList(files) {
@@ -73,7 +127,7 @@ function getVchartList(files) {
         ...baseOption,
         ...cloneDeep(settingConfig)
       },
-      setting: componentConfig.setting || [],
+      setting: [newThemeSetting,...(componentConfig.setting || [])],
       dataHandler: componentConfig.dataHandler || '',
       optionHandler: componentConfig.optionHandler || '',
       chartType: componentConfig.chartType,

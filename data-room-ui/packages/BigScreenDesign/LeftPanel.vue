@@ -194,17 +194,24 @@ export default {
         {
           id: 2,
           name: 'g2PlotComponents',
-          title: '图表',
+          title: 'g2Plot',
           icon: 'icon-jichushuju',
           components: this.g2PlotComponents
         },
         {
-          id: 7,
-          name: 'echart',
-          title: '3D图表',
+          id: 10,
+          name: 'vchart',
+          title: 'VChart',
           icon: 'icon-jichushuju',
-          components: this.echartsComponents
+          components: this.vchartComponents
         },
+        // {
+        //   id: 7,
+        //   name: 'echart',
+        //   title: '3D图表',
+        //   icon: 'icon-jichushuju',
+        //   components: this.echartsComponents
+        // },
         {
           id: 9,
           name: 'three',
@@ -212,13 +219,7 @@ export default {
           icon: 'icon-jichushuju',
           components: this.threeComponents
         },
-             {
-          id: 10,
-          name: 'vchart',
-          title: 'VChart图表',
-          icon: 'icon-jichushuju',
-          components: this.vchartComponents
-        },
+           
         {
           id: 3,
           name: 'dataV',
@@ -278,9 +279,9 @@ export default {
     this.initList()
     this.g2PlotComponents = [...this.g2PlotComponents, ...getCustomPlots()]
     this.menuList[1].components = this.g2PlotComponents
-    this.menuList[2].components = this.echartsComponents
+    // this.menuList[2].components = this.echartsComponents
     this.menuList[3].components = this.threeComponents
-    this.menuList[4].components = this.vchartComponents
+    this.menuList[2].components = this.vchartComponents
   },
   mounted () {
     this.nodeDrag()

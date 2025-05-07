@@ -39,7 +39,7 @@
               :key="settingIndex+1"
             >
               <el-form-item
-                :label="setting.type=== 'padding' ? '' : setting.label"
+                :label="setting.type=== 'padding' ? '' : setting.label+'（'+setting.vchartType+'）'"
                 :label-width="setting.type=== 'padding' ? '0px' :'120px'"
               >
                 <div style="display: flex; align-items: center; width: 100%;">
@@ -208,16 +208,20 @@ export default {
       const settingGroup = {
         basic: '基础',
         position: '位置',
-        graph: '图表',
+        data: '数据源', 
         rotate: '旋转',
-        grid: '网格线',
-        legend: '图例',
-        xAxis: 'X轴',
-        yAxis: 'Y轴',
         padding: '边距',
-        other: '其他'
-      }
-      return settingGroup[val]
+        other: '其他',
+        dataMapping: '数据设置',
+        chartTitle: '图表标题',
+        barStyle: '柱体样式',
+        axesStyleX: 'X轴样式',
+        axesStyleY: 'Y轴样式',
+        legendStyle: '图例样式',
+        animation: '动画配置',
+        advanced: '高级选项',
+      };
+      return settingGroup[val] || val;
     }
   },
   computed: {

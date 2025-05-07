@@ -9,7 +9,6 @@
       ref="vchartCore" 
       :config="config"           
       :chart-data="processedData"  
-      :initial-option="initialOption" 
       @linkage-trigger="handleLinkageTrigger" 
     />
     <!-- Optional: Display loading or no data message -->
@@ -46,7 +45,6 @@ export default {
   data () {
     return {
       processedData: null,
-      initialOption: null,
       showChart: false
     }
   },
@@ -74,15 +72,7 @@ export default {
   },
   created () {
   },
-  watch: {
-    'config.option.theme': {
-      handler (val) {
-        if (val) {
-          this.changeStyle(this.config, true)
-        }
-      }
-    }
-  },
+  watch: { },
   mounted () {
     const dragSelect = this.$el
     if (dragSelect) {
@@ -124,7 +114,6 @@ export default {
 
         if (isInitialLoad) {
             config = this.changeStyle(config)
-            this.initialOption = cloneDeep(config.option)
             this.showChart = true
 
             this.setLoading(true)
@@ -132,10 +121,11 @@ export default {
                 .then((finalConfig) => {
                     this.setLoading(false)
                     if (finalConfig?.processedDataSource) {
-                      this.processedData = finalConfig.processedDataSource
+                      this.processedData = cloneDeep(finalConfig.processedDataSource)
                     } else {
                       this.processedData = []
                     }
+                    console.log('[VchartRender chartInit - initialLoad] processedData updated:', this.processedData)
                 })
                 .catch((error) => {
                     this.setLoading(false)
@@ -148,11 +138,10 @@ export default {
             this.changeData(config)
                 .then((finalConfig) => {
                     this.setLoading(false)
-                    if (finalConfig?.processedDataSource) {
-                      this.processedData = finalConfig.processedDataSource
-                    } else {
-                      this.processedData = []
+                    if (finalConfig && finalConfig.hasOwnProperty('processedDataSource')) {
+                         this.processedData = cloneDeep(finalConfig.processedDataSource)
                     }
+                    console.log('[VchartRender chartInit - updateLoad] processedData (potentially re-set from finalConfig):', this.processedData)
                     this.showChart = true
                 })
                 .catch(error => {
@@ -163,25 +152,6 @@ export default {
                 })
         }
     },
-    dataInit (filterList) {
-      this.setLoading(true)
-      this.changeData(this.config, filterList)
-        .then(finalConfig => {
-          this.setLoading(false)
-           if (finalConfig?.processedDataSource) {
-             this.processedData = finalConfig.processedDataSource
-           } else {
-             this.processedData = []
-           }
-          this.showChart = true
-        })
-        .catch(error => {
-          this.setLoading(false)
-          this.processedData = []
-          this.showChart = false
-          console.error("[VchartRender dataInit] Error fetching linked data:", error)
-        })
-    },
     dataFormatting (config, data) {
       let processedDataSource = null
       if (data.success) {
@@ -189,23 +159,22 @@ export default {
         if (config.dataHandler) {
           try {
             const handlerFn = new Function('data', 'config', config.dataHandler)
-            const result = handlerFn(processedDataSource, config)
-            if (result !== undefined) {
+            const result = handlerFn(cloneDeep(processedDataSource), config)     
+            if (result) {
                  processedDataSource = result
             }
           } catch (e) {
             processedDataSource = []
-            console.error(`[VchartRender dataFormatting] Error executing dataHandler for ${config.name}:`, e)
           }
         }
-        config.processedDataSource = processedDataSource
+        this.processedData = cloneDeep(processedDataSource)
       } else {
         processedDataSource = []
-        console.warn(`[VchartRender dataFormatting] API data fetch failed for ${config.name}`)
-        config.processedDataSource = processedDataSource
+        this.processedData = []
       }
 
-      this.changeChartConfig(cloneDeep(config))
+      const configToStore = cloneDeep(config)
+      this.changeChartConfig(configToStore)
       return config
     },
     changeStyle (config, isUpdateTheme) {
@@ -221,70 +190,72 @@ export default {
 
       if (config.setting && Array.isArray(config.setting)) {
         config.setting.forEach(settingItem => {
+      
           if (settingItem && typeof settingItem.optionField === 'string' && settingItem.optionField.trim() !== '' && settingItem.hasOwnProperty('value')) {
             const directPathInOption = settingItem.optionField.trim();
             let valueToProcess = settingItem.value; // Start with the original value
             const isIncrementalUpdate = settingItem.isIncremental === true;
-            const settingType = settingItem.type;
 
             // Attempt to parse valueToProcess if it's a string that might be JSON
             if (typeof valueToProcess === 'string' && valueToProcess.trim().length > 0) {
-              // Check if it looks like JSON (starts with { or [ and ends with } or ])
-              // This is a basic check; JSON.parse will do the definitive validation.
               const trimmedValue = valueToProcess.trim();
               if ((trimmedValue.startsWith('{') && trimmedValue.endsWith('}')) || 
                   (trimmedValue.startsWith('[') && trimmedValue.endsWith(']'))) {
                 try {
                   const parsedValue = JSON.parse(trimmedValue);
-                  // If parsing is successful, use the parsed object/array
                   valueToProcess = parsedValue;
-                  console.log(`[VchartRender changeStyle] Successfully parsed string to JSON for path ${directPathInOption}:`, valueToProcess);
                 } catch (e) {
-                  // Not a valid JSON string, or some other error during parse.
-                  // Keep valueToProcess as the original string.
                   console.log(`[VchartRender changeStyle] Failed to parse string as JSON for path ${directPathInOption}, using as plain string. Error:`, e.message);
                 }
               }
             }
-            
-            console.log(`[VchartRender changeStyle] Path: ${directPathInOption}, Processed Value:`, valueToProcess, `, Incremental: ${isIncrementalUpdate}, Type: ${settingType}`);
 
+            // Apply type-specific coercions after potential JSON parsing
+            if (settingItem.type === 'inputNumber') {
+              if (typeof valueToProcess === 'string' && valueToProcess.trim() !== '') {
+                const num = parseFloat(valueToProcess);
+                if (!isNaN(num)) {
+                  valueToProcess = num;
+                }
+              } else if (typeof valueToProcess !== 'number' && valueToProcess !== null && valueToProcess !== undefined) {
+                 // If it's not a string that can be parsed, and not already a number (or null/undefined which might be valid for optional numbers)
+                 // Log a warning or decide on a default if necessary. For now, we let it pass if it was already a non-string non-number type.
+              }
+            } else if (settingItem.type === 'switch') {
+              if (typeof valueToProcess === 'string') {
+                if (valueToProcess.toLowerCase() === 'true') {
+                  valueToProcess = true;
+                } else if (valueToProcess.toLowerCase() === 'false') {
+                  valueToProcess = false;
+                }
+              }
+            }
+            
             try {
               if (isIncrementalUpdate) {
                 // INCREMENTAL UPDATE LOGIC (now using valueToProcess)
                 if (typeof valueToProcess === 'string') { // Check type AFTER potential JSON parse
                   if (valueToProcess !== '' && valueToProcess !== null && valueToProcess !== undefined) {
                     _.set(config.option, directPathInOption, valueToProcess);
-                    console.log(`[VchartRender changeStyle] Incremental SET (string) for ${directPathInOption} to:`, valueToProcess);
-                  } else {
-                    console.log(`[VchartRender changeStyle] Incremental SKIP (empty string) for ${directPathInOption}.`);
-                  }
+                  } 
                 } else if (typeof valueToProcess === 'object' && valueToProcess !== null && Object.keys(valueToProcess).length > 0) {
                   let targetForMerge = _.get(config.option, directPathInOption);
                   if (typeof targetForMerge === 'object' && targetForMerge !== null) {
                     _.merge(targetForMerge, valueToProcess);
-                    console.log(`[VchartRender changeStyle] Incremental MERGE for ${directPathInOption} with:`, valueToProcess);
                   } else {
                     _.set(config.option, directPathInOption, cloneDeep(valueToProcess));
-                    console.log(`[VchartRender changeStyle] Incremental SET (object, target not mergeable) for ${directPathInOption} to:`, valueToProcess);
                   }
                 } else if (Array.isArray(valueToProcess) && valueToProcess.length > 0) {
                   _.set(config.option, directPathInOption, cloneDeep(valueToProcess));
-                  console.log(`[VchartRender changeStyle] Incremental SET (array) for ${directPathInOption} to:`, valueToProcess);
-                } else {
-                  console.log(`[VchartRender changeStyle] Incremental SKIP (null/undefined/empty obj/array/primitive) for ${directPathInOption}.`);
-                }
+                } 
               } else {
                 // OVERWRITE UPDATE LOGIC (using valueToProcess)
                 _.set(config.option, directPathInOption, valueToProcess);
-                console.log(`[VchartRender changeStyle] Overwrite SET for ${directPathInOption} to:`, valueToProcess);
               }
             } catch (e) {
               console.error(`[VchartRender changeStyle] Error processing path "${directPathInOption}":`, e);
             }
-          } else {
-            // console.log('[VchartRender changeStyle] Skipping settingItem ...');
-          }
+          } 
         });
       }
 
@@ -292,8 +263,6 @@ export default {
       if (config.code === this.activeCode) {
         this.changeActiveItemConfig(cloneDeep(config));
       }
-     
-      this.initialOption = cloneDeep(config.option); 
       this.showChart = true;
       return config;
     },
