@@ -60,10 +60,10 @@ const setting = [
   },
   // --- 柱体样式 (通用) ---
   {
-    label: '柱体最大宽度 (px)', type: 'inputNumber', field: 'spec_bar_barMaxWidth', optionField: 'spec.barMaxWidth', vchartType: 'number', value: null, placeholder: '自动', min: 20, tabName: 'custom', groupName: 'barStyle'
+    label: '柱体最大宽度 (px)', type: 'inputNumber', field: 'spec_bar_barMaxWidth', optionField: 'spec.barMaxWidth', vchartType: 'number', value: 20, placeholder: '自动', min: 0, tabName: 'custom', groupName: 'barStyle'
   },
   {
-    label: '柱体最小宽度 (px)', type: 'inputNumber', field: 'spec_bar_barMinWidth', optionField: 'spec.barMinWidth', vchartType: 'number', value: null, placeholder: '自动', min: 20, tabName: 'custom', groupName: 'barStyle'
+    label: '柱体最小宽度 (px)', type: 'inputNumber', field: 'spec_bar_barMinWidth', optionField: 'spec.barMinWidth', vchartType: 'number', value: 20, placeholder: '自动', min: 0, tabName: 'custom', groupName: 'barStyle'
   },
   {
     label: '柱体圆角半径 (px)', type: 'inputNumber', field: 'spec_bar_cornerRadius', optionField: 'spec.bar.cornerRadius', vchartType: 'number', value: 0, min: 0, tabName: 'custom', groupName: 'barStyle' // Note: series.bar.cornerRadius in VChart

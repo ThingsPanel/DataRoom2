@@ -104,9 +104,9 @@ const setting = [
     field: 'spec_bar_barWidth',
     optionField: 'spec.barWidth',
     vchartType: 'number',
-    value: null,
+    value: 20,
     placeholder: '自动',
-    min: 20,
+    min: 0,
     tabName: 'custom',
     groupName: 'barStyle',
     help: '固定宽度，设置后barMaxWidth/Min将被忽略'
@@ -117,9 +117,9 @@ const setting = [
     field: 'spec_bar_barMaxWidth',
     optionField: 'spec.barMaxWidth',
     vchartType: 'number',
-    value: null,
+    value: 20,
     placeholder: '自动',
-    min: 20,
+    min: 0,
     tabName: 'custom',
     groupName: 'barStyle'
   },
