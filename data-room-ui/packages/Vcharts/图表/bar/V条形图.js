@@ -8,7 +8,28 @@ const name = 'V条形图';
 const type = 'customComponent';
 // VChart 图表类型标识
 const chartType = 'vchartComponent';
-
+// 示例数据
+const data = {
+  id: 'barData',
+  values: [
+    {
+      
+      value: 1200,    // 耗水量
+      type: '耗水量'
+    },
+    {
+     
+      value: 280,     // 耗电量
+      type: '耗电量'
+    },
+    {
+      
+      value: 150,     // 热能量
+      type: '热能量'
+    },
+  
+  ]
+}
 // 右侧配置项
 const setting = [
   // --- 数据字段选择 ---
@@ -32,26 +53,7 @@ const setting = [
     tabName: 'data',
     groupName: 'dataMapping'
   },
-  {
-    label: '值轴字段 (X轴)', // For horizontal bar, X is value axis
-    type: 'input',
-    field: 'spec_xField_select',
-    optionField: 'spec.xField',
-    vchartType: 'string',
-    value: 'value', // From current spec
-    tabName: 'custom',
-    groupName: 'dataMapping'
-  },
-  {
-    label: '类别轴字段 (Y轴)', // For horizontal bar, Y is category axis
-    type: 'input',
-    field: 'spec_yField_select',
-    optionField: 'spec.yField',
-    vchartType: 'string',
-    value: 'type', // From current spec
-    tabName: 'custom',
-    groupName: 'dataMapping'
-  },
+
   // --- 条形样式 ---
   { label: '条形圆角半径(统)', type: 'inputNumber', field: 'spec_bar_style_cornerRadius_all', optionField: 'spec.bar.style.cornerRadius', vchartType: 'number', value: 5, tabName: 'custom', groupName: 'barStyle', help:'设置一个值将应用于所有角, spec值为数组 e.g., [5,5,5,5]' },
   { label: '条形高度', type: 'inputNumber', field: 'spec_bar_style_height', optionField: 'spec.bar.style.height', vchartType: 'number', value: 10, tabName: 'custom', groupName: 'barStyle' },
@@ -84,34 +86,13 @@ const setting = [
     field: 'specHandler_sdata_values',
     optionField: 'spec.data[0].values',
     vchartType: 'string',
-    value: '',
+    value:  JSON.stringify(data.values),
     tabName: 'custom',
     groupName: 'advanced'
   }
 ];
 
-// 示例数据
-const data = {
-  id: 'barData',
-  values: [
-    {
-      
-      value: 1200,    // 耗水量
-      type: '耗水量'
-    },
-    {
-     
-      value: 280,     // 耗电量
-      type: '耗电量'
-    },
-    {
-      
-      value: 150,     // 热能量
-      type: '热能量'
-    },
-  
-  ]
-}
+
 
 // 默认 VChart Option (Spec)
 const option = {

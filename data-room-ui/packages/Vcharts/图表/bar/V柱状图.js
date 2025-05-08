@@ -8,7 +8,10 @@ const name = 'V柱状图';
 const type = 'customComponent';
 // VChart 图表类型标识
 const chartType = 'vchartComponent';
-
+const data = {
+  id: 'id0',
+  values: [{ x: '1', y: 22 }, { x: '2', y: 43 }, { x: '3', y: 33 }, { x: '4', y: 22 }, { x: '5', y: 10 }, { x: '6', y: 30 }, { x: '7', y: 46 }, { x: '8', y: 21 }, { x: '9', y: 33 }, { x: '10', y: 43 }, { x: '11', y: 42 }, { x: '12', y: 30 }, { x: '13', y: 9 }, { x: '14', y: 46 }]
+};
 // 右侧配置项
 const setting = [
   // --- 数据字段选择 ---
@@ -221,10 +224,7 @@ const setting = [
 ];
 
 // 示例数据
-const data = {
-  id: 'id0',
-  values: [{ x: '1', y: 22 }, { x: '2', y: 43 }, { x: '3', y: 33 }, { x: '4', y: 22 }, { x: '5', y: 10 }, { x: '6', y: 30 }, { x: '7', y: 46 }, { x: '8', y: 21 }, { x: '9', y: 33 }, { x: '10', y: 43 }, { x: '11', y: 42 }, { x: '12', y: 30 }, { x: '13', y: 9 }, { x: '14', y: 46 }]
-};
+
 
 // 默认 VChart Option (Spec)
 const option = {

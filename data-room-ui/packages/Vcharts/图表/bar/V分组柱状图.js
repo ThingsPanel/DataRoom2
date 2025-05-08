@@ -8,7 +8,31 @@ const name = 'V分组柱状图';
 const type = 'customComponent';
 // VChart 图表类型标识
 const chartType = 'vchartComponent';
-
+const data = {
+  id: 'groupedBarData', // Unique ID for this data source
+  values: [
+    { type: 'Nail polish', country: 'Africa', value: 4229 },
+    { type: 'Nail polish', country: 'EU', value: 4376 },
+    { type: 'Nail polish', country: 'China', value: 3054 },
+    { type: 'Nail polish', country: 'USA', value: 12814 },
+    { type: 'Eyebrow pencil', country: 'Africa', value: 3932 },
+    { type: 'Eyebrow pencil', country: 'EU', value: 3987 },
+    { type: 'Eyebrow pencil', country: 'China', value: 5067 },
+    { type: 'Eyebrow pencil', country: 'USA', value: 13012 },
+    { type: 'Rouge', country: 'Africa', value: 5221 },
+    { type: 'Rouge', country: 'EU', value: 3574 },
+    { type: 'Rouge', country: 'China', value: 7004 },
+    { type: 'Rouge', country: 'USA', value: 11624 },
+    { type: 'Lipstick', country: 'Africa', value: 9256 },
+    { type: 'Lipstick', country: 'EU', value: 4376 },
+    { type: 'Lipstick', country: 'China', value: 9054 },
+    { type: 'Lipstick', country: 'USA', value: 8814 },
+    { type: 'Eyeshadows', country: 'Africa', value: 3308 },
+    { type: 'Eyeshadows', country: 'EU', value: 4572 },
+    { type: 'Eyeshadows', country: 'China', value: 12043 },
+    { type: 'Eyeshadows', country: 'USA', value: 12998 }
+  ]
+};
 // 右侧配置项
 const setting = [
   // --- 数据字段选择 ---
@@ -34,28 +58,7 @@ const setting = [
     tabName: 'data',
     groupName: 'dataMapping'
   },
-  {
-    label: '类别轴字段 (X轴)',
-    type: 'input',
-    field: 'spec_xField_select',
-    optionField: 'spec.xField',
-    vchartType: 'array', // xField for grouped bar can be an array
-    value: '["type", "country"]', // Default to a single field in an array for simplicity, user can change to e.g. '["type", "country"]'
-    tabName: 'custom',
-    groupName: 'dataMapping',
-    multiple: true,
-    help: '用于主类别，可为数组如 ["field1", "field2"]'
-  },
-  {
-    label: '值轴字段 (Y轴)',
-    type: 'input',
-    field: 'spec_yField_select',
-    optionField: 'spec.yField',
-    vchartType: 'string',
-    value: 'value',
-    tabName: 'custom',
-    groupName: 'dataMapping'
-  },
+
   {
     label: '系列/分组字段',
     type: 'select',
@@ -140,31 +143,7 @@ const setting = [
 ];
 
 // 示例数据
-const data = {
-  id: 'groupedBarData', // Unique ID for this data source
-  values: [
-    { type: 'Nail polish', country: 'Africa', value: 4229 },
-    { type: 'Nail polish', country: 'EU', value: 4376 },
-    { type: 'Nail polish', country: 'China', value: 3054 },
-    { type: 'Nail polish', country: 'USA', value: 12814 },
-    { type: 'Eyebrow pencil', country: 'Africa', value: 3932 },
-    { type: 'Eyebrow pencil', country: 'EU', value: 3987 },
-    { type: 'Eyebrow pencil', country: 'China', value: 5067 },
-    { type: 'Eyebrow pencil', country: 'USA', value: 13012 },
-    { type: 'Rouge', country: 'Africa', value: 5221 },
-    { type: 'Rouge', country: 'EU', value: 3574 },
-    { type: 'Rouge', country: 'China', value: 7004 },
-    { type: 'Rouge', country: 'USA', value: 11624 },
-    { type: 'Lipstick', country: 'Africa', value: 9256 },
-    { type: 'Lipstick', country: 'EU', value: 4376 },
-    { type: 'Lipstick', country: 'China', value: 9054 },
-    { type: 'Lipstick', country: 'USA', value: 8814 },
-    { type: 'Eyeshadows', country: 'Africa', value: 3308 },
-    { type: 'Eyeshadows', country: 'EU', value: 4572 },
-    { type: 'Eyeshadows', country: 'China', value: 12043 },
-    { type: 'Eyeshadows', country: 'USA', value: 12998 }
-  ]
-};
+
 
 // 默认 VChart Option (Spec)
 const option = {
