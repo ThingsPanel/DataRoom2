@@ -35,6 +35,28 @@ const setting = [
     groupName: 'dataMapping'
   },
   {
+    label: '类别轴字段 (X轴)',
+    type: 'input',
+    field: 'spec_xField_select',
+    optionField: 'spec.xField',
+    vchartType: 'array', // xField for grouped bar can be an array
+    value: '["type", "country"]', // Default to a single field in an array for simplicity, user can change to e.g. '["type", "country"]'
+    tabName: 'custom',
+    groupName: 'dataMapping',
+    multiple: true,
+    help: '用于主类别，可为数组如 ["field1", "field2"]'
+  },
+  {
+    label: '值轴字段 (Y轴)',
+    type: 'input',
+    field: 'spec_yField_select',
+    optionField: 'spec.yField',
+    vchartType: 'string',
+    value: 'value',
+    tabName: 'custom',
+    groupName: 'dataMapping'
+  },
+  {
     label: '系列/分组字段',
     type: 'select',
     field: 'spec_seriesField_select',
@@ -104,6 +126,16 @@ const setting = [
   // --- 高级 ---
   {
     label: 'Spec处理脚本', type: 'textarea', field: 'specHandler_script_grouped', optionField: 'specHandler',vchartType: 'string', value: '', tabName: 'custom', groupName: 'advanced'
+  },
+  {
+    label: 'Spec初始数据',
+    type: 'textarea',
+    field: 'specHandler_sdata_values',
+    optionField: 'spec.data[0].values',
+    vchartType: 'string',
+    value: JSON.stringify(data.values),
+    tabName: 'custom',
+    groupName: 'advanced'
   }
 ];
 

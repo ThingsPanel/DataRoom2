@@ -32,7 +32,26 @@ const setting = [
     tabName: 'data',
     groupName: 'dataMapping'
   },
- 
+  {
+    label: '值轴字段 (X轴)', // For horizontal bar, X is value axis
+    type: 'input',
+    field: 'spec_xField_select',
+    optionField: 'spec.xField',
+    vchartType: 'string',
+    value: 'value', // From current spec
+    tabName: 'custom',
+    groupName: 'dataMapping'
+  },
+  {
+    label: '类别轴字段 (Y轴)', // For horizontal bar, Y is category axis
+    type: 'input',
+    field: 'spec_yField_select',
+    optionField: 'spec.yField',
+    vchartType: 'string',
+    value: 'type', // From current spec
+    tabName: 'custom',
+    groupName: 'dataMapping'
+  },
   // --- 条形样式 ---
   { label: '条形圆角半径(统)', type: 'inputNumber', field: 'spec_bar_style_cornerRadius_all', optionField: 'spec.bar.style.cornerRadius', vchartType: 'number', value: 5, tabName: 'custom', groupName: 'barStyle', help:'设置一个值将应用于所有角, spec值为数组 e.g., [5,5,5,5]' },
   { label: '条形高度', type: 'inputNumber', field: 'spec_bar_style_height', optionField: 'spec.bar.style.height', vchartType: 'number', value: 10, tabName: 'custom', groupName: 'barStyle' },
@@ -48,13 +67,22 @@ const setting = [
   // --- 准星线 (Crosshair) ---
 
   // --- 提示框 (Tooltip) ---
-  
-  // --- 高级 ---
   {
     label: 'Spec处理脚本',
     type: 'textarea',
     field: 'specHandler_script_bar_horizontal',
     optionField: 'specHandler',
+    vchartType: 'string',
+    value: '',
+    tabName: 'custom',
+    groupName: 'advanced'
+  },
+  // --- 高级 ---
+  {
+    label: 'Spec初始数据',
+    type: 'textarea',
+    field: 'specHandler_sdata_values',
+    optionField: 'spec.data[0].values',
     vchartType: 'string',
     value: '',
     tabName: 'custom',

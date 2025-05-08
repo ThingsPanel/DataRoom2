@@ -32,6 +32,7 @@ const setting = [
     tabName: 'data',
     groupName: 'dataMapping'
   },
+  
   // --- 图表标题 ---
   {
     label: '显示主标题',
@@ -204,6 +205,16 @@ const setting = [
     optionField: 'specHandler',
     vchartType: 'string',
     value: '',
+    tabName: 'custom',
+    groupName: 'advanced'
+  },
+  {
+    label: 'Spec初始数据',
+    type: 'textarea',
+    field: 'specHandler_sdata_values',
+    optionField: 'spec.data[0].values',
+    vchartType: 'string',
+    value:  JSON.stringify(data.values),
     tabName: 'custom',
     groupName: 'advanced'
   }

@@ -60,7 +60,7 @@ const newThemeSetting = {
 
 const vchartList = getVchartList(files)
 
-function getVchartList(files) {
+ function getVchartList(files) {
   const configMapList = {}
   
   // 收集所有图表配置
