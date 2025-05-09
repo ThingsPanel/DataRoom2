@@ -1,33 +1,62 @@
-export default {
-  name: '画布线条',
-  type: 'canvasLine',
-  icon: 'iconxiantiao',
-  component: () => import('./index.vue'),
-  setting: () => import('./setting.vue'),
-  w: 300,
-  h: 100,
-  customize: {
-    lineColor: '#1890ff',
-    lineWidth: 2,
-    opacity: 1,
-    dashed: false,
-    dashLength: 5,
-    lineType: 'straight',
-    points: [
-      { x: 0.2, y: 0.5 },
-      { x: 0.8, y: 0.5 }
-    ],
-    animation: {
+import { commonConfig, displayOption } from 'data-room-ui/js/config'
+
+export const settingConfig = {
+  legend: false,
+  isGroup: true,
+  data: [],
+  label: {
+    position: 'top',
+    content: ''
+  },
+  seriesField: '',
+  displayOption: {
+    ...displayOption,
+    dataAllocation: { enable: false },
+    dataSourceType: { enable: false },
+    params: { enable: false },
+    metricField: {
+      label: '指标',
       enable: false,
-      type: 'flow',
-      speed: 5,
-      flowColor: 'rgba(24, 144, 255, 0.6)',
-      flowLength: 30,
-      particleSize: 3,
-      particleColor: '#ffffff',
-      glowColor: 'rgba(24, 144, 255, 0.3)',
-      glowWidth: 10,
-      direction: 'forward'
+      multiple: false
+    },
+    dimensionField: {
+      label: '维度',
+      enable: false,
+      multiple: false
     }
   }
+}
+
+const customConfig = {
+  type: 'canvasLine',
+  title: '连接线',
+  root: {
+    version: '2023071001',
+    rotateX: 0,
+    rotateY: 0,
+    rotateZ: 0,
+    perspective: 0,
+    skewX: 0,
+    skewY: 0
+  },
+  customize: {
+    // 线条起点坐标
+    startX: 0,
+    startY: 0,
+    // 线条终点坐标
+    endX: 100,
+    endY: 100,
+    // 线条样式
+    lineWidth: 2,
+    lineColor: '#409EFF',
+    lineStyle: 'solid', // solid, dashed, dotted
+    // 箭头类型
+    arrowType: 'end', // none, start, end, both
+    // 是否自动调整大小
+    autoSize: true
+  }
+}
+
+export const dataConfig = {
+  ...commonConfig(customConfig)
 }

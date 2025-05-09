@@ -415,7 +415,7 @@ export default {
                   headers: {},
                   params: { ...userConfig.queryParams },
                   componentId: config.code,
-                  pollingInterval: 6000 // 设置轮询间隔为6秒
+                  pollingInterval: 10000 // 设置轮询间隔为6秒
                 }
 
                 // 如果是最新数据模式，删除历史数据相关参数

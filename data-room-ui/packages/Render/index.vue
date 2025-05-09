@@ -20,6 +20,7 @@
       class="drag-item"
       :class="{
         'multiple-selected': activeCodes.includes(chart.code),
+        'no-border-item': isNoBorderType(chart.type)
       }"
       :scale-ratio="scale"
       :x="chart.x"
@@ -51,18 +52,35 @@
       @refLineParams="getRefLineParams"
       @mouseleave.native="resetPresetLineDelay"
     >
-      <Configuration
-        v-if="isInit"
-        :config="chart"
-        @openRightPanel="openRightPanel"
-        @openDataViewDialog="openDataViewDialog"
-      >
-        <RenderCard
-          :ref="'RenderCard' + chart.code"
+      <template v-if="isNoBorderType(chart.type)">
+        <Configuration
+          v-if="isInit"
           :config="chart"
-          @styleHandler="styleHandler"
-        />
-      </Configuration>
+          @openRightPanel="openRightPanel"
+          @openDataViewDialog="openDataViewDialog"
+          class="no-border-configuration"
+        >
+          <RenderCard
+            :ref="'RenderCard' + chart.code"
+            :config="chart"
+            @styleHandler="styleHandler"
+          />
+        </Configuration>
+      </template>
+      <template v-else>
+        <Configuration
+          v-if="isInit"
+          :config="chart"
+          @openRightPanel="openRightPanel"
+          @openDataViewDialog="openDataViewDialog"
+        >
+          <RenderCard
+            :ref="'RenderCard' + chart.code"
+            :config="chart"
+            @styleHandler="styleHandler"
+          />
+        </Configuration>
+      </template>
     </vdr>
     <span
       v-for="(vl, index) in vLine"
@@ -542,6 +560,10 @@ export default {
       const rotateZ = parseFloat(chart.rotateZ || 0)
 
       return `skew(${skewX}deg, ${skewY}deg) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
+    },
+    // 判断是否为无边界类型组件
+    isNoBorderType(type) {
+      return type === 'svgLine' || type === 'canvasLine' || type === 'fabricLine';
     }
   }
 }
@@ -565,6 +587,32 @@ export default {
   }
   .ref-line {
     background-color: transparent;
+  }
+  
+  // 无边界项目的特殊样式
+  .no-border-item {
+    cursor: default;
+    
+    ::v-deep .render-item-wrap {
+      overflow: visible !important;
+      border: none !important;
+    }
+    
+    // 选中和悬停时不显示边框
+    &.multiple-selected, 
+    &:hover {
+      border: none !important;
+      box-shadow: none !important;
+    }
+    
+    // 无边界配置包装器样式
+    ::v-deep .no-border-configuration {
+      border: none !important;
+      
+      &.active, &.hover {
+        border: none !important;
+      }
+    }
   }
 }
 .design-drag-wrap {

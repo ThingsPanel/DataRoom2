@@ -27,7 +27,7 @@ const customConfig = {
     dashLength: 5,
     lineType: 'straight', // straight, curved, step, smooth, bezier
     points: [], // 存储相对位置的点
-    autoResize: true, // 始终保持为 true
+    autoSize: true, // 自动调整组件大小
     // 添加动画相关配置
     animation: {
       enable: false,

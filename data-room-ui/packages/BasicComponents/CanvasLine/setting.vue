@@ -3,248 +3,332 @@
     <el-form
       ref="form"
       :model="config"
-      label-width="90px"
-      size="mini"
+      label-width="100px"
+      label-position="left"
+      class="setting-body bs-el-form"
     >
-      <SettingTitle>基础样式</SettingTitle>
-      <div class="lc-field-body">
-        <el-form-item label="线条颜色">
-          <ColorPicker
-            v-model="config.customize.lineColor"
-            @change="updateColorAndRefresh"
-          />
-        </el-form-item>
-        <el-form-item label="线条宽度">
-          <el-input-number
-            v-model="config.customize.lineWidth"
-            :min="1"
-            :max="20"
-            @change="updateConfig"
-          />
-        </el-form-item>
-        <el-form-item label="不透明度">
-          <el-slider
-            v-model="config.customize.opacity"
-            :min="0"
-            :max="1"
-            :step="0.01"
-            @change="updateConfig"
-          />
-        </el-form-item>
-        <el-form-item label="虚线">
-          <el-switch
-            v-model="config.customize.dashed"
-            @change="updateConfig"
-          />
-        </el-form-item>
-        <el-form-item v-if="config.customize.dashed" label="虚线长度">
-          <el-input-number
-            v-model="config.customize.dashLength"
-            :min="1"
-            :max="20"
-            @change="updateConfig"
-          />
-        </el-form-item>
-        <el-form-item label="线条类型">
-          <el-select
-            v-model="config.customize.lineType"
-            placeholder="请选择线条类型"
-            @change="updateConfig"
-          >
-            <el-option label="直线" value="straight" />
-            <el-option label="曲线" value="curved" />
-            <el-option label="阶梯线" value="step" />
-            <el-option label="平滑曲线" value="smooth" />
-            <el-option label="贝塞尔曲线" value="bezier" />
-          </el-select>
-        </el-form-item>
-      </div>
-      <SettingTitle>动画效果</SettingTitle>
-      <div class="lc-field-body">
-        <el-form-item label="启用动画">
-          <el-switch
-            v-model="config.customize.animation.enable"
-            @change="updateConfig"
-          />
-        </el-form-item>
-        <template v-if="config.customize.animation.enable">
-          <el-form-item label="动画类型">
-            <el-select
-              v-model="config.customize.animation.type"
-              placeholder="请选择动画类型"
-              @change="updateConfig"
-            >
-              <el-option label="流动效果" value="flow" />
-              <el-option label="粒子效果" value="particle" />
-            </el-select>
-          </el-form-item>
-          <el-form-item label="动画速度">
-            <el-slider
-              v-model="config.customize.animation.speed"
-              :min="1"
-              :max="10"
-              :step="0.5"
-              @change="updateConfig"
+      <div>
+        <slot name="top" />
+        <el-form
+          :model="config.customize"
+          label-position="left"
+          class="setting-body bs-el-form"
+          label-width="100px"
+        >
+          <SettingTitle>旋转</SettingTitle>
+          <div class="lc-field-body">
+            <RotateSetting
+              :config="config"
             />
-          </el-form-item>
-          <el-form-item label="动画方向">
-            <el-select
-              v-model="config.customize.animation.direction"
-              placeholder="请选择动画方向"
-              @change="updateConfig"
-            >
-              <el-option label="正向" value="forward" />
-              <el-option label="反向" value="reverse" />
-              <el-option label="交替" value="alternate" />
-            </el-select>
-          </el-form-item>
+          </div>
           
-          <template v-if="config.customize.animation.type === 'flow'">
-            <el-form-item label="流动颜色">
+          <SettingTitle>线条属性</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="线条颜色">
               <ColorPicker
-                v-model="config.customize.animation.flowColor"
-                @change="updateColorAndRefresh"
+                v-model="config.customize.lineColor"
+                :predefine="predefineThemeColors"
               />
             </el-form-item>
-            <el-form-item label="流动长度">
-              <el-slider
-                v-model="config.customize.animation.flowLength"
-                :min="5"
-                :max="50"
-                @change="updateConfig"
-              />
-            </el-form-item>
-            <el-form-item label="发光宽度">
-              <el-slider
-                v-model="config.customize.animation.glowWidth"
-                :min="0"
-                :max="20"
-                @change="updateConfig"
-              />
-            </el-form-item>
-            <el-form-item label="发光颜色">
-              <ColorPicker
-                v-model="config.customize.animation.glowColor"
-                @change="updateColorAndRefresh"
-              />
-            </el-form-item>
-          </template>
-          
-          <template v-if="config.customize.animation.type === 'particle'">
-            <el-form-item label="粒子颜色">
-              <ColorPicker
-                v-model="config.customize.animation.particleColor"
-                @change="updateColorAndRefresh"
-              />
-            </el-form-item>
-            <el-form-item label="粒子大小">
-              <el-slider
-                v-model="config.customize.animation.particleSize"
+            
+            <el-form-item label="线条宽度">
+              <el-input-number
+                v-model="config.customize.lineWidth"
+                class="bs-el-input-number"
+                controls-position="right"
                 :min="1"
-                :max="10"
-                @change="updateConfig"
+                :max="20"
               />
             </el-form-item>
-          </template>
-        </template>
+            
+            <el-form-item label="线条样式">
+              <el-select
+                v-model="config.customize.lineStyle"
+                popper-class="bs-el-select"
+                class="bs-el-select"
+                clearable
+              >
+                <el-option
+                  v-for="style in lineStyleOptions"
+                  :key="style.value"
+                  :label="style.label"
+                  :value="style.value"
+                />
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="箭头类型">
+              <el-select
+                v-model="config.customize.arrowType"
+                popper-class="bs-el-select"
+                class="bs-el-select"
+                clearable
+              >
+                <el-option
+                  v-for="arrow in arrowTypeOptions"
+                  :key="arrow.value"
+                  :label="arrow.label"
+                  :value="arrow.value"
+                />
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="自动调整尺寸">
+              <el-switch
+                v-model="config.customize.autoSize"
+                @change="handleAutoSizeChange"
+              />
+            </el-form-item>
+          </div>
+          
+          <SettingTitle>坐标设置</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="起点 X">
+              <el-input-number
+                v-model="config.customize.startX"
+                class="bs-el-input-number"
+                controls-position="right"
+                :min="0"
+                @change="updateSize"
+              />
+            </el-form-item>
+            
+            <el-form-item label="起点 Y">
+              <el-input-number
+                v-model="config.customize.startY"
+                class="bs-el-input-number"
+                controls-position="right"
+                :min="0"
+                @change="updateSize"
+              />
+            </el-form-item>
+            
+            <el-form-item label="终点 X">
+              <el-input-number
+                v-model="config.customize.endX"
+                class="bs-el-input-number"
+                controls-position="right"
+                :min="0"
+                @change="updateSize"
+              />
+            </el-form-item>
+            
+            <el-form-item label="终点 Y">
+              <el-input-number
+                v-model="config.customize.endY"
+                class="bs-el-input-number"
+                controls-position="right"
+                :min="0"
+                @change="updateSize"
+              />
+            </el-form-item>
+            
+            <el-form-item>
+              <el-button type="primary" @click="updateAllLines">更新所有连接线</el-button>
+            </el-form-item>
+          </div>
+        </el-form>
       </div>
     </el-form>
   </div>
 </template>
-
 <script>
-import { EventBus } from 'data-room-ui/js/utils/eventBus'
+import { mapMutations, mapState } from 'vuex'
 import SettingTitle from 'data-room-ui/SettingTitle/index.vue'
 import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
+import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
+import {predefineColors} from "data-room-ui/js/utils/colorList";
 
 export default {
   name: 'CanvasLineSetting',
   components: {
+    ColorPicker,
     SettingTitle,
-    ColorPicker
+    RotateSetting
   },
   props: {
     config: {
       type: Object,
-      default: () => ({})
+      required: true
+    },
+    predefineThemeColors: {
+      type: Array,
+      default: () => predefineColors
+    }
+  },
+  computed: {
+    ...mapState({
+      chartList: state => state.bigScreen.pageInfo.chartList
+    }),
+    canvasWidth() {
+      if (!this.config || !this.config.customize) {
+        return 100; // 默认值
+      }
+      return Math.max(
+        isNaN(this.config.customize.endX) ? 0 : this.config.customize.endX, 
+        isNaN(this.config.customize.startX) ? 0 : this.config.customize.startX
+      ) + 20;
+    },
+    canvasHeight() {
+      if (!this.config || !this.config.customize) {
+        return 100; // 默认值
+      }
+      return Math.max(
+        isNaN(this.config.customize.endY) ? 0 : this.config.customize.endY, 
+        isNaN(this.config.customize.startY) ? 0 : this.config.customize.startY
+      ) + 20;
     }
   },
   data() {
-    return {}
+    return {
+      lineStyleOptions: [
+        {
+          label: '实线',
+          value: 'solid'
+        },
+        {
+          label: '虚线',
+          value: 'dashed'
+        },
+        {
+          label: '点线',
+          value: 'dotted'
+        }
+      ],
+      arrowTypeOptions: [
+        {
+          label: '无箭头',
+          value: 'none'
+        },
+        {
+          label: '起点箭头',
+          value: 'start'
+        },
+        {
+          label: '终点箭头',
+          value: 'end'
+        },
+        {
+          label: '双向箭头',
+          value: 'both'
+        }
+      ]
+    }
   },
-  created() {
-    this.initConfig()
+  mounted() {
+    // 确保config和customize对象都存在
+    if (!this.config || !this.config.customize) {
+      console.warn('CanvasLine setting: config or customize is undefined');
+      return;
+    }
+    
+    // 如果配置中没有autoSize属性，添加默认值
+    if (this.config.customize.autoSize === undefined) {
+      this.$set(this.config.customize, 'autoSize', true);
+      this.changeChartConfig({
+        ...this.config
+      });
+    }
   },
   methods: {
-    initConfig() {
-      if (!this.config.customize) {
-        this.$set(this.config, 'customize', {})
-      }
+    ...mapMutations('bigScreen', [
+      'changeChartConfig',
+      'changeActiveItemConfig',
+      'changeActiveItemWH'
+    ]),
+    
+    // 处理自动调整尺寸开关变化
+    handleAutoSizeChange(value) {
+      if (!this.config || !this.config.customize) return;
       
-      // 初始化线条样式
-      if (!this.config.customize.lineColor) {
-        this.$set(this.config.customize, 'lineColor', '#1890ff')
-      }
+      // 将更改保存到配置中
+      this.changeChartConfig({
+        ...this.config,
+        customize: {
+          ...this.config.customize,
+          autoSize: value
+        }
+      });
       
-      if (!this.config.customize.lineWidth) {
-        this.$set(this.config.customize, 'lineWidth', 2)
-      }
-      
-      if (typeof this.config.customize.opacity !== 'number') {
-        this.$set(this.config.customize, 'opacity', 1)
-      }
-      
-      if (typeof this.config.customize.dashed !== 'boolean') {
-        this.$set(this.config.customize, 'dashed', false)
-      }
-      
-      if (!this.config.customize.dashLength) {
-        this.$set(this.config.customize, 'dashLength', 5)
-      }
-      
-      // 初始化线条类型
-      if (!this.config.customize.lineType) {
-        // 兼容旧版本
-        const lineType = this.config.customize.curved ? 'curved' : 'straight'
-        this.$set(this.config.customize, 'lineType', lineType)
-      }
-      
-      // 初始化动画配置
-      if (!this.config.customize.animation) {
-        this.$set(this.config.customize, 'animation', {
-          enable: false,
-          type: 'flow',
-          speed: 5,
-          flowColor: 'rgba(24, 144, 255, 0.6)',
-          flowLength: 30,
-          particleSize: 3,
-          particleColor: '#ffffff',
-          glowColor: 'rgba(24, 144, 255, 0.3)',
-          glowWidth: 10,
-          direction: 'forward'
-        })
+      // 如果开启了自动调整，立即更新尺寸
+      if (value) {
+        this.updateSize();
       }
     },
     
-    updateConfig() {
-      this.$emit('change', this.config)
+    // 更新组件的尺寸
+    updateSize() {
+      // 确保config和customize对象存在
+      if (!this.config || !this.config.customize) return;
+      
+      // 如果未开启自动调整尺寸，则不执行
+      if (!this.config.customize.autoSize) return;
+      
+      // 计算所需的宽高
+      const width = this.canvasWidth;
+      const height = this.canvasHeight;
+      
+      // 更新组件的配置
+      this.changeChartConfig({
+        ...this.config,
+        w: width,
+        h: height
+      });
+      
+      // 更新活动项的配置
+      this.changeActiveItemConfig({
+        ...this.config,
+        w: width,
+        h: height
+      });
+      
+      // 更新活动项的宽高
+      this.changeActiveItemWH({
+        code: this.config.code,
+        w: width,
+        h: height
+      });
     },
     
-    updateColorAndRefresh() {
-      this.updateConfig()
-      // 通知组件刷新动画
-      EventBus.$emit('canvasline-refresh-animation')
+    // 更新所有连接线尺寸
+    updateAllLines() {
+      if (!this.chartList) return;
+      
+      // 遍历所有图表组件
+      this.chartList.forEach(chart => {
+        // 确保chart和chart.customize对象存在
+        if (!chart || !chart.customize) return;
+        
+        // 如果是canvasLine类型并且启用了自动调整尺寸
+        if (chart.type === 'canvasLine' && chart.customize.autoSize) {
+          // 计算该线条所需尺寸
+          const startX = isNaN(chart.customize.startX) ? 0 : chart.customize.startX;
+          const startY = isNaN(chart.customize.startY) ? 0 : chart.customize.startY;
+          const endX = isNaN(chart.customize.endX) ? 100 : chart.customize.endX;
+          const endY = isNaN(chart.customize.endY) ? 100 : chart.customize.endY;
+          
+          const width = Math.max(startX, endX) + 20;
+          const height = Math.max(startY, endY) + 20;
+          
+          // 更新组件配置
+          this.changeChartConfig({
+            ...chart,
+            w: width,
+            h: height
+          });
+        }
+      });
+      
+      // 提示用户操作已完成
+      this.$message.success('所有连接线已更新');
     }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.bs-setting-wrap {
-  padding: 0 16px;
-}
-
 .lc-field-body {
-  padding: 10px 0;
+  width: 97%;
+  padding: 16px;
 }
 </style>

@@ -209,6 +209,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+      case 'fabricLine':      // SVG线条
+      return {
+        name: 'fabri线条',
+        title: 'fabri线条',
+        icon: Icon.getNameList()[39],
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 100,
+        x: 0,
+        y: 0,
+        type
+      }  
     case 'canvasLine': // Canvas线条
       return {
         name: 'Canvas线条',

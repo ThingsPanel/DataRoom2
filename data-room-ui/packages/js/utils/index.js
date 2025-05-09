@@ -14,7 +14,7 @@ export const resolveComponentType = type => {
   const specialTypeMap = {
     customComponent: 'CustomComponent',
     threeComponent: 'ThreeComponent',
-    ThreeComponent: 'ThreeComponent'
+    ThreeComponent: 'ThreeComponent',
   }
   // 检查是否有特殊映射
   if (specialTypeMap[type]) {

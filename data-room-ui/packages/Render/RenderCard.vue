@@ -5,10 +5,10 @@
 -->
 
 <template>
-  <div class="content">
+  <div class="content" :class="{'special-content': isSpecialType}">
     <!-- 旋转控制器，只在设计模式下且组件被选中时显示 -->
     <div 
-      v-if="isSelected && !isPreviewMode" 
+      v-if="isSelected && !isPreviewMode && !isSpecialType" 
       class="rotate-handler"
       @mousedown.stop="startRotate"
       @dblclick.stop="resetRotate"
@@ -19,7 +19,7 @@
 
     <component
       :is="resolveComponentType(config.border.type)"
-      v-if="config.border&&config.border.type"
+      v-if="config.border&&config.border.type && !isSpecialType"
       :id="`border${config.code}`"
       :ref="`border${config.code}`"
       :key="`border${config.key}`"
@@ -27,6 +27,7 @@
     />
     <div
       class="render-item-wrap"
+      :class="{'special-wrap': isSpecialType}"
       :style="wrapStyle"
     >
       <component
@@ -48,12 +49,15 @@ import { mapMutations } from 'vuex'
 import { resolveComponentType } from 'data-room-ui/js/utils'
 import pcComponent from 'data-room-ui/js/utils/componentImport'
 import { dataInit, destroyedEvent } from 'data-room-ui/js/utils/eventBus'
+import chartContextMenu from 'data-room-ui/js/mixins/chartContextMenu'
 import CustomComponent from '../PlotRender/index.vue'
 import EchartsComponent from '../EchartsRender/index.vue'
 import ThreeComponent from '../ThreeRender/index.vue'
 import VchartCustomComponent from '../VchartRender/index.vue'
 import Svgs from '../Svgs/index.vue'
 import RemoteComponent from 'data-room-ui/RemoteComponents/index.vue'
+import BasicComponentFabricLine from '../BasicComponents/FabricLine/index.vue'
+
 const components = {}
 for (const key in pcComponent) {
   if (Object.hasOwnProperty.call(pcComponent, key)) {
@@ -63,6 +67,7 @@ for (const key in pcComponent) {
 export default {
   name: 'RenderCard',
   // mixins: [commonMixins],
+  mixins: [chartContextMenu],
   components: {
     ...components,
     CustomComponent,
@@ -70,7 +75,8 @@ export default {
     RemoteComponent,
     EchartsComponent,
     ThreeComponent,
-    VchartCustomComponent
+    VchartCustomComponent,
+    BasicComponentFabricLine
   },
   props: {
     // 卡片的属性
@@ -117,6 +123,10 @@ export default {
       }
       
       return previewPaths.includes(currentPath) || inBigScreenRun;
+    },
+    // 添加计算属性判断是否为特殊类型
+    isSpecialType() {
+      return this.config.type === 'svgLine' || this.config.type === 'canvasLine' || this.config.type === 'fabricLine';
     },
     wrapStyle() {
       return this.getWrapStyle()
@@ -227,6 +237,20 @@ export default {
     },
     getWrapStyle() {
       try {
+        // 检查是否为特殊类型
+        const isSpecialType = this.config.type === 'svgLine' || this.config.type === 'canvasLine';
+        
+        if (isSpecialType) {
+          // 对于特殊类型组件，应用不同的样式
+          return {
+            height: '100%',
+            width: '100%',
+            padding: '0',
+            overflow: 'visible' // 允许内容溢出
+          };
+        }
+        
+        // 常规组件使用原有样式
         return {
           height: `calc(100% - ${this.getTitleHeight()}px)`,
           padding: this.getPadding()
@@ -329,6 +353,11 @@ export default {
   display: flex;
   align-items: flex-end;
 
+  &.special-content {
+    overflow: visible;
+    border: none;
+  }
+
   .rotate-handler {
     position: absolute;
     top: -32px; // 增加距离
@@ -375,5 +404,10 @@ export default {
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
+  
+  &.special-wrap {
+    overflow: visible;
+    border: none;
+  }
 }
 </style>

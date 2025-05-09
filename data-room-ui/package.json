@@ -68,6 +68,7 @@
     "echarts": "^5.2.2",
     "element-ui": "2.15.6",
     "es6-promise": "4.2.8",
+    "fabric": "^6.6.4",
     "gc-vue-draggable-resizable": "^1.0.1",
     "html-to-image": "1.11.11",
     "insert-css": "^2.0.0",
