@@ -60,9 +60,19 @@ export default {
     pointRadius() {
       return this.config?.customize?.pointRadius || 5
     },
-    // 绘制模式
-    drawMode() {
-      return this.config?.customize?.drawMode || 'key_ctrl'
+    // 新增：线条样式相关计算属性
+    enableLineDash() {
+      return this.config?.customize?.enableLineDash || false;
+    },
+    lineDashValue() {
+      return this.config?.customize?.lineDashValue || 5;
+    },
+    lineGapValue() {
+      return this.config?.customize?.lineGapValue || 5;
+    },
+    // 新增：线条形状类型
+    lineShapeType() {
+      return this.config?.customize?.lineShapeType || 'straight';
     }
   },
   watch: {
@@ -71,6 +81,20 @@ export default {
     },
     'config.customize.lineWidth'() {
       this.updateLinesStyle()
+    },
+    // 新增：侦听线条样式变化
+    enableLineDash() {
+      this.updateLinesStyle();
+    },
+    lineDashValue() {
+      this.updateLinesStyle();
+    },
+    lineGapValue() {
+      this.updateLinesStyle();
+    },
+    // 新增：侦听线条形状变化
+    lineShapeType() {
+      this.updateLine(); // 重绘线条以应用新的形状
     },
     'config.customize.pointColor'() {
       this.updatePointsStyle()
@@ -125,6 +149,7 @@ export default {
       getCtrlKeyState: () => this.isCtrlDown,
       updateLine: this.drawLinePath,
       updatePathsData: this.updatePathsData,
+      onContainerResize: this.handleContainerResize,
       onDragStart: (index, point) => {
         console.log(`拖动点开始 ${index}:`, point.x, point.y);
         this.$emit('dragging-point', true);
@@ -268,31 +293,135 @@ export default {
       return Math.sqrt(Math.pow(p.x - projX, 2) + Math.pow(p.y - projY, 2));
     },
     drawLinePath() {
-      if (!this.draw || this.points.length < 2) return;
+      if (!this.draw || this.points.length < 1) return; // 允许单点，但不会画线
       if (this.currentLine) this.currentLine.remove();
-      try {
-        let path = '';
-        this.points.forEach((point, index) => {
-          let x, y;
-          if (point.element && typeof point.element.cx === 'function') {
-            x = point.element.cx(); y = point.element.cy();
-            point.x = x; point.y = y;
+      
+      let path = '';
+      const pts = this.points.map(p => ({ x: p.x, y: p.y })); // 使用纯数据点进行计算
+
+      if (pts.length < 2) {
+        // 如果点少于2个，不画线 (或者只画一个点，但目前逻辑是画线)
+        if (this.currentLine) this.currentLine.remove();
+        this.currentLine = null;
+        return;
+      }
+
+      switch (this.lineShapeType) {
+        case 'cubicBezier':
+          if (pts.length < 2) break; // 至少需要2个点来尝试画曲线
+          path = `M${pts[0].x},${pts[0].y}`;
+          if (pts.length === 2) { // 如果只有两个点，画直线
+             path += ` L${pts[1].x},${pts[1].y}`;
           } else {
-            x = point.x; y = point.y;
+            for (let i = 0; i < pts.length - 1; i++) {
+              const p0 = pts[i > 0 ? i -1 : 0];
+              const p1 = pts[i];
+              const p2 = pts[i+1];
+              const p3 = pts[i+2 < pts.length ? i+2 : pts.length -1];
+
+              const [cp1x, cp1y] = this._controlPoint(p0, pts[i > 1 ? i - 2 : 0] , p1, false, 0.2); // 根据前一个点和当前点计算第一个控制点
+              const [cp2x, cp2y] = this._controlPoint(p1, p0, p2, true, 0.2);    // 根据当前点和下一个点计算第二个控制点
+              
+              // 更正：应该是基于当前段 p1 -> p2 来计算控制点
+              // p1是当前点，p2是下一个点
+              // 控制点1：从p1出发，朝向p2，受p0影响
+              // 控制点2：到达p2之前，从p1过来，受p3影响
+              const [cpsX, cpsY] = this._controlPoint(pts[i], pts[i - 1], pts[i + 1], false, 0.2);
+              const [cpeX, cpeY] = this._controlPoint(pts[i + 1], pts[i], pts[i + 2], true, 0.2);
+
+              if (i === 0) { // 对于第一段特殊处理，使其更自然地开始
+                 const [cp1ForP0X, cp1ForP0Y] = this._controlPoint(pts[i], pts[i] , pts[i+1], false, 0.1);
+                 const [cp2ForP1X, cp2ForP1Y] = this._controlPoint(pts[i+1], pts[i], pts[i+2], true, 0.2);
+                 path = `M${pts[i].x},${pts[i].y} C${cp1ForP0X},${cp1ForP0Y} ${cp2ForP1X},${cp2ForP1Y} ${pts[i+1].x},${pts[i+1].y}`;
+              } else {
+                 path += ` S${cpsX},${cpsY} ${pts[i+1].x},${pts[i+1].y}`; // 使用S命令平滑连接
+                 // 或者标准Cubic: path += ` C${cpsX},${cpsY} ${cpeX},${cpeY} ${pts[i+1].x},${pts[i+1].y}`;
+              }
+            }
           }
-          path += index === 0 ? `M${x},${y} ` : `L${x},${y} `;
-        });
-        this.currentLine = this.draw.path(path).fill('none').stroke({ color: this.lineColor, width: this.lineWidth });
+          break;
+        case 'stepBefore':
+          path = `M${pts[0].x},${pts[0].y}`;
+          for (let i = 0; i < pts.length - 1; i++) {
+            path += ` L${pts[i+1].x},${pts[i].y} L${pts[i+1].x},${pts[i+1].y}`;
+          }
+          break;
+        case 'stepAfter':
+          path = `M${pts[0].x},${pts[0].y}`;
+          for (let i = 0; i < pts.length - 1; i++) {
+            path += ` L${pts[i].x},${pts[i+1].y} L${pts[i+1].x},${pts[i+1].y}`;
+          }
+          break;
+        case 'stepMiddle':
+          path = `M${pts[0].x},${pts[0].y}`;
+          for (let i = 0; i < pts.length - 1; i++) {
+            const midX = (pts[i].x + pts[i+1].x) / 2;
+            path += ` L${midX},${pts[i].y} L${midX},${pts[i+1].y} L${pts[i+1].x},${pts[i+1].y}`;
+          }
+          break;
+        case 'straight':
+        default:
+          path = `M${pts[0].x},${pts[0].y}`;
+          for (let i = 1; i < pts.length; i++) {
+            path += ` L${pts[i].x},${pts[i].y}`;
+          }
+          break;
+      }
+
+      try {
+        const strokeAttrs = {
+          color: this.lineColor,
+          width: this.lineWidth
+        };
+        if (this.enableLineDash && this.lineDashValue > 0 && this.lineGapValue > 0) {
+          strokeAttrs.dasharray = `${this.lineDashValue},${this.lineGapValue}`;
+        } else {
+          strokeAttrs.dasharray = 'none';
+        }
+        // console.log('FabricLine.vue: Updating line style with attributes:', JSON.parse(JSON.stringify(strokeAttrsToApply)));
+        // 在应用新路径之前移除旧线（如果存在），确保 currentLine 在此作用域内被正确处理
+        if (this.currentLine) {
+          this.currentLine.remove();
+        }
+        this.currentLine = this.draw.path(path).fill('none').stroke(strokeAttrs);
         this.currentLine.back();
-      } catch (err) { console.error('线段绘制失败:', err); }
+      } catch (err) { 
+        console.error('线段绘制失败:', err, 'Path:', path, 'Type:', this.lineShapeType);
+        if (this.currentLine) {
+          this.currentLine.remove();
+          this.currentLine = null;
+        } 
+      }
     },
     updateLine() {
       this.drawLinePath();
       this.updatePathsData();
     },
     updateLinesStyle() {
-      if (this.currentLine) this.currentLine.stroke({ color: this.lineColor, width: this.lineWidth });
-      this.lines.forEach(line => { if (line.path) line.path.stroke({ color: this.lineColor, width: this.lineWidth }) });
+      const strokeAttrsToApply = {
+        color: this.lineColor,
+        width: this.lineWidth
+      };
+      if (this.enableLineDash && this.lineDashValue > 0 && this.lineGapValue > 0) {
+        strokeAttrsToApply.dasharray = `${this.lineDashValue},${this.lineGapValue}`;
+      } else {
+        strokeAttrsToApply.dasharray = 'none';
+      }
+
+      console.log('FabricLine.vue: Updating line style with attributes:', JSON.parse(JSON.stringify(strokeAttrsToApply)));
+
+      if (this.currentLine) {
+        this.currentLine.stroke(strokeAttrsToApply);
+      }
+      // 注意: this.lines 数组似乎用于存储已完成的多段线条，如果存在，也需要更新
+      // 目前的实现主要集中在 this.currentLine 上
+      // 如果 this.lines 也需要实时更新样式，这里的逻辑需要扩展
+      this.lines.forEach(line => { 
+        if (line.path) { 
+          // 使用相同的 strokeAttrsToApply 对象，因为属性是一致的
+          line.path.stroke(strokeAttrsToApply);
+        }
+      });
     },
     updatePointsStyle() {
       this.points.forEach(point => { if (point.element) point.element.radius(this.pointRadius).fill(this.pointColor).move(point.x - this.pointRadius, point.y - this.pointRadius) });
@@ -378,6 +507,64 @@ export default {
         document.removeEventListener('mousemove', handleGlobalMouseMove, { capture: true });
         document.removeEventListener('mouseup', handleGlobalMouseUp, { capture: true });
       });
+    },
+    handleContainerResize(newWidth, newHeight) {
+      console.log(`FabricLine.vue: handleContainerResize called with newWidth=${newWidth}, newHeight=${newHeight}`);
+      if (this.$refs.drawingArea) {
+        const currentWidth = parseFloat(this.$refs.drawingArea.style.width) || this.$refs.drawingArea.clientWidth;
+        const currentHeight = parseFloat(this.$refs.drawingArea.style.height) || this.$refs.drawingArea.clientHeight;
+
+        let updateNeeded = false;
+        let finalWidth = currentWidth;
+        let finalHeight = currentHeight;
+
+        if (newWidth > currentWidth) {
+          finalWidth = newWidth;
+          this.$refs.drawingArea.style.width = `${finalWidth}px`;
+          updateNeeded = true;
+          console.log(`FabricLine.vue: Updated drawingArea width to ${finalWidth}px`);
+        }
+        if (newHeight > currentHeight) {
+          finalHeight = newHeight;
+          this.$refs.drawingArea.style.height = `${finalHeight}px`;
+          updateNeeded = true;
+          console.log(`FabricLine.vue: Updated drawingArea height to ${finalHeight}px`);
+        }
+
+        if (updateNeeded) {
+          this.$nextTick(() => {
+            if (this.draw) {
+              // SVG.js 的 size('100%', '100%') 会自动适应父元素的新尺寸，
+              // 但有时显式调用 viewbox() 或 size() 可能有助于强制重绘或解决某些边界情况。
+              // 不过通常不需要，因为SVG已经设置为100%x100%。
+              // this.draw.size(finalWidth, finalHeight); // 通常不需要
+            }
+            const newConfig = {
+              ...this.config,
+              w: finalWidth,
+              h: finalHeight,
+            };
+            this.$emit('update:config', newConfig);
+            console.log('FabricLine.vue: Emitted update:config with new dimensions:', newConfig.w, newConfig.h);
+          });
+        }
+      } else {
+        console.warn('FabricLine.vue: handleContainerResize - this.$refs.drawingArea is not available.');
+      }
+    },
+    // --- 辅助函数：计算贝塞尔曲线控制点 (参考 Francois Romain 的文章) ---
+    _controlPoint(current, previous, next, reverse, smoothing = 0.2) {
+      const p = previous || current;
+      const n = next || current;
+      const o = {
+        x: p.x + (n.x - p.x) * 0.5,
+        y: p.y + (n.y - p.y) * 0.5
+      };
+      const angle = Math.atan2(p.y - o.y, p.x - o.x) + (reverse ? Math.PI : 0);
+      const length = Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2)) * smoothing;
+      const x = o.x + Math.cos(angle) * length;
+      const y = o.y + Math.sin(angle) * length;
+      return [x, y];
     }
   }
 }

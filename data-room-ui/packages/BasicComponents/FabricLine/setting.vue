@@ -43,22 +43,19 @@
                 clearable
               />
             </el-form-item>
-            <el-form-item label="绘制模式">
+            <el-form-item label="线条形状">
               <el-select
-                v-model="config.customize.drawMode"
-                placeholder="请选择绘制模式"
+                v-model="config.customize.lineShapeType"
+                placeholder="选择线条形状"
                 class="bs-el-select"
               >
                 <el-option
-                  v-for="item in drawModes"
+                  v-for="item in lineShapeTypeOptions"
                   :key="item.value"
                   :label="item.label"
                   :value="item.value"
                 />
               </el-select>
-              <div class="draw-mode-hint" v-if="config.customize.drawMode === 'key_ctrl'">
-                按住Ctrl键开始绘制，松开停止
-              </div>
             </el-form-item>
             <el-form-item label="线条颜色">
               <ColorPicker
@@ -90,26 +87,29 @@
                 :max="10"
               />
             </el-form-item>
-            <el-form-item label="容器ID">
-              <el-input
-                v-model="config.customize.containerId"
-                class="bs-el-input"
-                placeholder="默认自动生成"
-              />
+            <el-form-item label="启用虚线">
+              <el-switch v-model="config.customize.enableLineDash" />
             </el-form-item>
-          </div>
-          
-          <SettingTitle>数据管理</SettingTitle>
-          <div class="lc-field-body">
-            <el-form-item>
-              <el-button 
-                type="danger" 
-                size="small" 
-                @click="clearData"
-              >
-                清除所有路径
-              </el-button>
-            </el-form-item>
+
+            <template v-if="config.customize.enableLineDash">
+              <el-form-item label="虚线长度">
+                <el-input-number
+                  v-model="config.customize.lineDashValue"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="1"
+                />
+              </el-form-item>
+              <el-form-item label="虚线间隔">
+                <el-input-number
+                  v-model="config.customize.lineGapValue"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="1"
+                />
+              </el-form-item>
+            </template>
+
           </div>
         </el-form>
       </div>
@@ -124,7 +124,7 @@ import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
 import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
 import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
 import {predefineColors} from "data-room-ui/js/utils/colorList"
-import { DrawModes } from './settingConfig'
+import { LineShapeTypeOptions } from './settingConfig'
 
 export default {
   name: 'FabricLineSetting',
@@ -147,26 +147,10 @@ export default {
   },
   data () {
     return {
-      drawModes: DrawModes
+      lineShapeTypeOptions: LineShapeTypeOptions
     }
   },
   methods: {
-    /**
-     * 清除所有路径数据
-     */
-    clearData() {
-      this.$confirm('确定要清除所有绘制的路径数据吗?', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(() => {
-        this.$set(this.config, 'data', [])
-        this.$message({
-          type: 'success',
-          message: '所有路径数据已清除'
-        })
-      }).catch(() => {})
-    }
   }
 }
 </script>

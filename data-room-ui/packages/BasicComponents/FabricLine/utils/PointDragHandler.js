@@ -13,6 +13,7 @@
  * @param {Function} options.getCtrlKeyState - 新增：获取Ctrl键是否按下的状态函数
  * @param {Function} options.updateLine - 更新线段的函数
  * @param {Function} options.updatePathsData - 更新路径数据的函数
+ * @param {Function} options.onContainerResize - 新增：容器尺寸变化时的回调函数
  * @returns {Object} 拖动处理器对象
  */
 export function createPointDragHandler(options) {
@@ -23,7 +24,8 @@ export function createPointDragHandler(options) {
     isOverallEditModeActive,
     getCtrlKeyState,
     updateLine,
-    updatePathsData
+    updatePathsData,
+    onContainerResize
   } = options;
 
   let isDragging = false;
@@ -71,38 +73,87 @@ export function createPointDragHandler(options) {
       console.log('PointDragHandler DEBUG: Ctrl IS NOT considered pressed (ctrlKeyState=false). Proceeding with drag.');
       console.log('PointDragHandler INFO: All checks passed. Proceeding with drag setup.');
 
+      // 确保 currentPoints 和 index 有效
+      if (!currentPoints || index < 0 || index >= currentPoints.length) {
+        console.error('PointDragHandler ERROR: Invalid currentPoints or index. Index:', index, 'Points length:', currentPoints?.length);
+        return;
+      }
+      const currentPoint = currentPoints[index];
+      if (!currentPoint) {
+        console.error('PointDragHandler ERROR: currentPoint at index', index, 'is undefined.');
+        return;
+      }
+      const element = currentPoint.element;
+      if (!element) {
+        console.error('PointDragHandler ERROR: element for currentPoint at index', index, 'is undefined.');
+        return;
+      }
+
+      console.log('PointDragHandler TRACE: currentPoint and element are valid for index:', index, element);
+
       if (!svgContainer) {
-        const pointElement = currentPoints[index]?.element;
-        if (pointElement && pointElement.doc) {
-          svgContainer = pointElement.doc();
+        console.log('PointDragHandler TRACE: Attempting to get svgContainer from element.root()');
+        if (element.root && typeof element.root === 'function') {
+          try {
+            svgContainer = element.root();
+            console.log('PointDragHandler TRACE: element.root() successfully CALLED. Returned:', svgContainer);
+
+            // 修改类型检查：检查 svgContainer.node.nodeName 是否为 'svg'
+            // 并确保 svgContainer 和 svgContainer.node 都存在
+            if (!svgContainer || !svgContainer.node || typeof svgContainer.node.nodeName !== 'string' || svgContainer.node.nodeName.toLowerCase() !== 'svg') {
+              console.error(
+                'PointDragHandler ERROR: element.root() did not return a valid SVG Svg wrapper object.',
+                'Expected .node.nodeName to be \'svg\'. Got:', svgContainer?.node?.nodeName,
+                'Returned object:', svgContainer
+              );
+              svgContainer = null; // 确保在错误时重置
+              return; 
+            }
+            console.log('PointDragHandler TRACE: svgContainer acquired via element.root() and seems to be a valid SVG wrapper.', svgContainer);
+          } catch (e) {
+            console.error('PointDragHandler CRITICAL ERROR: Exception during element.root() call.', e);
+            console.error('Affected element:', element);
+            svgContainer = null;
+            return;
+          }
         } else {
-          console.error('PointDragHandler ERROR: Could not find SVG container.');
+          console.error('PointDragHandler ERROR: element.root is not a function or does not exist.', element);
           return;
         }
       }
+
       draggedPointIndex = index;
-      points = [...currentPoints];
+      points = [...currentPoints]; // 确保 points 是一个有效的数组副本
       isDragging = true; 
       initialMousePos = { x: event.clientX, y: event.clientY };
-      const currentPoint = points[index];
-      const element = currentPoint.element;
-      if (element && typeof element.cx === 'function') {
+      
+      console.log('PointDragHandler TRACE: Attempting to get initialPointPos. Element:', element);
+      if (element.cx && typeof element.cx === 'function' && element.cy && typeof element.cy === 'function') {
         initialPointPos = { x: element.cx(), y: element.cy() };
-      } else if (currentPoint && typeof currentPoint.x === 'number' && typeof currentPoint.y === 'number') {
+        console.log('PointDragHandler TRACE: initialPointPos from element.cx/cy:', initialPointPos);
+      } else if (typeof currentPoint.x === 'number' && typeof currentPoint.y === 'number') {
         initialPointPos = { x: currentPoint.x, y: currentPoint.y };
+        console.log('PointDragHandler TRACE: initialPointPos from currentPoint.x/y data:', initialPointPos);
       } else {
-        console.error('PointDragHandler ERROR: Could not get initial point position.');
-        isDragging = false;
+        console.error('PointDragHandler ERROR: Could not get initial point position from element methods or point data.', currentPoint);
+        isDragging = false; // 重置状态，因为无法开始拖动
         return;
       }
-      console.log('PointDragHandler INFO: Drag setup complete. Initial mouse:', initialMousePos, 'Initial point:', initialPointPos);
+      
+      console.log('PointDragHandler INFO: Drag setup is fully complete. Initial mouse:', initialMousePos, 'Initial point:', initialPointPos);
+      
+      console.log('PointDragHandler TRACE: Adding mousemove and mouseup listeners to document.');
       document.addEventListener('mousemove', handleMouseMove, { capture: true });
       document.addEventListener('mouseup', handleMouseUp, { capture: true });
+      
       if (typeof onDragStart === 'function') {
-        onDragStart(index, points[index]);
+        console.log('PointDragHandler TRACE: Calling onDragStart callback.');
+        onDragStart(index, points[index]); // points[index] 应该是有效的 currentPoint
       }
+      
       event.preventDefault();
       event.stopPropagation();
+      console.log('PointDragHandler TRACE: handlePointMouseDown finished successfully for drag start.');
     }
   }
 
@@ -173,6 +224,36 @@ export function createPointDragHandler(options) {
       point.x = newX;
       point.y = newY;
       
+      // ---- 新增：容器尺寸调整逻辑 ----
+      if (svgContainer) {
+        const currentSvgWidth = svgContainer.width();
+        const currentSvgHeight = svgContainer.height();
+        let newSvgWidth = currentSvgWidth;
+        let newSvgHeight = currentSvgHeight;
+        let containerResized = false;
+
+        if (newX > currentSvgWidth) {
+          newSvgWidth = newX; // 向右扩展
+          containerResized = true;
+        }
+        if (newY > currentSvgHeight) {
+          newSvgHeight = newY; // 向下扩展
+          containerResized = true;
+        }
+
+        // 注意：目前未处理点被拖到 x < 0 或 y < 0 的情况以进行容器扩展
+        // 这需要更复杂的逻辑，例如平移所有SVG元素并调整viewBox
+
+        if (containerResized) {
+          svgContainer.size(newSvgWidth, newSvgHeight);
+          console.log(`PointDragHandler: Container resized to ${newSvgWidth}x${newSvgHeight}`);
+          if (typeof onContainerResize === 'function') {
+            onContainerResize(newSvgWidth, newSvgHeight);
+          }
+        }
+      }
+      // ---- 结束：容器尺寸调整逻辑 ----
+
       // 重要：立即更新线段，确保在拖动过程中线段跟随点移动
       if (typeof updateLine === 'function') {
         updateLine();
