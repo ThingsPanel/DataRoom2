@@ -407,7 +407,7 @@ export default {
         .then((dataUrl) => {
           const link = document.createElement('a')
           link.download = `${this.form.name}.png`
-          link.href = dataUrl
+          link.href = dataUrl||''
           link.click()
           link.addEventListener('click', () => {
             link.remove()

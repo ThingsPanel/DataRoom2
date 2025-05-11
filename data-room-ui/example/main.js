@@ -3,6 +3,7 @@ import promise from 'es6-promise'
 
 import Vue from 'vue'
 import ElementUI from 'element-ui'
+import VueKonva from 'vue-konva'
 
 // !! 新增 VChart 及主题包导入 !!
 import VChart from '@visactor/vchart';
@@ -30,6 +31,7 @@ initVChartArcoTheme()
 initVChartTTPlatformTheme();
 // import customPlots from '@/customPlots/exports'
 Vue.use(ElementUI, { size: 'mini' })
+Vue.use(VueKonva)
 Vue.prototype.Column = Column
 
 // !! 新增 VChart 主题注册 !!
