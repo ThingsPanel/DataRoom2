@@ -34,10 +34,9 @@ const typeList = [
   'horizontalLine', // 水平线
   'verticalLine', // 垂直线
   'rectangle', // 矩形
-  'svgLine', // SVG线条
-  'canvasLine', // Canvas线条
   'fabricLine',
-
+  'svgLine', // SVG线条
+ 
   // 4. 媒体展示类 - 媒体和嵌入元素
   'picture', // 图片
   'video', // 视频
