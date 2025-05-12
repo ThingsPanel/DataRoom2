@@ -14,6 +14,8 @@
  * @param {Function} options.updateLine - 更新线段的函数
  * @param {Function} options.updatePathsData - 更新路径数据的函数
  * @param {Function} options.onContainerResize - 新增：容器尺寸变化时的回调函数
+ * @param {Function} [options.onPointClick] - 新增：点被点击时的回调函数 (index)
+ * @param {number} [options.dragThreshold=5] - 新增：拖动阈值（像素）
  * @returns {Object} 拖动处理器对象
  */
 export function createPointDragHandler(options) {
@@ -25,7 +27,9 @@ export function createPointDragHandler(options) {
     getCtrlKeyState,
     updateLine,
     updatePathsData,
-    onContainerResize
+    onContainerResize,
+    onPointClick,
+    dragThreshold = 5
   } = options;
 
   let isDragging = false;
@@ -34,6 +38,10 @@ export function createPointDragHandler(options) {
   let svgContainer = null;
   let initialMousePos = { x: 0, y: 0 };
   let initialPointPos = { x: 0, y: 0 };
+
+  let mouseDownPos = { x: 0, y: 0 };
+  let mouseDownTime = 0;
+  let potentialDrag = false;
 
   /**
    * 处理点的鼠标按下事件
@@ -70,8 +78,7 @@ export function createPointDragHandler(options) {
       console.log('PointDragHandler DEBUG: Ctrl IS considered pressed (ctrlKeyState=true). Aborting drag.');
       return;
     } else { // If false (Ctrl is considered NOT pressed)
-      console.log('PointDragHandler DEBUG: Ctrl IS NOT considered pressed (ctrlKeyState=false). Proceeding with drag.');
-      console.log('PointDragHandler INFO: All checks passed. Proceeding with drag setup.');
+      console.log('PointDragHandler DEBUG: Ctrl IS NOT considered pressed (ctrlKeyState=false). Proceeding with drag/click check.');
 
       // 确保 currentPoints 和 index 有效
       if (!currentPoints || index < 0 || index >= currentPoints.length) {
@@ -124,7 +131,9 @@ export function createPointDragHandler(options) {
 
       draggedPointIndex = index;
       points = [...currentPoints]; // 确保 points 是一个有效的数组副本
-      isDragging = true; 
+      potentialDrag = true;
+      mouseDownPos = { x: event.clientX, y: event.clientY };
+      mouseDownTime = Date.now();
       initialMousePos = { x: event.clientX, y: event.clientY };
       
       console.log('PointDragHandler TRACE: Attempting to get initialPointPos. Element:', element);
@@ -146,14 +155,9 @@ export function createPointDragHandler(options) {
       document.addEventListener('mousemove', handleMouseMove, { capture: true });
       document.addEventListener('mouseup', handleMouseUp, { capture: true });
       
-      if (typeof onDragStart === 'function') {
-        console.log('PointDragHandler TRACE: Calling onDragStart callback.');
-        onDragStart(index, points[index]); // points[index] 应该是有效的 currentPoint
-      }
-      
       event.preventDefault();
       event.stopPropagation();
-      console.log('PointDragHandler TRACE: handlePointMouseDown finished successfully for drag start.');
+      console.log('PointDragHandler TRACE: handlePointMouseDown finished successfully for potential drag/click.');
     }
   }
 
@@ -162,69 +166,78 @@ export function createPointDragHandler(options) {
    * @param {Event} event - 鼠标事件
    */
   function handleMouseMove(event) {
-    if (!isDragging || draggedPointIndex === -1) return;
+    if (!potentialDrag || draggedPointIndex === -1) return;
     
     let isCtrlDuringDrag = false;
     if (typeof getCtrlKeyState === 'function') {
       isCtrlDuringDrag = getCtrlKeyState();
     }
     if (isCtrlDuringDrag) {
-      console.log('PointDragHandler DEBUG: Ctrl key pressed (getCtrlKeyState) during mouse move. Stopping drag.');
-      handleMouseUp(event); 
+      console.log('PointDragHandler DEBUG: Ctrl key pressed (getCtrlKeyState) during mouse move. Cancelling potential drag.');
+      handleMouseUp(event, true);
       return;
     }
+
+    if (!isDragging) {
+      const deltaX = event.clientX - mouseDownPos.x;
+      const deltaY = event.clientY - mouseDownPos.y;
+      const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+
+      if (distance >= dragThreshold) {
+        console.log('PointDragHandler INFO: Drag threshold reached. Starting drag.');
+        isDragging = true;
+        
+        if (typeof onDragStart === 'function') {
+          console.log('PointDragHandler TRACE: Calling onDragStart callback.');
+          onDragStart(draggedPointIndex, points[draggedPointIndex]);
+        }
+      } else {
+        return; 
+      }
+    }
+
+    if (!isDragging) return;
 
     event.preventDefault();
     event.stopPropagation();
 
-    // 计算鼠标移动的绝对位置
     const currentMousePos = {
       x: event.clientX,
       y: event.clientY
     };
     
-    // 计算鼠标的总移动距离（相对于拖动开始时的位置）
     const totalDeltaX = currentMousePos.x - initialMousePos.x;
     const totalDeltaY = currentMousePos.y - initialMousePos.y;
     
     console.log('鼠标当前位置:', currentMousePos);
     console.log('鼠标总移动距离:', totalDeltaX, totalDeltaY);
 
-    // 确保点元素存在
     if (!points[draggedPointIndex] || !points[draggedPointIndex].element) {
       console.error('无法找到拖动点元素');
       return;
     }
 
     try {
-      // 获取当前点和元素
       const point = points[draggedPointIndex];
       const element = point.element;
       
-      // 计算新的点位置（基于初始位置 + 总移动距离）
       const newX = initialPointPos.x + totalDeltaX;
       const newY = initialPointPos.y + totalDeltaY;
       
       console.log('新位置:', newX, newY);
 
-      // 更新点元素位置
       if (typeof element.center === 'function') {
-        // 使用center方法
         element.center(newX, newY);
       } else if (typeof element.cx === 'function') {
-        // 使用cx/cy方法
         element.cx(newX).cy(newY);
       } else {
-        // 使用move方法（需要计算左上角坐标）
         const radius = element.width() / 2;
         element.move(newX - radius, newY - radius);
       }
       
-      // 更新点数据
       point.x = newX;
       point.y = newY;
       
-      // ---- 新增：容器尺寸调整逻辑 ----
       if (svgContainer) {
         const currentSvgWidth = svgContainer.width();
         const currentSvgHeight = svgContainer.height();
@@ -233,16 +246,13 @@ export function createPointDragHandler(options) {
         let containerResized = false;
 
         if (newX > currentSvgWidth) {
-          newSvgWidth = newX; // 向右扩展
+          newSvgWidth = newX;
           containerResized = true;
         }
         if (newY > currentSvgHeight) {
-          newSvgHeight = newY; // 向下扩展
+          newSvgHeight = newY;
           containerResized = true;
         }
-
-        // 注意：目前未处理点被拖到 x < 0 或 y < 0 的情况以进行容器扩展
-        // 这需要更复杂的逻辑，例如平移所有SVG元素并调整viewBox
 
         if (containerResized) {
           svgContainer.size(newSvgWidth, newSvgHeight);
@@ -252,14 +262,7 @@ export function createPointDragHandler(options) {
           }
         }
       }
-      // ---- 结束：容器尺寸调整逻辑 ----
 
-      // 重要：立即更新线段，确保在拖动过程中线段跟随点移动
-      if (typeof updateLine === 'function') {
-        updateLine();
-      }
-
-      // 通知拖动回调
       if (typeof onDrag === 'function') {
         onDrag(draggedPointIndex, point, totalDeltaX, totalDeltaY);
       }
@@ -272,39 +275,49 @@ export function createPointDragHandler(options) {
    * 处理鼠标松开
    * @param {Event} event - 鼠标事件
    */
-  function handleMouseUp(event) {
-    if (!isDragging) return;
+  function handleMouseUp(event, isCancel = false) {
+    if (!potentialDrag) return;
 
-    // 防止事件冒泡
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
-
-    console.log('拖动结束 - 索引:', draggedPointIndex);
     
-    // 保存当前拖动点的索引
-    const index = draggedPointIndex;
-    
-    // 重置拖动状态
-    isDragging = false;
-    draggedPointIndex = -1;
-    initialMousePos = { x: 0, y: 0 };
-    initialPointPos = { x: 0, y: 0 };
+    const upTime = Date.now();
+    const downDuration = upTime - mouseDownTime;
+    const deltaX = event ? event.clientX - mouseDownPos.x : 0;
+    const deltaY = event ? event.clientY - mouseDownPos.y : 0;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
 
-    // 移除事件监听
     document.removeEventListener('mousemove', handleMouseMove, { capture: true });
     document.removeEventListener('mouseup', handleMouseUp, { capture: true });
 
-    // 更新路径数据
-    if (typeof updatePathsData === 'function') {
-      updatePathsData();
+    if (isDragging) {
+      console.log('PointDragHandler: Drag ended. Index:', draggedPointIndex);
+      if (typeof updatePathsData === 'function') {
+        updatePathsData();
+      }
+      if (typeof onDragEnd === 'function') {
+        onDragEnd(draggedPointIndex);
+      }
+    } else {
+      if (distance < dragThreshold && downDuration < 300) {
+        console.log('PointDragHandler: Click detected. Index:', draggedPointIndex, 'Duration:', downDuration, 'Distance:', distance.toFixed(2));
+        if (typeof onPointClick === 'function') {
+          onPointClick(draggedPointIndex);
+        }
+      } else {
+        console.log('PointDragHandler: MouseUp without qualifying as drag or click. Index:', draggedPointIndex, 'Duration:', downDuration, 'Distance:', distance.toFixed(2));
+      }
     }
-
-    // 调用拖动结束回调
-    if (typeof onDragEnd === 'function') {
-      onDragEnd(index);
-    }
+    
+    isDragging = false;
+    potentialDrag = false;
+    draggedPointIndex = -1;
+    initialMousePos = { x: 0, y: 0 };
+    initialPointPos = { x: 0, y: 0 };
+    mouseDownPos = { x: 0, y: 0 };
+    mouseDownTime = 0;
   }
 
   /**
@@ -314,6 +327,7 @@ export function createPointDragHandler(options) {
     document.removeEventListener('mousemove', handleMouseMove, { capture: true });
     document.removeEventListener('mouseup', handleMouseUp, { capture: true });
     isDragging = false;
+    potentialDrag = false;
     draggedPointIndex = -1;
     points = [];
     svgContainer = null;
