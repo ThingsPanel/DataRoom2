@@ -62,6 +62,19 @@ export const LineShapeTypeOptions = [
   { value: 'stepMiddle', label: '阶梯线 (中点)' }
 ];
 
+// 新增：动画类型选项
+export const AnimationTypeOptions = [
+  { value: 'none', label: '无动画' },
+  { value: 'droplet', label: '水珠动画' },
+  { value: 'flow', label: '流水动画' }
+];
+
+// 新增：动画方向选项
+export const AnimationDirectionOptions = [
+  { value: 'forward', label: '正向' },
+  { value: 'backward', label: '反向' }
+];
+
 const customConfig = {
   type: 'fabricLine',
   // 名称
@@ -125,7 +138,18 @@ const customConfig = {
     // 新增：虚线间隔长度 (已有默认值 5)
     lineGapValue: 5,
     // 新增：线条形状类型
-    lineShapeType: 'straight' // 默认为直线
+    lineShapeType: 'straight', // 默认为直线
+    // --- 动画相关配置 ---
+    animationActive: false,      // 动画总开关
+    animationType: 'none',       // 动画类型: none, droplet, flow
+    animationDirection: 'forward', // 动画方向: forward, backward
+    animationSpeed: 1,           // 动画速度 (相对值，例如 1, 2, 0.5)
+    animationLoop: true,         // 是否循环
+    dropletColor: '#40a9ff',     // 水珠颜色
+    dropletSize: 3,              // 水珠大小 (半径)
+    flowColor: '#40a9ff',        // 流水动画颜色 (如果需要区别于线条颜色)
+    flowThickness: 2,          // 流水动画线条的粗细
+    flowDensity: 10            // 流水密度 (例如虚线的长度)
     // Re-adding: Line Cap Style (will be removed)
     // lineCap: 'butt', 
     // Re-adding: Line Join Style (will be removed)

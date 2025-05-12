@@ -19,6 +19,10 @@ import DragStateManager from './utils/DragStateManager'
 import { createPointDragHandler } from './utils/PointDragHandler'
 // 新增：导入控制手柄拖动处理工具
 import { createControlHandleDragHandler } from './utils/ControlHandleDragHandler'
+// 新增：导入几何工具函数
+import { controlPoint, distanceToSegment, distanceToSegmentSq } from './utils/geometryUtils'
+// 新增：导入动画工具函数
+import { startDropletAnimation, startFlowAnimation } from './utils/animationUtils'
 
 export default {
   name: 'FabricLine',
@@ -52,6 +56,9 @@ export default {
       svgHeight: 0,
       svgRootNode: null, // 新增：存储SVG根DOM节点
       controlHandleDragHandler: null, // 新增：控制手柄拖动处理器
+      // --- 动画相关状态 ---
+      animationElements: [],
+      animationRunners: [], // 用于存储SVG.js动画的runner对象
     }
   },
   computed: {
@@ -84,6 +91,41 @@ export default {
     // 新增：线条形状类型
     lineShapeType() {
       return this.config?.customize?.lineShapeType || 'straight';
+    },
+    // --- 动画计算属性 ---
+    animationActive() {
+      return this.config?.customize?.animationActive || false;
+    },
+    animationType() {
+      return this.config?.customize?.animationType || 'none';
+    },
+    animationDirection() {
+      return this.config?.customize?.animationDirection || 'forward';
+    },
+    animationSpeed() {
+      // 确保速度有一个合理的默认值且大于0
+      const speed = this.config?.customize?.animationSpeed;
+      return typeof speed === 'number' && speed > 0 ? speed : 1;
+    },
+    animationLoop() {
+      return this.config?.customize?.animationLoop === undefined ? true : !!this.config.customize.animationLoop;
+    },
+    dropletColor() {
+      return this.config?.customize?.dropletColor || '#40a9ff';
+    },
+    dropletSize() {
+      return this.config?.customize?.dropletSize || 3;
+    },
+    flowColor() {
+      return this.config?.customize?.flowColor || '#40a9ff';
+    },
+    flowThickness() {
+      return this.config?.customize?.flowThickness || this.lineWidth; // 默认同线条宽度
+    },
+    flowDensity() {
+      // 密度转换为虚线长度，确保是正数
+      const density = this.config?.customize?.flowDensity;
+      return typeof density === 'number' && density > 0 ? density : 10;
     }
   },
   watch: {
@@ -107,9 +149,9 @@ export default {
     lineShapeType() {
       this.updateLine(); // 重绘线条以应用新的形状
       this._renderControlHandles(); // 更新控制柄的显示
+      this._updateAnimation(); // 线条形状变化，更新动画
     },
     selectedPointIndex(newIndex, oldIndex) {
-      console.log(`FabricLine.vue: selectedPointIndex changed from ${oldIndex} to ${newIndex}`);
       this._renderControlHandles(); // 更新控制柄的显示
     },
     'config.customize.pointColor'() {
@@ -120,7 +162,6 @@ export default {
     },
     'config.customize.points': {
       handler(newData, oldData) {
-        console.log('FabricLine Watch customize.points: Triggered.');
         const currentLocalPoints = this.points.map(p => ({
           x: p.x, y: p.y, 
           cp1x: p.cp1x, cp1y: p.cp1y, cp1UserSet: p.cp1UserSet || false,
@@ -129,29 +170,64 @@ export default {
         const localPointsStr = JSON.stringify(currentLocalPoints);
         const newPointsStr = JSON.stringify(newData || []);
 
-        // console.log('FabricLine Watch - Current Local Points String:', localPointsStr);
-        // console.log('FabricLine Watch - New Data from Prop String:', newPointsStr);
-
         if (localPointsStr === newPointsStr) {
-          console.log('FabricLine Watch customize.points: newData is identical to internal this.points state. Skipping loadData.');
           return;
         }
         
-        console.log('FabricLine Watch customize.points: newData differs from internal state. Proceeding to loadData. NewData:', JSON.stringify(newData));
-
         if (newData && Array.isArray(newData) && this.initialized) {
-          // this.isDataLoading = true; // loadData 内部会处理
-          this.loadData(newData); // 直接传递 newData
-          // this.isDataLoading = false;
+          this.loadData(newData);
         } else if (!newData || newData.length === 0) {
-          // this.clearDrawing();
           if (this.points.length > 0) { 
-            console.log('FabricLine Watch customize.points: newData is empty, clearing drawing.');
             this.clearDrawing();
           }
         }
       },
       deep: true
+    },
+    // --- 动画相关侦听 ---
+    animationActive(isActive) {
+      this._updateAnimation();
+    },
+    animationType() {
+      this._updateAnimation();
+    },
+    animationDirection() {
+      this._updateAnimation();
+    },
+    animationSpeed() {
+      this._updateAnimation();
+    },
+    animationLoop() {
+      this._updateAnimation();
+    },
+    dropletColor() {
+      if (this.animationActive && this.animationType === 'droplet') {
+        this._updateAnimation();
+      }
+    },
+    dropletSize() {
+      if (this.animationActive && this.animationType === 'droplet') {
+        this._updateAnimation();
+      }
+    },
+    flowColor() {
+      if (this.animationActive && this.animationType === 'flow') {
+        this._updateAnimation();
+      }
+    },
+    flowThickness() {
+      if (this.animationActive && this.animationType === 'flow') {
+        this._updateAnimation();
+      }
+    },
+    flowDensity() {
+      if (this.animationActive && this.animationType === 'flow') {
+        this._updateAnimation();
+      }
+    },
+    currentLine(newLine, oldLine) {
+      // 当线条本身发生变化时（例如重绘），也需要更新动画
+      this._updateAnimation();
     }
   },
   mounted() {
@@ -174,6 +250,7 @@ export default {
   beforeDestroy() {
     // updatePathsData 会在销毁前被调用，确保保存了最新的点（包括控制点）
     this.updatePathsData();
+    this._clearAnimation(); // 清理动画元素和控制器
     if (this.pointDragHandler) {
       this.pointDragHandler.destroy();
       this.pointDragHandler = null;
@@ -187,7 +264,6 @@ export default {
   created() {
     this.pointDragHandler = createPointDragHandler({
       onDragStart: (index, point) => {
-        console.log('拖动点开始', index, point.x, point.y);
         this.isPointDragging = true;
         if (this.selectedPointIndex !== index) {
           this.selectedPointIndex = index;
@@ -199,7 +275,6 @@ export default {
           this.points[draggedIndex].y = draggedPointData.y;
 
           const pointToUpdateControls = this.points[draggedIndex];
-          console.log(`PointDragHandler ON DRAG (BEFORE _updateControlPointsForPoint) - Point ${draggedIndex}: cp1UserSet=${pointToUpdateControls.cp1UserSet}, cp1x=${pointToUpdateControls.cp1x}, cp1y=${pointToUpdateControls.cp1y}, cp2UserSet=${pointToUpdateControls.cp2UserSet}, cp2x=${pointToUpdateControls.cp2x}, cp2y=${pointToUpdateControls.cp2y}`);
           
           this._updateControlPointsForPoint(draggedIndex);
           if (draggedIndex > 0) {
@@ -209,9 +284,6 @@ export default {
             this._updateControlPointsForPoint(draggedIndex + 1);
           }
 
-          const pointAfterUpdateControls = this.points[draggedIndex];
-          console.log(`PointDragHandler ON DRAG (AFTER _updateControlPointsForPoint) - Point ${draggedIndex}: cp1UserSet=${pointAfterUpdateControls.cp1UserSet}, cp1x=${pointAfterUpdateControls.cp1x}, cp1y=${pointAfterUpdateControls.cp1y}, cp2UserSet=${pointAfterUpdateControls.cp2UserSet}, cp2x=${pointAfterUpdateControls.cp2x}, cp2y=${pointAfterUpdateControls.cp2y}`);
-          
           this.drawLinePath();
           if (this.selectedPointIndex === draggedIndex) {
             this._renderControlHandles();
@@ -219,7 +291,6 @@ export default {
         }
       },
       onDragEnd: (index) => {
-        console.log('拖动点结束，索引:', index);
         this.isPointDragging = false;
         if (this.selectedPointIndex !== index && this.points[index]) {
            this.selectedPointIndex = index;
@@ -231,14 +302,10 @@ export default {
       },
       onPointClick: (index) => {
         if (this.isEditMode && this.isAltDown) {
-          console.log(`FabricLine.vue: Alt+Click on point ${index}. Attempting to delete.`);
           this.deletePoint(index);
         } else if (this.isEditMode) {
-          console.log('FabricLine.vue: Point clicked, index:', index);
           this.selectedPointIndex = index;
           this.$emit('pointClick', { pointIndex: index });
-        } else {
-          console.log('FabricLine.vue: Point clicked, but not in edit mode or Alt not pressed.');
         }
       },
       isOverallEditModeActive: () => this.isEditMode,
@@ -254,7 +321,6 @@ export default {
       getSvgContainer: () => this.draw, // 传递SVG.js的draw实例
       isEditModeActive: () => this.isEditMode,
       onDragStart: (mainPointIndex, handleType) => {
-        // console.log(`ControlHandleDrag: Start dragging ${handleType} of point ${mainPointIndex}`);
       },
       onDrag: (mainPointIndex, handleType, newX, newY) => {
         const point = this.points[mainPointIndex];
@@ -264,29 +330,17 @@ export default {
         } else if (handleType === 'cp2') {
           point.cp2x = newX; point.cp2y = newY; point.cp2UserSet = true;
         }
-        console.log(`ControlHandle ON DRAG - Point ${mainPointIndex} (${handleType}): cp1UserSet=${point.cp1UserSet}, cp1x=${point.cp1x}, cp1y=${point.cp1y}, cp2UserSet=${point.cp2UserSet}, cp2x=${point.cp2x}, cp2y=${point.cp2y}`);
         this.drawLinePath();
         this._renderControlHandles();
       },
       onDragEnd: (mainPointIndex, handleType) => {
-        const pointBeforeUpdate = this.points[mainPointIndex];
-        if (pointBeforeUpdate) {
-          console.log(`ControlHandle ON DRAG END (BEFORE updatePathsData) - Point ${mainPointIndex} (${handleType}): cp1UserSet=${pointBeforeUpdate.cp1UserSet}, cp1x=${pointBeforeUpdate.cp1x}, cp1y=${pointBeforeUpdate.cp1y}, cp2UserSet=${pointBeforeUpdate.cp2UserSet}, cp2x=${pointBeforeUpdate.cp2x}, cp2y=${pointBeforeUpdate.cp2y}`);
-        }
-        
         this.updatePathsData(); 
         
-        const pointAfterUpdate = this.points[mainPointIndex];
-        if (pointAfterUpdate) {
-          console.log(`ControlHandle ON DRAG END (AFTER updatePathsData) - Point ${mainPointIndex} (${handleType}): cp1UserSet=${pointAfterUpdate.cp1UserSet}, cp1x=${pointAfterUpdate.cp1x}, cp1y=${pointAfterUpdate.cp1y}, cp2UserSet=${pointAfterUpdate.cp2UserSet}, cp2x=${pointAfterUpdate.cp2x}, cp2y=${pointAfterUpdate.cp2y}`);
-        }
-
         if (this.selectedPointIndex !== null && 
             this.points && 
             this.selectedPointIndex < this.points.length && 
             this.points[this.selectedPointIndex]) {
           this._renderControlHandles(); 
-          console.log('ControlHandleDrag: Explicitly called _renderControlHandles after drag end.');
         } else {
           console.warn(
             `ControlHandleDrag: selectedPointIndex (${this.selectedPointIndex}) is invalid or point data missing after handle drag end. Not rerendering handles explicitly.`
@@ -298,98 +352,66 @@ export default {
   methods: {
     setupKeyboardListeners() {
       this._handleKeyDown = (event) => {
-        console.log('FabricLine DEBUG: Global keydown event detected. Key:', event.key, 'Current isCtrlDown:', this.isCtrlDown, 'Current isAltDown:', this.isAltDown);
         if (event.key === 'Control') {
-          console.log('FabricLine DEBUG: Control key event detected in _handleKeyDown.');
           if (!this.isCtrlDown) {
-            console.log('FabricLine DEBUG: _handleKeyDown - Setting isCtrlDown to true.');
             this.isCtrlDown = true;
-            console.log('FabricLine DEBUG: Ctrl key DOWN, isCtrlDown = true (set in _handleKeyDown)');
             if (this.isEditMode) this.$emit('drawing-started');
           }
         } else if (event.key === 'Alt') {
-          console.log('FabricLine DEBUG: Alt key event detected in _handleKeyDown.');
           if (!this.isAltDown) {
-            console.log('FabricLine DEBUG: _handleKeyDown - Setting isAltDown to true.');
             this.isAltDown = true;
-            console.log('FabricLine DEBUG: Alt key DOWN, isAltDown = true (set in _handleKeyDown)');
             event.preventDefault();
           }
         }
       };
       this._handleKeyUp = (event) => {
-        console.log('FabricLine DEBUG: Global keyup event detected. Key:', event.key, 'Current isCtrlDown:', this.isCtrlDown, 'Current isAltDown:', this.isAltDown);
         if (event.key === 'Control') {
-          console.log('FabricLine DEBUG: Control key event detected in _handleKeyUp.');
           if (this.isCtrlDown) {
-            console.log('FabricLine DEBUG: _handleKeyUp - Setting isCtrlDown to false.');
             this.isCtrlDown = false;
-            console.log('FabricLine DEBUG: Ctrl key UP, isCtrlDown = false (set in _handleKeyUp)');
             if (this.isEditMode) this.$emit('drawing-completed', this.pathsData);
           }
         } else if (event.key === 'Alt') {
-          console.log('FabricLine DEBUG: Alt key event detected in _handleKeyUp.');
           if (this.isAltDown) {
-            console.log('FabricLine DEBUG: _handleKeyUp - Setting isAltDown to false.');
             this.isAltDown = false;
-            console.log('FabricLine DEBUG: Alt key UP, isAltDown = false (set in _handleKeyUp)');
             event.preventDefault();
           }
         }
       };
       window.addEventListener('keydown', this._handleKeyDown);
       window.addEventListener('keyup', this._handleKeyUp);
-      console.log('FabricLine DEBUG: Keyboard listeners ADDED (Ctrl & Alt)');
     },
     removeKeyboardListeners() {
       if (this._handleKeyDown) window.removeEventListener('keydown', this._handleKeyDown);
       if (this._handleKeyUp) window.removeEventListener('keyup', this._handleKeyUp);
-      console.log('FabricLine DEBUG: Keyboard listeners REMOVED (Ctrl & Alt)');
     },
     handleClick(event) {
-      console.log(
-        'FabricLine handleClick ---- isEditMode (prop):', this.isEditMode, 
-        'isCtrlDown (data):', this.isCtrlDown,
-        'isAltDown (data):', this.isAltDown,
-        'event.target:', event.target,
-        'svgRootNode:', this.svgRootNode
-      );
-
       if (this.isAltDown) {
-        console.log('FabricLine DEBUG: handleClick ignored because isAltDown is true.');
         return;
       }
 
       if (this.controlHandleDragHandler && this.controlHandleDragHandler.isDragging()) {
-        console.log('FabricLine DEBUG: handleClick ignored because controlHandleDragHandler.isDragging() is true.');
         return;
       }
 
       if (this.pointDragHandler && this.pointDragHandler.isDragging()) {
-        console.log('FabricLine DEBUG: handleClick ignored because pointDragHandler.isDragging() is true.');
         return;
       }
 
       if (this.isEditMode && event.target === this.svgRootNode && !this.isCtrlDown) {
-        console.log('FabricLine DEBUG: Click on SVG background. Deselecting point.');
         this.selectedPointIndex = null;
         return;
       }
 
       if (!this.isEditMode) {
-        console.log('FabricLine DEBUG: handleClick - Not in edit mode (prop is false). Aborting.');
         return;
       }
 
       if (!this.isCtrlDown) {
-        console.log('FabricLine DEBUG: handleClick - In edit mode, but Ctrl key is UP. Aborting add point.');
         return;
       }
       
-      console.log('FabricLine DEBUG: handleClick - In edit mode AND Ctrl key is DOWN. Proceeding to add point.');
-      console.log('FabricLine DEBUG: handleClick - currentLine state before addPointOnLine:', this.currentLine ? 'Exists' : 'NULL');
       const point = this.draw.point(event.clientX, event.clientY);
-      const addedOnLine = this.addPointOnLine(point.x, point.y);
+      const addedOnLine = this.addPointOnLine(point.x, point.y, event.target);
       if (!addedOnLine) {
         this.addPoint(point.x, point.y);
       }
@@ -397,21 +419,76 @@ export default {
     },
     initDrawingEditor() {
       try {
+        console.log('FabricLine: initDrawingEditor - starting initialization');
         const container = document.getElementById(this.containerId)
         if (!container && this.$refs.drawingArea) {
+          console.log('FabricLine: Setting container ID:', this.containerId);
           this.$refs.drawingArea.id = this.containerId
         }
-        this.draw = SVG().addTo(`#${this.containerId}`).size('100%', '100%')
-        this.svgRootNode = this.draw.node;
-        this.draw.on('click', this.handleClick)
+        
+        if (!this.draw) {
+          console.log('FabricLine: Creating new SVG instance');
+          this.draw = SVG().addTo(`#${this.containerId}`).size('100%', '100%')
+          this.svgRootNode = this.draw.node;
+          this.draw.on('click', this.handleClick)
+        } else {
+          console.log('FabricLine: SVG instance already exists');
+        }
+        
         this.initialized = true
+        console.log('FabricLine: Initialization complete - draw exists:', !!this.draw);
+        
+        // 确保在初始化后立即绘制
+        this.$nextTick(() => {
+          this.handleResize();
+          this._updateAnimation();
+        });
       } catch (err) {
-        console.error('初始化绘图编辑器失败:', err)
+        console.error('FabricLine: 初始化绘图编辑器失败:', err)
+      }
+    },
+    handleResize () {
+      if (this.$refs.drawingArea) {
+        const newWidth = this.$refs.drawingArea.clientWidth;
+        const newHeight = this.$refs.drawingArea.clientHeight;
+
+        console.log(`FabricLine: handleResize - newWidth: ${newWidth}, newHeight: ${newHeight}, old svgWidth: ${this.svgWidth}, old svgHeight: ${this.svgHeight}`);
+        console.log('FabricLine: handleResize - config:', this.config);
+        console.log('FabricLine: handleResize - draw exists:', !!this.draw, 'currentLine exists:', !!this.currentLine);
+
+        if (newWidth === 0 && newHeight === 0 && (this.svgWidth !== 0 || this.svgHeight !== 0)) {
+          console.warn("FabricLine: handleResize detected 0x0 dimensions, possibly during unmount or rapid changes. Skipping update to prevent errors.");
+          return;
+        }
+
+        this.svgWidth = newWidth;
+        this.svgHeight = newHeight;
+        
+        if (this.draw) {
+          try {
+            this.draw.size(this.svgWidth, this.svgHeight);
+            console.log('FabricLine: SVG size updated:', this.draw.attr(['width', 'height']));
+            
+            // 确保在调整大小后重新绘制
+            if (this.points.length >= 2) {
+              this.updateLine();
+            }
+            
+            // 确保动画元素在调整大小后重新创建
+            this._updateAnimation();
+          } catch (err) {
+            console.error('FabricLine: Failed to update SVG size:', err);
+            // 如果更新失败，尝试重新初始化
+            this.initDrawingEditor();
+          }
+        } else {
+          console.warn("FabricLine: handleResize - this.draw is null, reinitializing SVG");
+          this.initDrawingEditor();
+        }
       }
     },
     addPoint(x, y) {
       if (!this.draw) return;
-      console.log('addPoint: 添加锚点:', x, y);
       const pointElement = this.draw.circle(this.pointRadius * 2)
         .center(x, y)
         .fill(this.pointColor);
@@ -436,10 +513,61 @@ export default {
       if (this.points.length >= 2) this.updateLine();
       this.updatePathsData();
     },
-    addPointOnLine(x, y) {
-      console.log('FabricLine DEBUG: addPointOnLine - currentLine state at entry:', this.currentLine ? 'Exists' : 'NULL', 'Points count:', this.points.length);
-      if (!this.currentLine || this.points.length < 2) return false;
-      console.log('addPointOnLine: 尝试在线段上添加点:', x, y);
+    addPointOnLine(x, y, originalEventTarget) {
+      if (!this.currentLine || this.points.length < 2) {
+        return false;
+      }
+
+      if (this.lineShapeType === 'cubicBezier') {
+        if (originalEventTarget && this.currentLine.node && originalEventTarget === this.currentLine.node) {
+          let closestSegmentIndex = -1;
+          let minDistToAnchorLineSq = Infinity;
+
+          if (this.points.length >= 2) {
+            for (let i = 0; i < this.points.length -1; i++) {
+              const p1 = this.points[i];
+              const p2 = this.points[i+1];
+              const distSq = distanceToSegmentSq({x,y}, p1, p2); 
+              if (distSq < minDistToAnchorLineSq) {
+                minDistToAnchorLineSq = distSq;
+                closestSegmentIndex = i;
+              }
+            }
+          }
+          
+          if (closestSegmentIndex !== -1) {
+            const insertIndex = closestSegmentIndex + 1;
+
+            const pointElement = this.draw.circle(this.pointRadius * 2).center(x, y).fill(this.pointColor);
+            const newPointData = { x, y, element: pointElement, cp1UserSet: false, cp2UserSet: false };
+            
+            this.points.splice(insertIndex, 0, newPointData);
+            
+            this.points.forEach((p, idx) => {
+              if (p.element) {
+                p.element.off('mousedown'); 
+                p.element.on('mousedown', (e) => {
+                  e.stopPropagation();
+                  if (this.pointDragHandler) {
+                    this.pointDragHandler.handlePointMouseDown(e, idx, this.points);
+                  }
+                });
+                p.element.off('click'); 
+                p.element.on('click', (e) => e.stopPropagation());
+              }
+            });
+
+            this._recalculateAllControlPoints();
+            this.updateLine();
+            this.selectedPointIndex = insertIndex;
+            return true;
+          } else {
+            return false;
+          }
+        }
+        return false; 
+      }
+
       const segments = [];
       for (let i = 0; i < this.points.length - 1; i++) {
         segments.push({ start: this.points[i], end: this.points[i + 1], index: i });
@@ -448,7 +576,7 @@ export default {
       let minDistance = Infinity;
       let targetSegment = null;
       segments.forEach(segment => {
-        const distance = this.distanceToSegment({ x, y }, segment.start, segment.end);
+        const distance = distanceToSegment({ x, y }, segment.start, segment.end);
         if (distance < minDistance && distance < threshold) {
           minDistance = distance;
           targetSegment = segment;
@@ -481,15 +609,6 @@ export default {
         return true;
       }
       return false;
-    },
-    distanceToSegment(p, v, w) {
-      const l2 = Math.pow(w.x - v.x, 2) + Math.pow(w.y - v.y, 2);
-      if (l2 === 0) return Math.sqrt(Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2));
-      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
-      t = Math.max(0, Math.min(1, t));
-      const projX = v.x + t * (w.x - v.x);
-      const projY = v.y + t * (w.y - v.y);
-      return Math.sqrt(Math.pow(p.x - projX, 2) + Math.pow(p.y - projY, 2));
     },
     drawLinePath() {
       if (!this.draw || this.points.length < 1) {
@@ -576,7 +695,6 @@ export default {
         if (this.currentLine) {
           this.currentLine.remove();
         }
-        console.log('FabricLine DEBUG: drawLinePath - Attempting to draw path:', path);
         this.currentLine = this.draw.path(path).fill('none').stroke(strokeAttrs);
         this.currentLine.back();
       } catch (err) { 
@@ -608,8 +726,6 @@ export default {
         strokeAttrsToApply.dasharray = 'none';
       }
 
-      console.log('FabricLine.vue: Updating line style with attributes:', JSON.parse(JSON.stringify(strokeAttrsToApply)));
-
       if (this.currentLine) {
         this.currentLine.stroke(strokeAttrsToApply);
       }
@@ -627,6 +743,7 @@ export default {
       this.points.forEach(point => { if (point.element) point.element.remove() });
       this.lines.forEach(line => { if (line.path) line.path.remove() });
       if (this.currentLine) this.currentLine.remove();
+      this._clearAnimation(); // 清理动画
       if (this.controlHandlesGroup) {
         this.controlHandlesGroup.remove();
         this.controlHandlesGroup = null;
@@ -666,15 +783,11 @@ export default {
       if (this.config) {
         if (!this.config.customize) this.config.customize = {};
         
-        console.log('FabricLine updatePathsData: Trying to save points:', JSON.stringify(pointsToSave));
-
         const oldConfigPointsStr = JSON.stringify(this.config.customize.points || []);
         if (oldConfigPointsStr === JSON.stringify(pointsToSave)) {
-          console.log('FabricLine updatePathsData: pointsToSave is identical to current config.customize.points. Skipping emit.');
           return; 
         }
         this.config.customize.points = pointsToSave; 
-        console.log('FabricLine updatePathsData: Emitting update:config with new points:', JSON.stringify(this.config.customize.points));
         this.$emit('update:config', {...this.config});
       }
     },
@@ -688,8 +801,6 @@ export default {
         return;
       }
 
-      console.log(`FabricLine.vue: Deleting point at index ${indexToDelete}`);
-
       const pointToRemove = this.points[indexToDelete];
       if (pointToRemove && pointToRemove.element) {
         pointToRemove.element.remove();
@@ -697,23 +808,20 @@ export default {
 
       this.points.splice(indexToDelete, 1);
 
-      // 更新剩余点的事件处理器，因为索引已改变
       this.points.forEach((p, newIndex) => {
         if (p.element) {
-          p.element.off('mousedown'); // 移除旧监听器
+          p.element.off('mousedown');
           p.element.on('mousedown', (e) => {
             e.stopPropagation();
             if (this.pointDragHandler) {
               this.pointDragHandler.handlePointMouseDown(e, newIndex, this.points);
             }
           });
-          // 确保click事件也停止冒泡，以防万一
           p.element.off('click'); 
           p.element.on('click', (e) => e.stopPropagation()); 
         }
       });
 
-      // 调整selectedPointIndex
       if (this.selectedPointIndex === indexToDelete) {
         this.selectedPointIndex = null;
       } else if (this.selectedPointIndex > indexToDelete) {
@@ -734,11 +842,10 @@ export default {
       
       this._recalculateAllControlPoints();
       this.drawLinePath(); 
-      this._renderControlHandles(); // 会根据 selectedPointIndex 更新或隐藏控制柄
-      this.updatePathsData(); // 保存更改
+      this._renderControlHandles();
+      this.updatePathsData();
 
       this.$emit('pointDeleted', { deletedIndex: indexToDelete, points: this.pathsData });
-      console.log(`FabricLine.vue: Point at index ${indexToDelete} deleted. Current points count: ${this.points.length}`);
     },
     getData() {
       const lineData = this.lines.map(line => ({ points: line.points.map(p => ({ x: p.x, y: p.y })) }));
@@ -747,8 +854,6 @@ export default {
     },
     loadData(data) {
       this.isDataLoading = true;
-      console.log('FabricLine loadData: Started. Received data:', JSON.stringify(data));
-
       this.clearDrawing();
       if (!data || !Array.isArray(data)) {
         this.$nextTick(() => { this.isDataLoading = false; });
@@ -769,7 +874,6 @@ export default {
         }));
 
         this.points = richPointsData;
-        console.log('FabricLine loadData: this.points populated from richPointsData (before creating elements):', JSON.stringify(this.points.map(p => ({x:p.x, y:p.y, cp1x:p.cp1x, cp1y:p.cp1y, cp1UserSet:p.cp1UserSet, cp2x:p.cp2x, cp2y:p.cp2y, cp2UserSet:p.cp2UserSet}))));
 
         this.points.forEach((pData, i) => {
           const pointElement = this.draw.circle(this.pointRadius * 2)
@@ -784,9 +888,7 @@ export default {
           pointElement.on('click', (e) => e.stopPropagation());
         });
 
-        console.log('FabricLine loadData: About to call _recalculateAllControlPoints. Current this.points:', JSON.stringify(this.points.map(p => ({x:p.x, y:p.y, cp1x:p.cp1x, cp1y:p.cp1y, cp1UserSet:p.cp1UserSet, cp2x:p.cp2x, cp2y:p.cp2y, cp2UserSet:p.cp2UserSet}))));
         this._recalculateAllControlPoints(); 
-        console.log('FabricLine loadData: After _recalculateAllControlPoints. Current this.points:', JSON.stringify(this.points.map(p => ({x:p.x, y:p.y, cp1x:p.cp1x, cp1y:p.cp1y, cp1UserSet:p.cp1UserSet, cp2x:p.cp2x, cp2y:p.cp2y, cp2UserSet:p.cp2UserSet}))));
 
         if (this.points.length >= 1) {
           this.updateLine();
@@ -795,19 +897,16 @@ export default {
       finally {
         this.$nextTick(() => {
           this.isDataLoading = false;
-          console.log('FabricLine loadData: Finished, isDataLoading set to false.');
         });
       }
     },
     setupGlobalMouseEvents() {
       const handleGlobalMouseMove = (event) => {
         if (this.pointDragHandler && this.pointDragHandler.isDragging()) {
-          console.log('全局鼠标移动事件捕获');
         }
       };
       const handleGlobalMouseUp = (event) => {
         if (this.pointDragHandler && this.pointDragHandler.isDragging()) {
-          console.log('全局鼠标松开事件捕获，确保拖动结束');
         }
       };
       document.addEventListener('mousemove', handleGlobalMouseMove, { capture: true });
@@ -818,7 +917,6 @@ export default {
       });
     },
     handleContainerResize(newWidth, newHeight) {
-      console.log(`FabricLine.vue: handleContainerResize called with newWidth=${newWidth}, newHeight=${newHeight}`);
       if (this.$refs.drawingArea) {
         const currentWidth = parseFloat(this.$refs.drawingArea.style.width) || this.$refs.drawingArea.clientWidth;
         const currentHeight = parseFloat(this.$refs.drawingArea.style.height) || this.$refs.drawingArea.clientHeight;
@@ -831,13 +929,11 @@ export default {
           finalWidth = newWidth;
           this.$refs.drawingArea.style.width = `${finalWidth}px`;
           updateNeeded = true;
-          console.log(`FabricLine.vue: Updated drawingArea width to ${finalWidth}px`);
         }
         if (newHeight > currentHeight) {
           finalHeight = newHeight;
           this.$refs.drawingArea.style.height = `${finalHeight}px`;
           updateNeeded = true;
-          console.log(`FabricLine.vue: Updated drawingArea height to ${finalHeight}px`);
         }
 
         if (updateNeeded) {
@@ -850,96 +946,11 @@ export default {
               h: finalHeight,
             };
             this.$emit('update:config', newConfig);
-            console.log('FabricLine.vue: Emitted update:config with new dimensions:', newConfig.w, newConfig.h);
           });
         }
       } else {
         console.warn('FabricLine.vue: handleContainerResize - this.$refs.drawingArea is not available.');
       }
-    },
-    _controlPoint(current, previous, next, reverse, smoothing = 0.2) {
-      const p = previous || current;
-      const n = next || current;
-      const o = {
-        x: p.x + (n.x - p.x) * 0.5,
-        y: p.y + (n.y - p.y) * 0.5
-      };
-      const angle = Math.atan2(p.y - o.y, p.x - o.x) + (reverse ? Math.PI : 0);
-      const length = Math.sqrt(Math.pow(p.x - o.x, 2) + Math.pow(p.y - o.y, 2)) * smoothing;
-      const x = o.x + Math.cos(angle) * length;
-      const y = o.y + Math.sin(angle) * length;
-      return [x, y];
-    },
-    _updateControlPointsForPoint(index) {
-      if (index < 0 || index >= this.points.length) return;
-
-      const targetPoint = this.points[index];
-      const prevPoint = this.points[index - 1]; // May be undefined
-      const nextPoint = this.points[index + 1]; // May be undefined
-
-      console.log(`_updateControlPointsForPoint for index ${index}: Initial targetPoint state: cp1UserSet=${targetPoint.cp1UserSet}, cp1x=${targetPoint.cp1x}, cp1y=${targetPoint.cp1y}, cp2UserSet=${targetPoint.cp2UserSet}, cp2x=${targetPoint.cp2x}, cp2y=${targetPoint.cp2y}`);
-
-      // --- CP1 LOGIC (Incoming curve to targetPoint) ---
-      if (prevPoint) { // If there's a previous point, targetPoint can have a cp1
-        if (!targetPoint.cp1UserSet) {
-          console.log(`  _updateControlPointsForPoint: Recalculating cp1 for point ${index}.`);
-          const [cp1x, cp1y] = this._controlPoint(targetPoint, prevPoint, nextPoint, true, 0.2);
-          targetPoint.cp1x = cp1x;
-          targetPoint.cp1y = cp1y;
-        } else {
-          console.log(`  _updateControlPointsForPoint: Skipping cp1 recalculation for point ${index} due to cp1UserSet=true.`);
-        }
-      } else { // No previous point, so targetPoint is the START point (P0)
-        if (!targetPoint.cp1UserSet) { // P0 should not have a cp1 unless user explicitly set (e.g. for a closed path, though not our case here)
-          // console.log(`  _updateControlPointsForPoint: Deleting cp1 for START point ${index} as it's not user-set.`);
-          delete targetPoint.cp1x;
-          delete targetPoint.cp1y;
-        } else {
-          // console.log(`  _updateControlPointsForPoint: Retaining user-set cp1 for START point ${index}.`);
-        }
-      }
-
-      // --- CP2 LOGIC (Outgoing curve from targetPoint) ---
-      if (nextPoint) { // If there's a next point, targetPoint can have a cp2
-        if (!targetPoint.cp2UserSet) {
-          console.log(`  _updateControlPointsForPoint: Recalculating cp2 for point ${index}.`);
-          const [cp2x, cp2y] = this._controlPoint(targetPoint, prevPoint, nextPoint, false, 0.2);
-          targetPoint.cp2x = cp2x;
-          targetPoint.cp2y = cp2y;
-        } else {
-          console.log(`  _updateControlPointsForPoint: Skipping cp2 recalculation for point ${index} due to cp2UserSet=true.`);
-        }
-      } else { // No next point, so targetPoint is the END point (P_last)
-        if (!targetPoint.cp2UserSet) { // P_last should not have a cp2 unless user explicitly set
-          // console.log(`  _updateControlPointsForPoint: Deleting cp2 for END point ${index} as it's not user-set.`);
-          delete targetPoint.cp2x;
-          delete targetPoint.cp2y;
-        } else {
-          // console.log(`  _updateControlPointsForPoint: Retaining user-set cp2 for END point ${index}.`);
-        }
-      }
-
-      // --- Refined Endpoint Specific Calculations (if not UserSet and applicable) ---
-      // This part adjusts the smoothing/calculation for the *single* control point an endpoint naturally has.
-      if (this.points.length >= 2) {
-        if (index === 0 && this.points[1]) { // Current point is START (P0), and there's a P1
-          if (!targetPoint.cp2UserSet) { // targetPoint is this.points[0]. We are recalculating P0's cp2.
-            console.log(`  _updateControlPointsForPoint: Applying specific cp2 calculation for START point ${index}.`);
-            const [cp2x_start, cp2y_start] = this._controlPoint(targetPoint, targetPoint, this.points[1], false, 0.1);
-            targetPoint.cp2x = cp2x_start;
-            targetPoint.cp2y = cp2y_start;
-          }
-        } else if (index === this.points.length - 1 && this.points[index - 1]) { // Current point is END (P_last), and there's a P_second_last
-          if (!targetPoint.cp1UserSet) { // targetPoint is P_last. We are recalculating P_last's cp1.
-            console.log(`  _updateControlPointsForPoint: Applying specific cp1 calculation for END point ${index}.`);
-            const pSecondLast = this.points[index - 1];
-            const [cp1x_end, cp1y_end] = this._controlPoint(targetPoint, pSecondLast, targetPoint, true, 0.1);
-            targetPoint.cp1x = cp1x_end;
-            targetPoint.cp1y = cp1y_end;
-          }
-        }
-      }
-      console.log(`_updateControlPointsForPoint for index ${index}: Final targetPoint state: cp1UserSet=${targetPoint.cp1UserSet}, cp1x=${targetPoint.cp1x}, cp1y=${targetPoint.cp1y}, cp2UserSet=${targetPoint.cp2UserSet}, cp2x=${targetPoint.cp2x}, cp2y=${targetPoint.cp2y}`);
     },
     _recalculateAllControlPoints() {
       if (this.points.length < 2) {
@@ -954,17 +965,14 @@ export default {
       }
     },
     _renderControlHandles() {
-      console.log(`FabricLine.vue: _renderControlHandles called. lineShapeType: ${this.lineShapeType}, selectedPointIndex: ${this.selectedPointIndex}`);
       if (this.controlHandlesGroup) {
         this.controlHandlesGroup.remove();
         this.controlHandlesGroup = null;
       }
 
       if (this.lineShapeType !== 'cubicBezier' || this.selectedPointIndex === null || !this.draw) {
-        console.log('FabricLine.vue: _renderControlHandles - conditions not met, returning.');
         return;
       }
-      console.log('FabricLine.vue: _renderControlHandles - conditions met, proceeding to render.');
 
       const point = this.points[this.selectedPointIndex];
       if (!point) return;
@@ -1007,12 +1015,190 @@ export default {
         this.controlHandlesGroup.front(); 
       }
     },
+    _updateControlPointsForPoint(index) {
+      if (index < 0 || index >= this.points.length) return;
+
+      const targetPoint = this.points[index];
+      const prevPoint = this.points[index - 1];
+      const nextPoint = this.points[index + 1];
+
+      if (prevPoint) { 
+        if (!targetPoint.cp1UserSet) {
+          const [cp1x, cp1y] = controlPoint(targetPoint, prevPoint, nextPoint, true, 0.2);
+          targetPoint.cp1x = cp1x;
+          targetPoint.cp1y = cp1y;
+        }
+      } else {
+        if (!targetPoint.cp1UserSet) {
+          delete targetPoint.cp1x;
+          delete targetPoint.cp1y;
+        }
+      }
+
+      if (nextPoint) { 
+        if (!targetPoint.cp2UserSet) {
+          const [cp2x, cp2y] = controlPoint(targetPoint, prevPoint, nextPoint, false, 0.2);
+          targetPoint.cp2x = cp2x;
+          targetPoint.cp2y = cp2y;
+        }
+      } else {
+        if (!targetPoint.cp2UserSet) {
+          delete targetPoint.cp2x;
+          delete targetPoint.cp2y;
+        }
+      }
+
+      if (this.points.length >= 2) {
+        if (index === 0 && this.points[1]) { 
+          if (!targetPoint.cp2UserSet) { 
+            const [cp2x_start, cp2y_start] = controlPoint(targetPoint, targetPoint, this.points[1], false, 0.1);
+            targetPoint.cp2x = cp2x_start;
+            targetPoint.cp2y = cp2y_start;
+          }
+        } else if (index === this.points.length - 1 && this.points[index - 1]) { 
+          if (!targetPoint.cp1UserSet) { 
+            const pSecondLast = this.points[index - 1];
+            const [cp1x_end, cp1y_end] = controlPoint(targetPoint, pSecondLast, targetPoint, true, 0.1);
+            targetPoint.cp1x = cp1x_end;
+            targetPoint.cp1y = cp1y_end;
+          }
+        }
+      }
+    },
     _updateLine(line, points, lineShapeType) {
       // Implementation of _updateLine method
     },
     updatePathsDataToConfig() {
       // Implementation of updatePathsDataToConfig method
-    }
+    },
+    _distanceToSegmentSq(p, v, w) {
+      const l2 = Math.pow(w.x - v.x, 2) + Math.pow(w.y - v.y, 2);
+      if (l2 === 0) return Math.pow(p.x - v.x, 2) + Math.pow(p.y - v.y, 2);
+      let t = ((p.x - v.x) * (w.x - v.x) + (p.y - v.y) * (w.y - v.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      const projX = v.x + t * (w.x - v.x);
+      const projY = v.y + t * (w.y - v.y);
+      return Math.pow(p.x - projX, 2) + Math.pow(p.y - projY, 2);
+    },
+    // --- 动画方法 ---
+    _clearAnimation() {
+      this.animationRunners.forEach(runner => {
+        if (runner && typeof runner.cancel === 'function') {
+          runner.cancel();
+        }
+      });
+      this.animationRunners = [];
+
+      this.animationElements.forEach(el => {
+        if (el && typeof el.remove === 'function') {
+          el.remove();
+        }
+      });
+      this.animationElements = [];
+    },
+
+    _updateAnimation() {
+      console.log('FabricLine: _updateAnimation called - draw exists:', !!this.draw, 'currentLine exists:', !!this.currentLine);
+      
+      // 如果 draw 不存在，尝试重新初始化
+      if (!this.draw) {
+        console.warn('FabricLine: _updateAnimation - draw is null, attempting to reinitialize');
+        this.initDrawingEditor();
+        return;
+      }
+      
+      if (!this.currentLine) {
+        console.warn('FabricLine: _updateAnimation - currentLine is null, clearing animation');
+        return this._clearAnimation();
+      }
+      
+      this._clearAnimation();
+
+      if (!this.animationActive || this.animationType === 'none') {
+        console.log('FabricLine: _updateAnimation - animation not active or type is none');
+        return;
+      }
+
+      // 确保线条有有效的路径/长度用于动画
+      if (this.lineWidth <= 0 || this.svgWidth <= 0) {
+        console.warn('FabricLine: _updateAnimation - invalid dimensions:', { lineWidth: this.lineWidth, svgWidth: this.svgWidth });
+        return;
+      }
+
+      if (typeof this.currentLine.length !== 'function' || this.currentLine.length() === 0) {
+        console.warn("FabricLine: Cannot start animation, line has no length or invalid.");
+        return;
+      }
+
+      console.log('FabricLine: Starting animation with config:', {
+        animationActive: this.animationActive,
+        animationType: this.animationType,
+        animationDirection: this.animationDirection,
+        animationSpeed: this.animationSpeed,
+        animationLoop: this.animationLoop
+      });
+
+      const animationConfig = {
+        animationActive: this.animationActive,
+        animationType: this.animationType,
+        animationDirection: this.animationDirection,
+        animationSpeed: this.animationSpeed,
+        animationLoop: this.animationLoop,
+        dropletColor: this.dropletColor,
+        dropletSize: this.dropletSize,
+        flowColor: this.flowColor,
+        flowThickness: this.flowThickness,
+        flowDensity: this.flowDensity
+      };
+
+      let animationResult = { elements: [], runners: [] };
+
+      try {
+        switch (this.animationType) {
+          case 'droplet':
+            animationResult = startDropletAnimation(this.draw, this.currentLine, animationConfig);
+            break;
+          case 'flow':
+            animationResult = startFlowAnimation(this.draw, this.currentLine, animationConfig);
+            break;
+        }
+        console.log('FabricLine: Animation result:', {
+          elementsCount: animationResult.elements?.length,
+          runnersCount: animationResult.runners?.length
+        });
+
+        this.animationElements = animationResult.elements || [];
+        this.animationRunners = animationResult.runners || [];
+
+        if (this.animationElements.length > 0) {
+          this.animationElements.forEach(el => {
+            if (el && typeof el.front === 'function') {
+              try {
+                el.front();
+              } catch (e) {
+                console.error('FabricLine: Error calling front() on animation element:', e);
+              }
+            }
+          });
+          if (this.currentLine) {
+            try {
+              this.currentLine.back();
+            } catch (e) {
+              console.error('FabricLine: Error calling back() on currentLine:', e);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('FabricLine: Error in _updateAnimation:', e);
+        this._clearAnimation();
+      }
+    },
+
+    // _startDropletAnimation() { // 已移除, 迁移到 animationUtils.js
+    // },
+
+    // _startFlowAnimation() { // 已移除, 迁移到 animationUtils.js
+    // }
   }
 }
 </script>

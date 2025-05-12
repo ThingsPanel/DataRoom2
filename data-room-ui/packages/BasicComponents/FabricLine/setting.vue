@@ -111,6 +111,96 @@
             </template>
 
           </div>
+          <SettingTitle>动画</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="启用动画">
+              <el-switch v-model="config.customize.animationActive" />
+            </el-form-item>
+            <template v-if="config.customize.animationActive">
+              <el-form-item label="动画类型">
+                <el-select
+                  v-model="config.customize.animationType"
+                  placeholder="选择动画类型"
+                  class="bs-el-select"
+                >
+                  <el-option
+                    v-for="item in animationTypeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="动画方向">
+                <el-select
+                  v-model="config.customize.animationDirection"
+                  placeholder="选择动画方向"
+                  class="bs-el-select"
+                >
+                  <el-option
+                    v-for="item in animationDirectionOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="动画速度">
+                <el-input-number
+                  v-model="config.customize.animationSpeed"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="0.1"
+                  :step="0.1"
+                />
+              </el-form-item>
+              <el-form-item label="循环播放">
+                <el-switch v-model="config.customize.animationLoop" />
+              </el-form-item>
+
+              <template v-if="config.customize.animationType === 'droplet'">
+                <el-form-item label="水珠颜色">
+                  <ColorPicker
+                    v-model="config.customize.dropletColor"
+                    :predefine="predefineThemeColors"
+                  />
+                </el-form-item>
+                <el-form-item label="水珠大小">
+                  <el-input-number
+                    v-model="config.customize.dropletSize"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+              </template>
+
+              <template v-if="config.customize.animationType === 'flow'">
+                <el-form-item label="流水颜色">
+                  <ColorPicker
+                    v-model="config.customize.flowColor"
+                    :predefine="predefineThemeColors"
+                  />
+                </el-form-item>
+                <el-form-item label="流水粗细">
+                  <el-input-number
+                    v-model="config.customize.flowThickness"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+                <el-form-item label="流水密度">
+                  <el-input-number
+                    v-model="config.customize.flowDensity"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+              </template>
+            </template>
+          </div>
         </el-form>
       </div>
     </el-form>
@@ -124,7 +214,7 @@ import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
 import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
 import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
 import {predefineColors} from "data-room-ui/js/utils/colorList"
-import { LineShapeTypeOptions } from './settingConfig'
+import { LineShapeTypeOptions, AnimationTypeOptions, AnimationDirectionOptions } from './settingConfig'
 
 export default {
   name: 'FabricLineSetting',
@@ -147,7 +237,9 @@ export default {
   },
   data () {
     return {
-      lineShapeTypeOptions: LineShapeTypeOptions
+      lineShapeTypeOptions: LineShapeTypeOptions,
+      animationTypeOptions: AnimationTypeOptions,
+      animationDirectionOptions: AnimationDirectionOptions
     }
   },
   methods: {
