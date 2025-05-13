@@ -37,7 +37,10 @@
         :key="config.key"
         :config="config"
         :selected="isSelected && !isPreviewMode"
+        :page-width="pageWidth"
+        :page-height="pageHeight"
         @styleHandler="styleHandler"
+        @bounds-update="handleBoundsUpdate"
         @error="handleError"
       />
     </div>
@@ -87,6 +90,15 @@ export default {
     ruleKey: {
       type: Number,
       default: 0
+    },
+    // 新增：接收页面宽度和高度
+    pageWidth: {
+      type: Number,
+      default: Infinity
+    },
+    pageHeight: {
+      type: Number,
+      default: Infinity
     }
   },
   data () {
@@ -340,6 +352,15 @@ export default {
         console.error('RenderCard changeStyle 执行出错:', error, config)
         return config
       }
+    },
+    // 添加处理 bounds-update 事件的方法
+    handleBoundsUpdate(payload) {
+      // 向上冒泡事件，并包含 code 和新的负载结构
+      this.$emit('request-layout-and-points-update', {
+        code: this.config.code, // 包含组件的 code
+        layout: payload.layout, // 新的绝对容器布局 {x, y, w, h}
+        relativePoints: payload.relativePoints // 新的相对点坐标
+      });
     }
   }
 }

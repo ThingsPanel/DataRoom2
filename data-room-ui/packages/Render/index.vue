@@ -51,6 +51,7 @@
       @dragstop="dragstop(...arguments, chart)"
       @refLineParams="getRefLineParams"
       @mouseleave.native="resetPresetLineDelay"
+      @request-layout-and-points-update="handleLayoutUpdate"
     >
       <template v-if="isNoBorderType(chart.type)">
         <Configuration
@@ -63,7 +64,10 @@
           <RenderCard
             :ref="'RenderCard' + chart.code"
             :config="chart"
+            :page-width="pageInfo.pageConfig.w"
+            :page-height="pageInfo.pageConfig.h"
             @styleHandler="styleHandler"
+            @request-layout-and-points-update="handleLayoutUpdate"
           />
         </Configuration>
       </template>
@@ -77,7 +81,10 @@
           <RenderCard
             :ref="'RenderCard' + chart.code"
             :config="chart"
+            :page-width="pageInfo.pageConfig.w"
+            :page-height="pageInfo.pageConfig.h"
             @styleHandler="styleHandler"
+            @request-layout-and-points-update="handleLayoutUpdate"
           />
         </Configuration>
       </template>
@@ -216,8 +223,32 @@ export default {
       'emptyComputedDatas',
       'CLEAR_POLLING_TIMER'
     ]),
+    handleLayoutUpdate(payload) {
+      const { code, layout, relativePoints } = payload;
+      const chartIndex = this.chartList.findIndex(c => c.code === code);
+      if (chartIndex !== -1) {
+        const targetChart = this.chartList[chartIndex];
+        const newConfig = {
+          ...targetChart,
+          x: layout.x,
+          y: layout.y,
+          w: layout.w,
+          h: layout.h,
+          customize: {
+            ...(targetChart.customize || {}),
+            points: relativePoints
+          },
+          key: new Date().getTime()
+        };
+
+        this.changeChartConfig(newConfig);
+        if (this.activeCode === code) {
+          this.changeActiveItemConfig(newConfig);
+        }
+        this.saveTimeLine(`更新 ${targetChart.title || '线条'} 布局`);
+      }
+    },
     // 判断鼠标点击的是画布中的高亮元素（被框选的）还是非高亮元素或者空白区域
-    // 如果是高亮元素则不会取消高亮状态，如果不是则取消高亮状态
     handleClickOutside (event) {
       // 获取被点击的元素
       const clickedElement = event.target

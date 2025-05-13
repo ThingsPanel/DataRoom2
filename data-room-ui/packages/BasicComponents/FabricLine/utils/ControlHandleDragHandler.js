@@ -9,6 +9,7 @@ export function createControlHandleDragHandler(options) {
     onDrag,         // (mainPointIndex, handleType, newX, newY) => void
     onDragEnd,      // (mainPointIndex, handleType) => void
     isEditModeActive, // 函数，检查是否处于编辑模式
+    getDragBoundaries // <-- Add getDragBoundaries
   } = options;
 
   let isDragging = false;
@@ -24,7 +25,6 @@ export function createControlHandleDragHandler(options) {
   function handleMouseDown(event, mainPointIndex, handleType) {
     if (event.button !== 0) return; // 只响应左键
     if (!isEditModeActive || !isEditModeActive()) {
-      console.log('ControlHandleDragHandler: Not in edit mode. Aborting handle drag.');
       return;
     }
 
@@ -33,12 +33,10 @@ export function createControlHandleDragHandler(options) {
 
     const points = getPointsArray ? getPointsArray() : null;
     if (!points || mainPointIndex < 0 || mainPointIndex >= points.length) {
-      console.error('ControlHandleDragHandler: Invalid points array or mainPointIndex.');
       return;
     }
     const mainPoint = points[mainPointIndex];
     if (!mainPoint) {
-        console.error('ControlHandleDragHandler: Main point not found for index:', mainPointIndex);
         return;
     }
 
@@ -54,12 +52,10 @@ export function createControlHandleDragHandler(options) {
     } else if (handleType === 'cp2' && mainPoint.cp2x != null) {
       initialHandlePos = { x: mainPoint.cp2x, y: mainPoint.cp2y };
     } else {
-      console.error('ControlHandleDragHandler: Active handle coordinates not found on main point.', mainPoint, handleType);
       isDragging = false;
       return;
     }
     
-    console.log(`ControlHandleDragHandler: mousedown on handle ${handleType} of point ${mainPointIndex}. Initial SVG pos:`, initialHandlePos);
 
     document.addEventListener('mousemove', handleMouseMove, { capture: true });
     document.addEventListener('mouseup', handleMouseUp, { capture: true });
@@ -84,25 +80,56 @@ export function createControlHandleDragHandler(options) {
     // 对于更通用的情况，我们需要将屏幕坐标转换回SVG坐标。
     // 暂时假设SVG是1:1且无复杂变换，或者依赖SVG.js的坐标转换（如果能获取到）
     // 一个更健壮的方法是使用SVG的 CTM (Current Transformation Matrix)
-    // const svgNode = getSvgContainer ? getSvgContainer().node : null;
-    // if (svgNode) {
-    //   const svgPoint = svgNode.createSVGPoint();
-    //   svgPoint.x = event.clientX;
-    //   svgPoint.y = event.clientY;
-    //   const transformedPoint = svgPoint.matrixTransform(svgNode.getScreenCTM().inverse());
-    //   newHandleX = transformedPoint.x;
-    //   newHandleY = transformedPoint.y;
-    // } else {
+    const svgNode = getSvgContainer ? getSvgContainer().node : null;
+    if (svgNode) {
+      const svgPoint = svgNode.createSVGPoint();
+      svgPoint.x = event.clientX;
+      svgPoint.y = event.clientY;
+      const transformedPoint = svgPoint.matrixTransform(svgNode.getScreenCTM().inverse());
+      let newX = transformedPoint.x;
+      let newY = transformedPoint.y;
+
+      // --- Apply drag boundaries ---
+      if (typeof getDragBoundaries === 'function') {
+        const boundaries = getDragBoundaries();
+        if (boundaries) {
+          newX = Math.max(boundaries.minX, Math.min(boundaries.maxX, newX));
+          newY = Math.max(boundaries.minY, Math.min(boundaries.maxY, newY));
+        }
+      }
+      // --- End apply drag boundaries ---
+
+      // Update the handle's visual position (optional, can be handled by parent update)
+      // currentHandleElement.center(newX, newY);
+
+      // Call the onDrag callback provided by the parent component
+      if (typeof onDrag === 'function') {
+        onDrag(activeMainPointIndex, activeHandleType, newX, newY);
+      }
+    } else {
       // 简化处理：直接用屏幕偏移量，这在简单场景下可能够用
       // 或者，如果 initialHandlePos 是准确的SVG坐标，那么 newX = initialHandlePos.x + dxScreen
       // 这个假设是屏幕上的1px移动等于SVG坐标系中的1单位移动
-    // }
+      const newX = initialHandlePos.x + dxScreen;
+      const newY = initialHandlePos.y + dyScreen;
 
-    const newHandleX = initialHandlePos.x + dxScreen;
-    const newHandleY = initialHandlePos.y + dyScreen;
+      // --- Apply drag boundaries ---
+      if (typeof getDragBoundaries === 'function') {
+        const boundaries = getDragBoundaries();
+        if (boundaries) {
+          newX = Math.max(boundaries.minX, Math.min(boundaries.maxX, newX));
+          newY = Math.max(boundaries.minY, Math.min(boundaries.maxY, newY));
+        }
+      }
+      // --- End apply drag boundaries ---
 
-    if (typeof onDrag === 'function') {
-      onDrag(activeMainPointIndex, activeHandleType, newHandleX, newHandleY);
+      // Update the handle's visual position (optional, can be handled by parent update)
+      // currentHandleElement.center(newX, newY);
+
+      // Call the onDrag callback provided by the parent component
+      if (typeof onDrag === 'function') {
+        onDrag(activeMainPointIndex, activeHandleType, newX, newY);
+      }
     }
   }
 
