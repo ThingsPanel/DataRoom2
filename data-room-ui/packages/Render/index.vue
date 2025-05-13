@@ -265,6 +265,7 @@ export default {
       })
       if (!isElementInHighlights) {
         this.changeActiveCodes([])
+        this.changeActiveCode('')
       }
     },
     // 切换主题时针对远程组件触发样式修改的方法

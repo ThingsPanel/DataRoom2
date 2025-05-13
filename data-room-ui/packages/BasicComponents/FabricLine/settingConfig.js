@@ -108,6 +108,10 @@ const customConfig = {
   },
   root: {
     version: '2023071001',
+    // 新增：设置默认宽度
+    w: 400,
+    // 新增：设置默认高度
+    h: 300,
     // 绕x轴旋转角度
     rotateX: 0,
     // 绕y轴旋转角度
@@ -130,7 +134,10 @@ const customConfig = {
     // 点大小
     pointRadius: 5,
     // 点数据存储
-    points: [],
+    points: [ // 新增：添加两个初始点
+      { x: 50, y: 50 },
+      { x: 350, y: 250 }
+    ],
     // 新增：是否启用虚线
     enableLineDash: false,
     // 新增：虚线段长度 (已有默认值 5)

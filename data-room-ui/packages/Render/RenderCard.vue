@@ -39,6 +39,7 @@
         :selected="isSelected && !isPreviewMode"
         :page-width="pageWidth"
         :page-height="pageHeight"
+        :active-code="activeCode"
         @styleHandler="styleHandler"
         @bounds-update="handleBoundsUpdate"
         @error="handleError"

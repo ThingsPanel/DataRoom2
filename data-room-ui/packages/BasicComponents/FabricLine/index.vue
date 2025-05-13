@@ -1,10 +1,14 @@
 <template>
   <div class="fabric-line-container">
+    <div class="handler-info" v-if="showHandlerInfo" :class="{ 'animate-blink': showHandlerInfo }">ctrl+click 添加点 alt+click 删除点</div>
+   
     <div
       ref="drawingArea"
       class="drawing-area"
       :id="containerId"
-    ></div>
+    >
+  
+  </div>
   </div>
 </template>
 
@@ -12,9 +16,7 @@
 // 仅导入SVG.js
 import { SVG } from '@svgdotjs/svg.js'
 // 导入绘制模式管理器
-import DrawModeManager, { DrawModeTypes } from './utils/DrawModeManager'
 // 导入拖动状态管理器
-import DragStateManager from './utils/DragStateManager'
 // 导入点拖动处理工具
 import { createPointDragHandler } from './utils/PointDragHandler'
 // 新增：导入控制手柄拖动处理工具
@@ -26,7 +28,8 @@ import { startDropletAnimation, startFlowAnimation } from './utils/animationUtil
 // 新增：导入布局工具函数 (更新导入的函数名)
 import { calculateLayoutUpdate } from './utils/layoutUtils'
 
-const PADDING = 10; // <--- 重新添加 PADDING 常量
+const PADDING = 10;
+const HIT_SLOP = 8; // <-- 增大一点容差值试试
 
 export default {
   name: 'FabricLine',
@@ -47,6 +50,10 @@ export default {
     pageHeight: {
       type: Number,
       default: Infinity
+    },
+    activeCode: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -63,6 +70,8 @@ export default {
       isDataLoading: false,
       selectedPointIndex: null, // 新增：当前选中点的索引
       controlHandlesGroup: null, // 新增：存放控制柄的SVG分组
+      showHandlerInfo: false, // 控制提示信息的显示
+      handlerInfoTimeout: null, // 存储 setTimeout 的 ID
       isPointDragging: false,
       activePathIndex: -1,
       svgWidth: 0,
@@ -139,6 +148,11 @@ export default {
       // 密度转换为虚线长度，确保是正数
       const density = this.config?.customize?.flowDensity;
       return typeof density === 'number' && density > 0 ? density : 10;
+    },
+    // 新增：计算属性，判断组件是否激活
+    isActive() {
+      // 确保 config 和 config.code 存在
+      return !!(this.config && typeof this.config.code !== 'undefined' && this.activeCode === this.config.code);
     }
   },
   watch: {
@@ -161,6 +175,7 @@ export default {
     // 新增：侦听线条形状变化
     lineShapeType() {
       this._renderControlHandles();
+      
       // --- 切换形状后重新计算布局并更新 (传入 PADDING) ---
       const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight, PADDING);
       if (layoutUpdateResult) {
@@ -197,7 +212,7 @@ export default {
       this._updateAnimation(); // 线条形状变化，更新动画
     },
     selectedPointIndex(newIndex, oldIndex) {
-      this._renderControlHandles(); // 更新控制柄的显示
+      // 不再需要根据选中点来渲染手柄
     },
     'config.customize.pointColor'() {
       this.updatePointsStyle()
@@ -273,7 +288,34 @@ export default {
     currentLine(newLine, oldLine) {
       // 当线条本身发生变化时（例如重绘），也需要更新动画
       this._updateAnimation();
-    }
+    },
+    // 新增：监听 isActive 计算属性的变化
+    isActive(newIsActive, oldIsActive) {
+      if (newIsActive !== oldIsActive) {
+        this._updateInteractiveElementsVisibility();
+
+        if (newIsActive) {
+          // 组件激活时
+          this.showHandlerInfo = true; // 显示提示
+          // 清除可能存在的旧计时器
+          if (this.handlerInfoTimeout) {
+            clearTimeout(this.handlerInfoTimeout);
+          }
+          // 5秒后隐藏提示
+          this.handlerInfoTimeout = setTimeout(() => {
+            this.showHandlerInfo = false;
+          }, 5000);
+        } else {
+          // 组件失活时
+          this.showHandlerInfo = false; // 隐藏提示
+          // 清除计时器
+          if (this.handlerInfoTimeout) {
+            clearTimeout(this.handlerInfoTimeout);
+            this.handlerInfoTimeout = null;
+          }
+        }
+      }
+    },
   },
   mounted() {
     this.$nextTick(() => {
@@ -287,13 +329,18 @@ export default {
           this.isDataLoading = true;
           this.loadData(initialPoints);
           this.isDataLoading = false;
+          // 新增：设置初始可见性
+          this._updateInteractiveElementsVisibility();
         }, 200);
       }
       this.setupGlobalMouseEvents();
     })
   },
   beforeDestroy() {
-    // updatePathsData 会在销毁前被调用，确保保存了最新的点（包括控制点）
+    // 清除 handlerInfoTimeout
+    if (this.handlerInfoTimeout) {
+      clearTimeout(this.handlerInfoTimeout);
+    }
     this.updatePathsData();
     this._clearAnimation(); // 清理动画元素和控制器
     if (this.pointDragHandler) {
@@ -436,6 +483,10 @@ export default {
       if (this._handleKeyUp) window.removeEventListener('keyup', this._handleKeyUp);
     },
     handleClick(event) {
+      if (event.defaultPrevented) { // 如果 mousedown 已经 preventDefault，可能表示已被处理
+        // return; // 根据需要决定是否返回
+      }
+
       if (this.isAltDown) {
         return;
       }
@@ -448,7 +499,7 @@ export default {
         return;
       }
 
-      if (this.isEditMode && event.target === this.svgRootNode && !this.isCtrlDown) {
+      if (this.isEditMode && event.target === this.svgRootNode && !this.isCtrlDown && !this.isAltDown) {
         this.selectedPointIndex = null;
         return;
       }
@@ -468,9 +519,84 @@ export default {
       }
       this.updatePathsData();
     },
+    handleSvgMouseDown(event) {
+      if (event.button !== 0) return;
+      if (!this.isEditMode) return;
+      if (!this.draw) return;
+
+      const svgMousePoint = this.draw.point(event.clientX, event.clientY);
+      let minDistSq = Infinity;
+      let closestAnchorIndex = -1; // Renamed from closestPointIndex for clarity
+      const anchorTolerance = (this.pointRadius || 5) + HIT_SLOP;
+
+      // 1. 检查锚点命中 (逻辑不变)
+      this.points.forEach((p, index) => {
+        const dx = p.x - svgMousePoint.x;
+        const dy = p.y - svgMousePoint.y;
+        const distSq = dx * dx + dy * dy;
+        if (distSq <= anchorTolerance * anchorTolerance) {
+          if (distSq < minDistSq) {
+            minDistSq = distSq;
+            closestAnchorIndex = index;
+          }
+        }
+      });
+
+      if (closestAnchorIndex !== -1) {
+        // console.log(`Anchor point ${closestAnchorIndex} hit!`);
+        event.stopPropagation();
+        this.pointDragHandler.handlePointMouseDown(event, closestAnchorIndex, this.points);
+        return;
+      }
+
+      // 2. 检查所有可见的控制手柄命中 (如果锚点未命中)
+      if (this.lineShapeType === 'cubicBezier' && this.controlHandlesGroup) {
+        const handleVisualRadius = Math.max(2, (this.pointRadius || 5) / 2);
+        const handleTolerance = handleVisualRadius + HIT_SLOP;
+        const handleToleranceSq = handleTolerance * handleTolerance;
+
+        // console.log(`Checking all handles. Mouse: (${svgMousePoint.x.toFixed(1)}, ${svgMousePoint.y.toFixed(1)}), HandleTolerance: ${handleTolerance.toFixed(1)}`);
+
+        // 遍历所有点来检查它们的手柄
+        for (let index = 0; index < this.points.length; index++) {
+          const point = this.points[index];
+
+          // 检查 cp1
+          if (point.cp1x != null && point.cp1y != null) {
+            const dx_cp1 = point.cp1x - svgMousePoint.x;
+            const dy_cp1 = point.cp1y - svgMousePoint.y;
+            const distSq_cp1 = dx_cp1 * dx_cp1 + dy_cp1 * dy_cp1;
+            // console.log(` Point ${index} - DistSq to CP1 (${point.cp1x.toFixed(1)}, ${point.cp1y.toFixed(1)}): ${distSq_cp1.toFixed(1)} (TolSq: ${handleToleranceSq.toFixed(1)})`);
+            if (distSq_cp1 <= handleToleranceSq) {
+              // console.log(` --> CP1 handle of point ${index} HIT!`);
+              event.stopPropagation();
+              // 确保将正确的 index 传递给处理器
+              this.controlHandleDragHandler.handleMouseDown(event, index, 'cp1');
+              return; // 找到一个就处理并返回
+            }
+          }
+
+          // 检查 cp2
+          if (point.cp2x != null && point.cp2y != null) {
+            const dx_cp2 = point.cp2x - svgMousePoint.x;
+            const dy_cp2 = point.cp2y - svgMousePoint.y;
+            const distSq_cp2 = dx_cp2 * dx_cp2 + dy_cp2 * dy_cp2;
+            // console.log(` Point ${index} - DistSq to CP2 (${point.cp2x.toFixed(1)}, ${point.cp2y.toFixed(1)}): ${distSq_cp2.toFixed(1)} (TolSq: ${handleToleranceSq.toFixed(1)})`);
+            if (distSq_cp2 <= handleToleranceSq) {
+              // console.log(` --> CP2 handle of point ${index} HIT!`);
+              event.stopPropagation();
+              // 确保将正确的 index 传递给处理器
+              this.controlHandleDragHandler.handleMouseDown(event, index, 'cp2');
+              return; // 找到一个就处理并返回
+            }
+          }
+        }
+        // console.log("No handle hit after checking all points.");
+      }
+      // 如果啥也没命中，事件继续，handleClick 可能被触发
+    },
     initDrawingEditor() {
       try {
-       
         const container = document.getElementById(this.containerId)
         if (!container && this.$refs.drawingArea) {
           this.$refs.drawingArea.id = this.containerId
@@ -479,21 +605,18 @@ export default {
         if (!this.draw) {
           this.draw = SVG().addTo(`#${this.containerId}`).size('100%', '100%')
           this.svgRootNode = this.draw.node;
-          this.draw.on('click', this.handleClick)
-        } else {
-         
+          this.draw.on('mousedown', this.handleSvgMouseDown);
+          this.draw.on('click', this.handleClick);
         }
         
         this.initialized = true
         
-        
-        // 确保在初始化后立即绘制
         this.$nextTick(() => {
           this.handleResize();
           this._updateAnimation();
         });
       } catch (err) {
-   
+        console.error("FabricLine: Error initializing drawing editor", err);
       }
     },
     handleResize () {
@@ -501,12 +624,7 @@ export default {
         const newWidth = this.$refs.drawingArea.clientWidth;
         const newHeight = this.$refs.drawingArea.clientHeight;
 
-        // console.log(`FabricLine: handleResize - newWidth: ${newWidth}, newHeight: ${newHeight}, old svgWidth: ${this.svgWidth}, old svgHeight: ${this.svgHeight}`);
-        // console.log('FabricLine: handleResize - config:', this.config);
-        // console.log('FabricLine: handleResize - draw exists:', !!this.draw, 'currentLine exists:', !!this.currentLine);
-
         if (newWidth === 0 && newHeight === 0 && (this.svgWidth !== 0 || this.svgHeight !== 0)) {
-          // console.warn("FabricLine: handleResize detected 0x0 dimensions, possibly during unmount or rapid changes. Skipping update to prevent errors.");
           return;
         }
 
@@ -516,22 +634,16 @@ export default {
         if (this.draw) {
           try {
             this.draw.size(this.svgWidth, this.svgHeight);
-            // console.log('FabricLine: SVG size updated:', this.draw.attr(['width', 'height']));
             
-            // 确保在调整大小后重新绘制
             if (this.points.length >= 2) {
               this.updateLine();
             }
             
-            // 确保动画元素在调整大小后重新创建
             this._updateAnimation();
           } catch (err) {
-            // console.error('FabricLine: Failed to update SVG size:', err);
-            // 如果更新失败，尝试重新初始化
             this.initDrawingEditor();
           }
         } else {
-          // console.warn("FabricLine: handleResize - this.draw is null, reinitializing SVG");
           this.initDrawingEditor();
         }
       }
@@ -542,6 +654,11 @@ export default {
         .center(x, y)
         .fill(this.pointColor);
       
+      // 新增：如果组件未激活，隐藏新创建的点
+      if (!this.isActive) {
+        pointElement.hide();
+      }
+
       const newPointData = { 
         x, 
         y, 
@@ -549,16 +666,9 @@ export default {
       };
 
       this.points.push(newPointData);
-      const pointIndex = this.points.length - 1;
 
       this._recalculateAllControlPoints();
 
-      pointElement.on('mousedown', (e) => {
-        e.stopPropagation(); 
-        this.pointDragHandler.handlePointMouseDown(e, pointIndex, this.points);
-      });
-      pointElement.on('click', (e) => e.stopPropagation());
-      
       if (this.points.length >= 2) this.updateLine();
       this.updatePathsData();
     },
@@ -592,20 +702,6 @@ export default {
             
             this.points.splice(insertIndex, 0, newPointData);
             
-            this.points.forEach((p, idx) => {
-              if (p.element) {
-                p.element.off('mousedown'); 
-                p.element.on('mousedown', (e) => {
-                  e.stopPropagation();
-                  if (this.pointDragHandler) {
-                    this.pointDragHandler.handlePointMouseDown(e, idx, this.points);
-                  }
-                });
-                p.element.off('click'); 
-                p.element.on('click', (e) => e.stopPropagation());
-              }
-            });
-
             this._recalculateAllControlPoints();
             this.updateLine();
             this.selectedPointIndex = insertIndex;
@@ -696,7 +792,6 @@ export default {
                     path += ` C${p1.cp2x},${p1.cp2y} ${p2.cp1x},${p2.cp1y} ${p2.x},${p2.y}`;
                  }
               } else {
-                // console.warn(`Missing control points for cubic Bezier segment from point ${i} to ${i+1}. Drawing line.`);
                 if (i===0) path = `M${p1.x},${p1.y}`;
                 path += ` L${p2.x},${p2.y}`;
               }
@@ -747,14 +842,10 @@ export default {
         this.currentLine = this.draw.path(path).fill('none').stroke(strokeAttrs);
         this.currentLine.back();
       } catch (err) { 
-        // console.error('线段绘制失败 (Error drawing segment):', err);
-        // console.error('FabricLine DEBUG: drawLinePath - Failed Path String:', path);
-        // console.error('FabricLine DEBUG: drawLinePath - Error Object:', err);
         if (this.currentLine) {
           try {
             this.currentLine.remove();
           } catch (removeError) {
-            // console.warn('FabricLine DEBUG: drawLinePath - Error removing currentLine in catch block:', removeError);
           }
         } 
         this.currentLine = null;
@@ -762,6 +853,7 @@ export default {
     },
     updateLine() {
       this.drawLinePath();
+      this._renderControlHandles();
       this.updatePathsData();
     },
     updateLinesStyle() {
@@ -792,7 +884,7 @@ export default {
       this.points.forEach(point => { if (point.element) point.element.remove() });
       this.lines.forEach(line => { if (line.path) line.path.remove() });
       if (this.currentLine) this.currentLine.remove();
-      this._clearAnimation(); // 清理动画
+      this._clearAnimation();
       if (this.controlHandlesGroup) {
         this.controlHandlesGroup.remove();
         this.controlHandlesGroup = null;
@@ -841,35 +933,14 @@ export default {
       }
     },
     deletePoint(indexToDelete) {
-      if (!this.isEditMode) {
-        // console.warn('deletePoint: Not in edit mode. Aborting.');
-        return;
-      }
-      if (indexToDelete < 0 || indexToDelete >= this.points.length) {
-        // console.warn(`deletePoint: Invalid index ${indexToDelete}. Aborting.`);
-        return;
-      }
+      if (!this.isEditMode) return;
+      if (indexToDelete < 0 || indexToDelete >= this.points.length) return;
 
       const pointToRemove = this.points[indexToDelete];
       if (pointToRemove && pointToRemove.element) {
         pointToRemove.element.remove();
       }
-
       this.points.splice(indexToDelete, 1);
-
-      this.points.forEach((p, newIndex) => {
-        if (p.element) {
-          p.element.off('mousedown');
-          p.element.on('mousedown', (e) => {
-            e.stopPropagation();
-            if (this.pointDragHandler) {
-              this.pointDragHandler.handlePointMouseDown(e, newIndex, this.points);
-            }
-          });
-          p.element.off('click'); 
-          p.element.on('click', (e) => e.stopPropagation()); 
-        }
-      });
 
       if (this.selectedPointIndex === indexToDelete) {
         this.selectedPointIndex = null;
@@ -878,14 +949,8 @@ export default {
       }
 
       if (this.points.length < 2) {
-         if (this.currentLine) {
-            this.currentLine.remove();
-            this.currentLine = null;
-         }
-         if (this.controlHandlesGroup) {
-            this.controlHandlesGroup.remove();
-            this.controlHandlesGroup = null;
-         }
+         if (this.currentLine) { this.currentLine.remove(); this.currentLine = null; }
+         if (this.controlHandlesGroup) { this.controlHandlesGroup.remove(); this.controlHandlesGroup = null; }
          if (this.points.length === 0) this.selectedPointIndex = null;
       }
       
@@ -928,13 +993,11 @@ export default {
           const pointElement = this.draw.circle(this.pointRadius * 2)
             .center(pData.x, pData.y)
             .fill(this.pointColor);
+          // 新增：如果组件未激活，隐藏加载的点
+          if (!this.isActive) {
+            pointElement.hide();
+          }
           pData.element = pointElement;
-
-          pointElement.on('mousedown', (e) => {
-            e.stopPropagation();
-            if (this.pointDragHandler) this.pointDragHandler.handlePointMouseDown(e, i, this.points);
-          });
-          pointElement.on('click', (e) => e.stopPropagation());
         });
 
         this._recalculateAllControlPoints(); 
@@ -942,12 +1005,11 @@ export default {
         if (this.points.length >= 1) {
           this.updateLine();
         }
-      } catch (err) { // console.error('加载数据失败:', err); 
+      } catch (err) { 
+        console.error('FabricLine: Error loading data:', err); 
       }
       finally {
-        this.$nextTick(() => {
-          this.isDataLoading = false;
-        });
+        this.$nextTick(() => { this.isDataLoading = false; });
       }
     },
     setupGlobalMouseEvents() {
@@ -999,7 +1061,6 @@ export default {
           });
         }
       } else {
-        // console.warn('FabricLine.vue: handleContainerResize - this.$refs.drawingArea is not available.');
       }
     },
     _recalculateAllControlPoints() {
@@ -1015,55 +1076,74 @@ export default {
       }
     },
     _renderControlHandles() {
+      console.log("--- _renderControlHandles called ---"); 
+      console.log("Current activeCode:", this.activeCode); 
+      console.log("Current config.code:", this.config ? this.config.code : 'config is null'); 
+      console.log("Current lineShapeType:", this.lineShapeType); 
+      console.log("this.draw exists:", !!this.draw); 
+
       if (this.controlHandlesGroup) {
         this.controlHandlesGroup.remove();
         this.controlHandlesGroup = null;
+        console.log("Cleared old controlHandlesGroup"); 
       }
 
-      if (this.lineShapeType !== 'cubicBezier' || this.selectedPointIndex === null || !this.draw) {
+      const configExists = this.config && typeof this.config.code !== 'undefined';
+      const codesMatch = configExists && this.activeCode === this.config.code;
+      
+      console.log("Config exists for code check:", configExists); 
+      console.log("Codes match (activeCode === config.code):", codesMatch); 
+
+      // const isActive = this.activeCode && this.config && this.config.code && (this.activeCode === this.config.code);
+      // 使用分解后的条件，方便调试
+      const isActive = !!(this.activeCode && configExists && codesMatch);
+      console.log("Final isActive for rendering handles:", isActive); 
+
+      if (!isActive) {
+        console.log("Handles not rendered because !isActive"); 
+        return; 
+      }
+
+      if (this.lineShapeType !== 'cubicBezier') {
+        console.log("Handles not rendered because lineShapeType is not cubicBezier"); 
+        return;
+      }
+      if (!this.draw) {
+        console.log("Handles not rendered because this.draw is null"); 
         return;
       }
 
-      const point = this.points[this.selectedPointIndex];
-      if (!point) return;
-
+      console.log("Proceeding to render handles..."); 
+      
       this.controlHandlesGroup = this.draw.group();
-      const handleRadius = Math.max(2, this.pointRadius / 2);
+      const handleRadius = Math.max(2, (this.pointRadius || 5) / 2);
       const handleColor = '#00a8ff';
       const lineColor = 'rgba(0, 168, 255, 0.5)';
 
-      if (point.cp1x != null && point.cp1y != null) {
-        this.controlHandlesGroup.line(point.x, point.y, point.cp1x, point.cp1y)
-          .stroke({ width: 1, color: lineColor, dasharray: '2,2' });
-        const cp1Handle = this.controlHandlesGroup.circle(handleRadius * 2)
-          .center(point.cp1x, point.cp1y)
-          .fill(handleColor)
-          .stroke({ width: 1, color: '#fff' });
-        
-        cp1Handle.on('mousedown', (event) => {
-          if (this.controlHandleDragHandler) {
-            this.controlHandleDragHandler.handleMouseDown(event, this.selectedPointIndex, 'cp1');
-          }
-        });
-      }
-
-      if (point.cp2x != null && point.cp2y != null) {
-        this.controlHandlesGroup.line(point.x, point.y, point.cp2x, point.cp2y)
-          .stroke({ width: 1, color: lineColor, dasharray: '2,2' });
-        const cp2Handle = this.controlHandlesGroup.circle(handleRadius * 2)
-          .center(point.cp2x, point.cp2y)
-          .fill(handleColor)
-          .stroke({ width: 1, color: '#fff' });
-
-        cp2Handle.on('mousedown', (event) => {
-          if (this.controlHandleDragHandler) {
-            this.controlHandleDragHandler.handleMouseDown(event, this.selectedPointIndex, 'cp2');
-          }
-        });
-      }
-      if(point.element) {
-        this.controlHandlesGroup.front(); 
-      }
+      this.points.forEach((point, index) => {
+        if (point.cp1x != null && point.cp1y != null) {
+          this.controlHandlesGroup.line(point.x, point.y, point.cp1x, point.cp1y)
+            .stroke({ width: 1, color: lineColor, dasharray: '2,2' });
+          this.controlHandlesGroup.circle(handleRadius * 2)
+            .center(point.cp1x, point.cp1y)
+            .fill(handleColor)
+            .stroke({ width: 1, color: '#fff' })
+            .data('point-index', index)
+            .data('handle-type', 'cp1');
+        }
+        if (point.cp2x != null && point.cp2y != null) {
+          this.controlHandlesGroup.line(point.x, point.y, point.cp2x, point.cp2y)
+            .stroke({ width: 1, color: lineColor, dasharray: '2,2' });
+          this.controlHandlesGroup.circle(handleRadius * 2)
+            .center(point.cp2x, point.cp2y)
+            .fill(handleColor)
+            .stroke({ width: 1, color: '#fff' })
+            .data('point-index', index)
+            .data('handle-type', 'cp2');
+        }
+      });
+      this.controlHandlesGroup.front();
+      console.log("Handles should now be visible."); 
     },
     _updateControlPointsForPoint(index) {
       if (index < 0 || index >= this.points.length) return;
@@ -1148,45 +1228,28 @@ export default {
     },
 
     _updateAnimation() {
-      // console.log('FabricLine: _updateAnimation called - draw exists:', !!this.draw, 'currentLine exists:', !!this.currentLine);
-      
-      // 如果 draw 不存在，尝试重新初始化
       if (!this.draw) {
-        // console.warn('FabricLine: _updateAnimation - draw is null, attempting to reinitialize');
         this.initDrawingEditor();
         return;
       }
       
       if (!this.currentLine) {
-        // console.warn('FabricLine: _updateAnimation - currentLine is null, clearing animation');
         return this._clearAnimation();
       }
       
       this._clearAnimation();
 
       if (!this.animationActive || this.animationType === 'none') {
-        // console.log('FabricLine: _updateAnimation - animation not active or type is none');
         return;
       }
 
-      // 确保线条有有效的路径/长度用于动画
       if (this.lineWidth <= 0 || this.svgWidth <= 0) {
-        // console.warn('FabricLine: _updateAnimation - invalid dimensions:', { lineWidth: this.lineWidth, svgWidth: this.svgWidth });
         return;
       }
 
       if (typeof this.currentLine.length !== 'function' || this.currentLine.length() === 0) {
-        // console.warn("FabricLine: Cannot start animation, line has no length or invalid.");
         return;
       }
-
-      // console.log('FabricLine: Starting animation with config:', {
-      //   animationActive: this.animationActive,
-      //   animationType: this.animationType,
-      //   animationDirection: this.animationDirection,
-      //   animationSpeed: this.animationSpeed,
-      //   animationLoop: this.animationLoop
-      // });
 
       const animationConfig = {
         animationActive: this.animationActive,
@@ -1212,10 +1275,6 @@ export default {
             animationResult = startFlowAnimation(this.draw, this.currentLine, animationConfig);
             break;
         }
-        // console.log('FabricLine: Animation result:', {
-        //   elementsCount: animationResult.elements?.length,
-        //   runnersCount: animationResult.runners?.length
-        // });
 
         this.animationElements = animationResult.elements || [];
         this.animationRunners = animationResult.runners || [];
@@ -1226,7 +1285,6 @@ export default {
               try {
                 el.front();
               } catch (e) {
-                // console.error('FabricLine: Error calling front() on animation element:', e);
               }
             }
           });
@@ -1234,28 +1292,19 @@ export default {
             try {
               this.currentLine.back();
             } catch (e) {
-              // console.error('FabricLine: Error calling back() on currentLine:', e);
             }
           }
         }
       } catch (e) {
-        // console.error('FabricLine: Error in _updateAnimation:', e);
         this._clearAnimation();
       }
     },
 
-    // _startDropletAnimation() { // 已移除, 迁移到 animationUtils.js
-    // },
-
-    // _startFlowAnimation() { // 已移除, 迁移到 animationUtils.js
-    // },
-
-    // 新增：计算拖拽边界的方法
     getDragBoundaries() {
       const currentX = this.config?.x || 0;
       const currentY = this.config?.y || 0;
-      const parentW = this.pageWidth === Infinity ? window.innerWidth : this.pageWidth; // Fallback if prop not set
-      const parentH = this.pageHeight === Infinity ? window.innerHeight : this.pageHeight; // Fallback if prop not set
+      const parentW = this.pageWidth === Infinity ? window.innerWidth : this.pageWidth;
+      const parentH = this.pageHeight === Infinity ? window.innerHeight : this.pageHeight;
 
       return {
         minX: -currentX+10,
@@ -1265,48 +1314,64 @@ export default {
       };
     },
 
-    // 新增：统一处理拖动结束后的布局更新
     _handleDragEndLayoutUpdate() {
-      // --- 使用新的布局计算函数 (传入 PADDING) ---
       const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight, PADDING);
       
       if (layoutUpdateResult) {
-        // 更新内部 points 数组为新的相对坐标
         this.points = layoutUpdateResult.relativePoints.map((rp, idx) => {
           const existingPoint = this.points[idx]; 
-          // 确保保留 element 和 userSet 状态等非坐标属性
           return { 
-            ...existingPoint, // 保留旧属性
-            ...rp            // 用新坐标覆盖 x, y, cp1x, cp1y, cp2x, cp2y
+            ...existingPoint,
+            ...rp
           }; 
         });
 
-        // 手动更新 SVG 点元素的位置 (锚点)
         this.points.forEach(p => {
           if (p.element && typeof p.element.center === 'function') {
             p.element.center(p.x, p.y); 
           }
         });
 
-        // 重新绘制线条和控制柄
         this.drawLinePath(); 
-        this._renderControlHandles(); // 控制柄需要基于新的相对坐标重新渲染
+        this._renderControlHandles();
 
-        // 发出带有新布局和相对点信息的事件
         this.$emit('bounds-update', layoutUpdateResult); 
       } else {
-        // 如果没有布局更新，可能只是需要重绘
         this.drawLinePath();
         this._renderControlHandles();
       }
-      // 确保在拖动结束后，最新的（相对化的）点数据反映到 config 中
       this.updatePathsData(); 
+    },
+    // 新增：统一更新点和控制手柄的可见性
+    _updateInteractiveElementsVisibility() {
+      // 更新点的可见性
+      this.points.forEach(p => {
+        if (p.element) {
+          if (this.isActive) {
+            p.element.show();
+          } else {
+            p.element.hide();
+          }
+        }
+      });
+      // 更新控制手柄的可见性（调用已有的方法，它内部会检查 isActive）
+      this._renderControlHandles();
     },
   }
 }
 </script>
 
 <style scoped>
+@keyframes blinkAnimation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; } /* 短暂变暗实现闪烁效果 */
+}
+
+.handler-info.animate-blink {
+  /* 应用动画：名称 时长 缓动函数 次数 */
+  animation: blinkAnimation 0.6s ease-in-out infinite; /* 无限闪烁 */
+}
+
 .fabric-line-container {
   width: 100%;
   height: 100%;
@@ -1314,7 +1379,6 @@ export default {
 }
 
 .drawing-area {
-
   width: 100%;
   height: 100%;
   background-color: transparent;
@@ -1345,5 +1409,18 @@ export default {
 
 .debug-panel button:hover {
   background: #40a9ff;
+}
+.handler-info{
+  position: absolute;
+  z-index: -1;
+
+  width: 100%;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.151);
+  color: rgba(255, 204, 204, 0.61);
+  font-size: 10px;
+  text-align: center;
+  overflow: hidden;
+  padding: 2px ;
 }
 </style>
