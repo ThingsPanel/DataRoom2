@@ -385,7 +385,7 @@ export default {
     },
     tip() {
       // 超链接跳转至
-      const htmlStr = `<span>大屏设计器提供了全国省市区县的地图数据，<a href="https://www.yuque.com/chuinixiongkou/bigscreen/kdrm8g3c8zfgaaq6#xjE8w" style="color: #00a0e9"  target="_blank">点击查看</a></span>`
+      const htmlStr = `<span>大屏设计器提供了全国省市区县的地图数据，<a href="https://lark-assets-prod-aliyun.oss-cn-hangzhou.aliyuncs.com/yuque/0/2023/sql/2841308/1695020401376-310ff0dd-781f-49ba-b32f-85b9cb606d96.sql?OSSAccessKeyId=LTAI4GKnqTWmz2X8mzA1Sjbv&Expires=1747137241&Signature=bCy%2Fct%2FPJNtQ0rv8rAbogkIaRRA%3D&response-content-disposition=attachment%3Bfilename*%3DUTF-8%27%27map_china_city.sql" style="color: #00a0e9"  target="_blank">点击查看</a></span>`
       this.$notify({
         title: '推荐',
         dangerouslyUseHTMLString: true,
