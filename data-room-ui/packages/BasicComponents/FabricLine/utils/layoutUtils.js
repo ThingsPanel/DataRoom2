@@ -147,8 +147,9 @@ function calculateVisualBounds(points, lineShapeType = 'straight', lineWidth = 2
 }
 
 /**
- * Calculates necessary layout updates (position, size) and translates points 
- * so they are relative to the new container's top-left (0,0), ensuring no negative coordinates.
+ * Calculates necessary layout updates (position, size) and translates points
+ * so they are relative to the new container's top-left (0,0) plus padding,
+ * ensuring no negative coordinates for the container itself and respecting page boundaries.
  *
  * @param {Array<Object>} points - Array of point objects with current internal coordinates.
  * @param {Object} currentConfig - The current component config { x, y, w, h, ... }.
@@ -156,65 +157,93 @@ function calculateVisualBounds(points, lineShapeType = 'straight', lineWidth = 2
  * @param {number} [lineWidth=2] - The width of the line stroke.
  * @param {number} [pageWidth=Infinity] - The width of the parent canvas.
  * @param {number} [pageHeight=Infinity] - The height of the parent canvas.
- * @returns {Object | null} An object containing the update payload or null if no points:
- *                  - layout: { x, y, w, h } - The new absolute position and size for the container.
- *                  - relativePoints: Array<Object> - Points translated relative to the new container origin (0,0).
+ * @param {number} [padding=0] - Padding to add around the content within the container.
+ * @returns {Object | null} An object containing the update payload or null if no points.
  */
-export function calculateLayoutUpdate(points, currentConfig, lineShapeType = 'straight', lineWidth = 2, pageWidth = Infinity, pageHeight = Infinity) {
+export function calculateLayoutUpdate(points, currentConfig, lineShapeType = 'straight', lineWidth = 2, pageWidth = Infinity, pageHeight = Infinity, padding = 0) {
   if (!points || points.length === 0) {
-    return null;
+    return { // Return a default state if no points, so FabricLine can clear itself
+        layout: { x: currentConfig?.x || 0, y: currentConfig?.y || 0, w: padding * 2, h: padding * 2 },
+        relativePoints: []
+    };
   }
 
-  const currentX = currentConfig?.x || 0;
-  const currentY = currentConfig?.y || 0;
+  const currentAbsX = currentConfig?.x || 0;
+  const currentAbsY = currentConfig?.y || 0;
 
+  // visualMin/Max are relative to the SVG's current (0,0)
   const { visualMinX, visualMinY, visualMaxX, visualMaxY } = calculateVisualBounds(points, lineShapeType, lineWidth);
 
-  // Calculate necessary adjustments based on negative visual bounds
-  const deltaX = Math.min(0, visualMinX); // How much it goes negative (<= 0)
-  const deltaY = Math.min(0, visualMinY); // How much it goes negative (<= 0)
+  let finalContainerAbsX = currentAbsX;
+  let finalContainerAbsY = currentAbsY;
 
-  // Calculate new absolute position for the container
-  const newContainerX = currentX + deltaX;
-  const newContainerY = currentY + deltaY;
+  // --- Determine if container's absolute X, Y need to change ---
+  // Content's visual left edge (relative to current SVG 0,0) is visualMinX.
+  // We want this edge to be at least `padding` inside the container.
+  // If visualMinX < padding, it means content is too far left relative to where padding should start.
+  const offsetX = visualMinX - padding; // If negative, content is 'intruding' into padding zone or beyond 0.
+  if (offsetX < 0) {
+    // Move container left by the intrusion amount to make visualMinX align with padding.
+    finalContainerAbsX = currentAbsX + offsetX;
+  }
 
-  // Calculate width and height based on visual bounds of the content itself
-  const visualContentW = visualMaxX - visualMinX;
-  const visualContentH = visualMaxY - visualMinY;
-
-  // Calculate maximum allowed width/height based on page boundaries and new container position
-  const maxAllowedW = (isFinite(pageWidth) && pageWidth > 0) ? pageWidth - newContainerX : Infinity;
-  const maxAllowedH = (isFinite(pageHeight) && pageHeight > 0) ? pageHeight - newContainerY : Infinity;
-
-  // Final width and height, clamped by page boundaries
-  const finalW = Math.min(visualContentW, maxAllowedW);
-  const finalH = Math.min(visualContentH, maxAllowedH);
+  const offsetY = visualMinY - padding; // If negative, content is 'intruding' into padding zone or beyond 0.
+  if (offsetY < 0) {
+    // Move container up by the intrusion amount.
+    finalContainerAbsY = currentAbsY + offsetY;
+  }
   
-  // Calculate the translation needed for internal points to be relative to the visual content's top-left (0,0)
-  const translateX = -visualMinX;
-  const translateY = -visualMinY;
+  // --- Calculate container dimensions ---
+  // Width/Height of the visual content itself
+  const contentVisualW = Math.max(0, visualMaxX - visualMinX);
+  const contentVisualH = Math.max(0, visualMaxY - visualMinY);
+
+  // Desired container width/height including padding
+  let desiredContainerW = contentVisualW + padding * 2;
+  let desiredContainerH = contentVisualH + padding * 2;
+
+  // Ensure minimum size due to padding, even if content is zero-size
+  desiredContainerW = Math.max(desiredContainerW, padding * 2);
+  desiredContainerH = Math.max(desiredContainerH, padding * 2);
+
+  // --- Clamp container by page boundaries ---
+  // Max width/height the container can have based on its new position and page size
+  const maxAllowedW = isFinite(pageWidth) ? pageWidth - finalContainerAbsX : Infinity;
+  const maxAllowedH = isFinite(pageHeight) ? pageHeight - finalContainerAbsY : Infinity;
+
+  const finalContainerW = Math.max(padding * 2, Math.min(desiredContainerW, maxAllowedW));
+  const finalContainerH = Math.max(padding * 2, Math.min(desiredContainerH, maxAllowedH));
+
+  // --- Translate points to be relative to the new container's padded origin ---
+  // The origin for relative points should be (padding, padding) inside the new container.
+  // A point's original absolute X was: currentAbsX + p.x
+  // Its new absolute X should be: finalContainerAbsX + new_relative_x
+  // We want the visual content (e.g., visualMinX) to now be effectively at 'padding'
+  // relative to the new container's (0,0).
+  // Translation: shift such that original visualMinX now corresponds to 'padding'.
+  const translateX = padding - visualMinX;
+  const translateY = padding - visualMinY;
 
   const relativePoints = points.map(p => {
-    const relativePoint = {
-      ...p, // Copy other properties
+    const rp = {
+      ...p, // Copy other properties like cp1UserSet, cp2UserSet, element
       x: p.x + translateX,
       y: p.y + translateY,
     };
-    // Translate control points
-    if (relativePoint.cp1x != null) { relativePoint.cp1x += translateX; }
-    if (relativePoint.cp1y != null) { relativePoint.cp1y += translateY; }
-    if (relativePoint.cp2x != null) { relativePoint.cp2x += translateX; }
-    if (relativePoint.cp2y != null) { relativePoint.cp2y += translateY; }
-    delete relativePoint.element;
-    return relativePoint;
+    if (rp.cp1x != null) { rp.cp1x += translateX; }
+    if (rp.cp1y != null) { rp.cp1y += translateY; }
+    if (rp.cp2x != null) { rp.cp2x += translateX; }
+    if (rp.cp2y != null) { rp.cp2y += translateY; }
+    delete rp.element; // Don't save DOM element references
+    return rp;
   });
 
   return {
     layout: {
-      x: newContainerX,
-      y: newContainerY,
-      w: Math.max(0, finalW), // Use clamped width
-      h: Math.max(0, finalH)  // Use clamped height
+      x: finalContainerAbsX,
+      y: finalContainerAbsY,
+      w: finalContainerW,
+      h: finalContainerH
     },
     relativePoints: relativePoints
   };

@@ -26,6 +26,8 @@ import { startDropletAnimation, startFlowAnimation } from './utils/animationUtil
 // 新增：导入布局工具函数 (更新导入的函数名)
 import { calculateLayoutUpdate } from './utils/layoutUtils'
 
+const PADDING = 10; // <--- 重新添加 PADDING 常量
+
 export default {
   name: 'FabricLine',
   props: {
@@ -158,16 +160,17 @@ export default {
     },
     // 新增：侦听线条形状变化
     lineShapeType() {
-      // this.updateLine(); // 重绘线条以应用新的形状 (这会在下面的流程中被调用)
-      this._renderControlHandles(); // 更新控制柄的显示
-      
-      // --- 新增：切换形状后重新计算布局并更新 ---
-      const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight);
+      this._renderControlHandles();
+      // --- 切换形状后重新计算布局并更新 (传入 PADDING) ---
+      const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight, PADDING);
       if (layoutUpdateResult) {
         // 更新内部 points 数组为新的相对坐标
         this.points = layoutUpdateResult.relativePoints.map((rp, idx) => {
           const existingPoint = this.points[idx]; 
-          return { ...existingPoint, ...rp }; 
+          return { 
+            ...existingPoint,
+            ...rp
+          }; 
         });
 
         // 手动更新 SVG 点元素的位置
@@ -1255,17 +1258,17 @@ export default {
       const parentH = this.pageHeight === Infinity ? window.innerHeight : this.pageHeight; // Fallback if prop not set
 
       return {
-        minX: -currentX,
-        minY: -currentY,
-        maxX: parentW - currentX,
-        maxY: parentH - currentY
+        minX: -currentX+10,
+        minY: -currentY+10,
+        maxX: parentW - currentX-10,
+        maxY: parentH - currentY-10
       };
     },
 
     // 新增：统一处理拖动结束后的布局更新
     _handleDragEndLayoutUpdate() {
-      // --- 使用新的布局计算函数 ---
-      const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight);
+      // --- 使用新的布局计算函数 (传入 PADDING) ---
+      const layoutUpdateResult = calculateLayoutUpdate(this.points, this.config, this.lineShapeType, this.lineWidth, this.pageWidth, this.pageHeight, PADDING);
       
       if (layoutUpdateResult) {
         // 更新内部 points 数组为新的相对坐标
@@ -1311,6 +1314,7 @@ export default {
 }
 
 .drawing-area {
+
   width: 100%;
   height: 100%;
   background-color: transparent;
