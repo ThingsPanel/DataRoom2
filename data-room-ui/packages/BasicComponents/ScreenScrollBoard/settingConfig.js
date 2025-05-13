@@ -57,7 +57,11 @@ const customConfig = {
     indexHeader: '#',
     carousel: 'single',
     hoverPause: true,
-    columnConfig: []
+    columnConfig: [],
+    headerFontSize: 16,
+    dataFontSize: 14,
+    headerColor: '#FFFFFF',
+    dataColor: '#333333'
   }
 }
 export const dataConfig = {

@@ -7,6 +7,7 @@
       :key="updateKey"
       :class="{'light-theme':customTheme === 'light','auto-theme':customTheme =='dark'}"
       :config="option"
+      :style="boardStyle"
       @click="rowClick"
     />
   </div>
@@ -39,9 +40,29 @@ export default {
   computed: {
     option: {
       get () {
-        return { ...this.config.customize, data: this.config.option?.data, header: this.config.option?.header, columnWidth: this.config.option?.columnWidth, align: this.config.option?.align }
+        const {
+          dataFontSize, // 将作为 config.fontSize 传递
+          // headerFontSize, headerColor, dataColor 将通过 CSS 变量应用
+          ...restCustomize
+        } = this.config.customize
+        return {
+          ...restCustomize,
+          data: this.config.option?.data,
+          header: this.config.option?.header,
+          columnWidth: this.config.option?.columnWidth,
+          align: this.config.option?.align,
+          fontSize: dataFontSize // dv-scroll-board 通常用 fontSize 控制数据行字体大小
+        }
       },
       set () {}
+    },
+    boardStyle () {
+      return {
+        '--dv-header-text-color': this.config.customize.headerColor,
+        '--dv-data-text-color': this.config.customize.dataColor,
+        '--dv-header-font-size': `${this.config.customize.headerFontSize}px`,
+        '--dv-data-font-size': `${this.config.customize.dataFontSize}px`
+      }
     }
   },
   watch: {
@@ -125,7 +146,7 @@ export default {
 <style lang="scss" scoped>
 .light-theme{
   background-color: #ffffff;
-  color: #000000;
+  // color: #000000; // 移除或注释掉全局颜色，由 CSS 变量精确控制
 }
 .auto-theme{
   background-color: rgba(0,0,0,0);
@@ -141,6 +162,18 @@ export default {
     border-radius: 4px;
     box-shadow: 0px 0px 4px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+
+    // 应用 CSS 变量到 dv-scroll-board 内部元素
+    ::v-deep .dv-scroll-board {
+      .header .header-item { // 根据实际组件内部结构可能需要调整选择器
+        color: var(--dv-header-text-color);
+        font-size: var(--dv-header-font-size);
+      }
+      .rows .row-item .ceil { // 根据实际组件内部结构可能需要调整选择器
+        color: var(--dv-data-text-color);
+        font-size: var(--dv-data-font-size);
+      }
+    }
   }
   .title-box{
     height: 40px;
