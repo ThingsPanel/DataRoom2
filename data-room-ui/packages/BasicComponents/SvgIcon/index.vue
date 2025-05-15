@@ -58,4 +58,11 @@ export default {
     mask-size: cover!important;
     display: inline-block;
   }
+  
+  /* 强制所有SVG的stroke属性使用currentColor */
+  .icon-svg >>> svg, 
+  .icon-svg >>> path, 
+  .icon-svg >>> g {
+    stroke: currentColor !important;
+  }
 </style>

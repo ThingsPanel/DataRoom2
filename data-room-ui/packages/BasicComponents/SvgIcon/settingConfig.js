@@ -2,36 +2,20 @@ import { commonConfig, displayOption } from 'data-room-ui/js/config'
 
 // SettingConfig defines the overall structure for the settings panel tabs and sections
 export const settingConfig = {
-  // No theme-specific or direct value settings at this top level for SvgIcon,
-  // as core values are in customConfig.customize.
-  // General panel structure:
+
   legend: false,
-  isGroup: false, // Not typically a groupable item unless specifically designed for it
-  data: [], // SvgIcon does not use datasets directly
-  label: false, // No data labels
-  seriesField: '', // No series field
-
-  // Controls which standard sections/fields are visible in the settings panel
+  isGroup: false,
+  data: [], 
+  label: {
+    position: 'top', 
+    content: ''
+  },
+  seriesField: '', 
   displayOption: {
-    ...displayOption, // Spread common/default display options
-
-    // Disable data-related fields as they are not applicable to SvgIcon
-    dataSource: { enable: false },
+    ...displayOption, 
     dataAllocation: { enable: false },
     dataSourceType: { enable: false },
-    params: { enable: false },
-    metricField: { enable: false },
-    dimensionField: { enable: false },
-    // text: { enable: false }, // SvgIcon doesn't have a primary 'text' content like Texts component
-    // expression: { enable: false }, // SvgIcon doesn't use expressions in this context
-
-    // Enable basic styling sections if they are globally handled and make sense for SvgIcon
-    // (e.g., opacity, visibility, position - which are often part of commonConfig or root)
-    basicStyle: { enable: true }, // Example: if this controls general visibility, tooltip, etc.
-    componentBorder: { enable: true } // Example: if a standard border can be applied from the panel
   }
-  // Other top-level config sections like 'interaction', 'advanced' could be here
-  // if defined by the common structure and applicable.
 }
 
 // CustomConfig holds the default values for the component's specific properties

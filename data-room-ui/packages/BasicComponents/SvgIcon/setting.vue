@@ -8,6 +8,11 @@
         label-position="left"
         class="setting-body bs-el-form"
       >
+          <SettingTitle>位置</SettingTitle>
+          <div class="lc-field-body">
+            <PosWhSetting :config="config" />
+            1
+          </div>
         <SettingTitle>图标属性</SettingTitle>
         <div class="lc-field-body">
           <el-form-item label="图标颜色">
@@ -16,13 +21,11 @@
               :predefine="predefineThemeColors"
             />
           </el-form-item>
-          
-        
         </div>
       </el-form>
 
       <!-- 平铺的图标选择器 -->
-      <div  class="icon-selector-panel">
+      <div class="icon-selector-panel">
         <SettingTitle>图标选择</SettingTitle>
         <div class="icon-selector">
           <!-- 搜索框 -->
@@ -35,31 +38,45 @@
             ></el-input>
           </div>
           
-          <!-- 主分类选择 -->
-          <div class="main-categories">
-            <div 
-              v-for="mainCategory in mainCategories" 
-              :key="mainCategory"
-              class="main-category-tab"
-              :class="{ 'active': selectedMainCategory === mainCategory }"
-              @click="selectMainCategory(mainCategory)"
-            >
-              {{ mainCategory }}
+          <!-- 分类选择下拉框 -->
+          <div class="category-selects">
+            <!-- 主分类下拉框 -->
+            <div class="category-item">
+              <div class="category-label">主分类</div>
+              <el-select 
+                v-model="selectedMainCategory" 
+                placeholder="选择主分类"
+                @change="handleMainCategoryChange"
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="mainCategory in mainCategories"
+                  :key="mainCategory"
+                  :label="mainCategory"
+                  :value="mainCategory"
+                ></el-option>
+              </el-select>
+            </div>
+            
+            <!-- 子分类下拉框 -->
+            <div class="category-item" v-if="subCategories.length > 0">
+              <div class="category-label">子分类</div>
+              <el-select 
+                v-model="selectedSubCategory" 
+                placeholder="选择子分类"
+                clearable
+                style="width: 100%"
+              >
+                <el-option
+                  v-for="subCategory in subCategories"
+                  :key="subCategory"
+                  :label="subCategory"
+                  :value="subCategory"
+                ></el-option>
+              </el-select>
             </div>
           </div>
-          
-          <!-- 子分类选择 -->
-          <div v-if="!searchQuery && subCategories.length > 0" class="sub-categories">
-            <div 
-              v-for="subCategory in subCategories" 
-              :key="subCategory"
-              class="sub-category-tab"
-              :class="{ 'active': selectedSubCategory === subCategory }"
-              @click="selectSubCategory(subCategory)"
-            >
-              {{ subCategory }}
-            </div>
-          </div>
+    
           
           <!-- 图标列表 -->
           <div class="icons-container">
@@ -101,12 +118,15 @@ import SettingTitle from 'data-room-ui/SettingTitle/index.vue'
 import ColorPicker from 'data-room-ui/ColorPicker/index.vue'
 import { predefineColors } from "data-room-ui/js/utils/colorList"
 import iconsManifest from './iconsManifest.json'
+import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting.vue'
+
 
 export default {
   name: 'SvgIconSetting',
   components: {
     SettingTitle,
     ColorPicker,
+    PosWhSetting,
   },
   data() {
     return {
@@ -125,7 +145,7 @@ export default {
     
     // 默认选中第一个主分类
     if (this.mainCategories.length > 0) {
-      this.selectMainCategory(this.mainCategories[0]);
+      this.selectedMainCategory = this.mainCategories[0];
     }
   },
   computed: {
@@ -214,26 +234,14 @@ export default {
       this.categoryStructure = structure;
     },
     
-    // 选择主分类
-    selectMainCategory(mainCategory) {
-      this.selectedMainCategory = mainCategory;
-      this.selectedSubCategory = ''; // 清空子分类选择
-    },
-    
-    // 选择子分类
-    selectSubCategory(subCategory) {
-      this.selectedSubCategory = subCategory;
-    },
-    
-    // 切换图标选择器显示状态
-    toggleIconSelector() {
-      this.showIconSelector = !this.showIconSelector;
+    // 选择主分类时清空子分类
+    handleMainCategoryChange() {
+      this.selectedSubCategory = '';
     },
     
     // 选择图标
     selectIcon(icon) {
       this.config.customize.iconClass = icon.name;
-      // 选择后不关闭图标选择器，方便用户继续选择
     }
   }
 }
@@ -250,7 +258,7 @@ export default {
 .icon-preview-box {
   display: flex;
   align-items: center;
-  margin-top: 10px;
+  margin: 10px 0;
   padding: 8px;
   border: 1px dashed #ddd;
   border-radius: 4px;
@@ -269,9 +277,9 @@ export default {
 }
 
 .icon-selector-panel {
-  margin-top: 16px;
-  border-top: 1px solid #ebeef5;
-  padding-top: 16px;
+  margin-top: 2px;
+
+  padding-top:2px;
 }
 
 .icon-selector {
@@ -281,70 +289,28 @@ export default {
     margin-bottom: 15px;
   }
   
-  .main-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  .category-selects {
     margin-bottom: 15px;
     
-    .main-category-tab {
-      padding: 6px 12px;
-      border: 1px solid #dcdfe6;
-      border-radius: 4px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
+    .category-item {
+      margin-bottom: 12px;
       
-      &:hover {
-        border-color: #c6e2ff;
-        color: #409eff;
-      }
-      
-      &.active {
-        background-color: #409eff;
-        color: #ffffff;
-        border-color: #409eff;
-      }
-    }
-  }
-  
-  .sub-categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 15px;
-    padding: 10px;
-    background-color: #f5f7fa00;
-    border-radius: 4px;
-    border: 1px solid #e4e7ed;
-    .sub-category-tab {
-      padding: 4px 10px;
-      border: 1px solid #e4e7ed;
-      border-radius: 3px;
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.3s;
-      background-color: #7c7c7c;
-      
-      &:hover {
-        border-color: #c6e2ff;
-        color: #409eff;
-      }
-      
-      &.active {
-        background-color: #ecf5ff;
-        color: #409eff;
-        border-color: #409eff;
+      .category-label {
+        margin-bottom: 5px;
+        color: #606266;
+        font-size: 14px;
+        line-height: 1;
       }
     }
   }
   
   .icons-container {
     margin-bottom: 15px;
+    max-height: 400px;
     
     .no-icons-message {
       display: flex;
-      height: 100%;
+      height: 100px;
       align-items: center;
       justify-content: center;
       color: #909399;
@@ -354,7 +320,7 @@ export default {
   
   .icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
     gap: 12px;
     padding: 10px;
     
@@ -371,11 +337,13 @@ export default {
       &:hover {
         border-color: #c0c4cc;
         background-color: #f5f7fa;
+        color: #409eff;
       }
       
       &.is-selected {
         border-color: #409eff;
         background-color: #ecf5ff;
+        color: #409eff;
       }
       
       .icon-image {
@@ -405,3 +373,4 @@ export default {
   }
 }
 </style>
+
