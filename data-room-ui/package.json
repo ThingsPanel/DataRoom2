@@ -139,6 +139,8 @@
     "husky": "^4.2.5",
     "increase-memory-limit": "^1.0.7",
     "jest": "^27.1.0",
+    "less": "^4.3.0",
+    "less-loader": "^12.3.0",
     "lint-staged": "^10.2.11",
     "runjs": "^4.3.2",
     "script-ext-html-webpack-plugin": "2.1.3",

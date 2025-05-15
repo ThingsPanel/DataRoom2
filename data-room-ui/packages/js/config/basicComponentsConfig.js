@@ -36,6 +36,7 @@ const typeList = [
   'rectangle', // 矩形
   'fabricLine',
   'svgLine', // SVG线条
+  'svgIcon', // SVG图标
  
   // 4. 媒体展示类 - 媒体和嵌入元素
   'picture', // 图片

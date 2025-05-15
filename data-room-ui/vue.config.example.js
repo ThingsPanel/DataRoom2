@@ -182,6 +182,7 @@ const originalConfig = {
       .add(resolve('packages/assets/images/bigScreenIcon/svg'))
       .add(resolve('packages/Svgs/svg'))
       .add(resolve('packages/assets/images/alignIcon/svg'))
+      .add(resolve('packages/BasicComponents/SvgIcon/icons'))
       .end()
 
     config.module
@@ -192,6 +193,7 @@ const originalConfig = {
       .add(resolve('packages/assets/images/bigScreenIcon/svg'))
       .add(resolve('packages/Svgs/svg'))
       .add(resolve('packages/assets/images/alignIcon/svg'))
+      .add(resolve('packages/BasicComponents/SvgIcon/icons'))
       .end()
       .use('svg-sprite-loader')
       .loader('svg-sprite-loader')

@@ -233,6 +233,19 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+    case 'svgIcon': // SVG 图标
+      return {
+        name: 'SVG图标',
+        title: 'SVG图标',
+        icon: Icon.getNameList()[5], // Placeholder icon, adjust as needed
+        className:
+          'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 100, // Default width on canvas
+        h: 100, // Default height on canvas
+        x: 0,
+        y: 0,
+        type
+      }
 
     // 4. 媒体展示类
     case 'picture': // 图片
