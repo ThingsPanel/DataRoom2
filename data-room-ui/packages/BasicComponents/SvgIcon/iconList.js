@@ -1,153 +1,44 @@
-import { getAvailableIcons, getIconCategory } from './svgLoader';
-
 /**
- * 多级分类结构定义
- * 根据目录结构自动生成图标元数据
+ * 图标列表管理
+ * 从iconsManifest.json加载图标数据
  */
 
-// 从文件名和图标目录生成图标元数据
-function generateIconMetadataFromFileName(iconFullName) {
-  // 解析iconName，格式：category-name
-  const parts = iconFullName.split('-');
-  if (parts.length < 2) {
-    return {
-      name: iconFullName,
-      path: ['其他'],
-      id: iconFullName
-    };
-  }
-
-  const category = parts[0];
-  const iconName = parts.slice(1).join('-');
-  
-  // 根据目录结构映射中文分类
-  let path = [];
-  switch(category) {
-    case '常用':
-      path = ['常用'];
-      break;
-    case '工程':
-      path = ['工程'];
-      break;
-    case 'IT&互联网':
-      path = ['IT&互联网'];
-      break;
-    case '智慧城市':
-      path = ['智慧城市'];
-      break;
-    case '电力':
-      path = ['电力'];
-      break;
-    case '能源':
-      path = ['能源'];
-      break;
-    case 'actions':
-      path = ['操作类'];
-      break;
-    case 'arrows':
-      path = ['箭头类'];
-      break;
-    default:
-      path = ['其他'];
-  }
-
-  // 生成更人性化的显示名称
-  let displayName = iconName.replace(/-/g, ' ');
-  // 首字母大写
-  displayName = displayName.charAt(0).toUpperCase() + displayName.slice(1);
-
-  return {
-    name: displayName,
-    path: path,
-    id: iconFullName
-  };
+// 导入清单文件
+let iconManifest = [];
+try {
+  iconManifest = require('./iconsManifest.json');
+  console.log(`成功加载图标清单，包含 ${iconManifest.length} 个图标`);
+} catch (e) {
+  console.warn('无法加载图标清单，可能需要先运行 scanIcons.js');
+  iconManifest = [];
 }
 
-// 预定义的图标元数据，可以覆盖自动生成的元数据
-const predefinedIconMetadata = {
-  // 操作类图标
-  'actions-check': {
-    name: '勾选',
-    path: ['操作类'],
-    id: 'actions-check'
-  },
-  'actions-close': {
-    name: '关闭',
-    path: ['操作类'],
-    id: 'actions-close'
-  },
-  'actions-edit': {
-    name: '编辑',
-    path: ['操作类'],
-    id: 'actions-edit'
-  },
-  'actions-delete': {
-    name: '删除',
-    path: ['操作类'],
-    id: 'actions-delete'
-  },
+// 处理图标数据，生成更友好的结构
+const processIconData = (icon) => {
+  if (!icon || !icon.id) return null;
   
-  // 箭头类图标
-  'arrows-left': {
-    name: '左箭头',
-    path: ['箭头类'],
-    id: 'arrows-left'
-  },
-  'arrows-right': {
-    name: '右箭头',
-    path: ['箭头类'],
-    id: 'arrows-right'
-  },
-  'arrows-up': {
-    name: '上箭头',
-    path: ['箭头类'],
-    id: 'arrows-up'
-  },
-  'arrows-down': {
-    name: '下箭头',
-    path: ['箭头类'],
-    id: 'arrows-down'
-  },
+  // 处理分类路径
+  const pathParts = icon.category ? icon.category.split('\\') : ['常用'];
   
-  // 电力类图标示例
-  '电力-总览': {
-    name: '电力总览',
-    path: ['电力', '概览'],
-    id: '电力-总览'
-  },
-  '电力-变压器': {
-    name: '变压器',
-    path: ['电力', '设备'],
-    id: '电力-变压器'
-  },
-  '电力-火电-发电机': {
-    name: '火电发电机',
-    path: ['电力', '火电', '设备'],
-    id: '电力-火电-发电机'
-  },
+  // 生成显示名称
+  const displayName = icon.name || '';
   
-  // 能源类图标示例
-  '能源-石油': {
-    name: '石油',
-    path: ['能源', '化石能源'],
-    id: '能源-石油'
-  }
+  return {
+    name: displayName,
+    path: pathParts,
+    id: icon.id,
+    category: icon.category || '常用'
+  };
 };
 
-// 导出图标列表，基于svgLoader中的可用图标和元数据定义
-export const iconList = getAvailableIcons().map(iconName => {
-  // 如果有预定义的元数据，使用预定义的
-  if (predefinedIconMetadata[iconName]) {
-    return predefinedIconMetadata[iconName];
-  }
-  
-  // 否则，根据文件名生成元数据
-  return generateIconMetadataFromFileName(iconName);
-}).filter(icon => !!icon); // 过滤掉无效图标
+// 生成图标列表
+export const iconList = iconManifest
+  .map(processIconData)
+  .filter(Boolean);
 
 /**
  * 生成分类树结构
- * @returns {Array} 分类树结构
+ * @returns {Object} 包含树结构和分类映射的对象
  */
 export function generateCategoryTree() {
   const tree = [];
@@ -156,7 +47,7 @@ export function generateCategoryTree() {
   // 构建分类树
   iconList.forEach(icon => {
     let currentLevel = tree;
-    const path = icon.path || ['其他'];
+    const path = icon.path || ['常用'];
     
     // 遍历路径创建或查找节点
     for (let i = 0; i < path.length; i++) {
@@ -190,7 +81,15 @@ export function generateCategoryTree() {
   return { tree, categoryMap };
 }
 
-// 导出分类树和分类映射
+// 生成分类树和映射
 const { tree: categoryTree, categoryMap } = generateCategoryTree();
 export const categoryHierarchy = categoryTree;
-export const categoriesMap = categoryMap; 
+export const categoriesMap = categoryMap;
+
+// 导出默认对象
+export default {
+  iconList,
+  categoryHierarchy,
+  categoriesMap,
+  generateCategoryTree
+};

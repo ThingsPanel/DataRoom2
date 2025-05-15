@@ -30,15 +30,21 @@ function scanDirectory(dir) {
       // 读取SVG文件内容
       try {
         const content = fs.readFileSync(fullPath, 'utf8');
-        const category = path.relative(ICONS_DIR, dir);
+        // 使用相对路径
+        const relativePath = path.relative(ICONS_DIR, fullPath).replace(/\\/g, '/');
+        const category = path.dirname(relativePath) !== '.' ? path.dirname(relativePath) : '';
         const iconName = item.name.replace('.svg', '');
         
+        // 生成ID：使用目录层次作为前缀
+        const idParts = category ? category.split('/') : [];
+        idParts.push(iconName);
+        const iconId = idParts.join('-');
+        
         results.push({
-          path: fullPath,
-          category: category || path.basename(dir),
+          path: relativePath,  // 相对路径，方便跨平台
+          category: category || '常用',
           name: iconName,
-          id: category ? `${category}-${iconName}` : iconName,
-          content: content
+          id: iconId
         });
       } catch (err) {
         console.error(`读取文件 ${fullPath} 失败:`, err);
@@ -152,9 +158,12 @@ function generatePreviewHtml(icons) {
 `;
     
     categoryIcons.forEach(icon => {
+      // 这里不再直接使用icon.content，因为我们不再存储内容
       html += `
       <div class="icon-item">
-        <div class="icon-preview">${icon.content}</div>
+        <div class="icon-preview">
+          <img src="icons/${icon.path}" alt="${icon.name}" style="max-width:100%; max-height:100%;">
+        </div>
         <div class="icon-name">${icon.name}</div>
         <div class="icon-id">${icon.id}</div>
       </div>
@@ -194,15 +203,10 @@ function main() {
       return;
     }
     
-    // 创建不包含完整内容的图标清单（避免文件过大）
-    const iconManifest = icons.map(({ path, category, name, id }) => ({
-      path, category, name, id
-    }));
-    
     // 输出JSON清单
     fs.writeFileSync(
       OUTPUT_FILE,
-      JSON.stringify(iconManifest, null, 2),
+      JSON.stringify(icons, null, 2),
       'utf8'
     );
     console.log(`已生成图标清单: ${OUTPUT_FILE}`);

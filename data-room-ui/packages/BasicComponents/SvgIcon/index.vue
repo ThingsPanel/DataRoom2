@@ -4,14 +4,10 @@
     :style="containerStyle"
   >
     <div 
-      v-if="config && config.customize && config.customize.iconClass"
       class="icon-svg"
       :style="iconSvgStyle"
-      v-html="getSvgContent()"
+      v-html="svgContent"
     ></div>
-    <div v-else class="icon-placeholder">
-      未选择图标或配置错误
-    </div>
   </div>
 </template>
 
@@ -19,17 +15,19 @@
 import commonMixins from 'data-room-ui/js/mixins/commonMixins'
 import linkageMixins from 'data-room-ui/js/mixins/linkageMixins'
 import { mapState } from 'vuex'
-import { iconList } from './iconList'
-import { getSvgIcon } from './svgLoader'
-// predefineColors 似乎没有在这个组件中直接使用，如果后续配置面板也不需要，可以考虑移除
-// import {predefineColors} from "data-room-ui/js/utils/colorList";
 
-// SVG图标内容 - 直接硬编码
+// 直接引入SVG内容
+const officeSvg = '<svg data-v-9833e8b2="" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="25" height="20"><g data-v-9833e8b2=""><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m28.1,1l83.5,0l0,47.4l-83.5,0l0,-47.4l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m34.9,7.8l70,0l0,33.9l-70,0l0,-33.9l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m95.9,56.3l0,4.5l-49.7,0l0,-4.5l20.3,0l0,-5.6l9,0l0,5.6l20.4,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m130.9,150l0,-72.3l-110.7,0l0,72.3l-19.2,0l0,-89.2l188.5,0l0,89.2l-58.6,0l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m137.6,77.7l45.2,0l0,13.5l-45.2,0l0,-13.5l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m160.2,82.3c1.2,0 2.3,1 2.3,2.3c0,1.2 -1,2.3 -2.3,2.3c-1.2,0 -2.3,-1 -2.3,-2.3c0.1,-1.3 1.1,-2.3 2.3,-2.3l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m137.6,93.6l45.2,0l0,13.5l-45.2,0l0,-13.5l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m160.2,98.1c1.2,0 2.3,1 2.3,2.3c0,1.2 -1,2.3 -2.3,2.3c-1.2,0 -2.3,-1 -2.3,-2.3c0.1,-1.3 1.1,-2.3 2.3,-2.3l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m137.6,109.4l45.2,0l0,13.5l-45.2,0l0,-13.5l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m160.2,113.9c1.2,0 2.3,1 2.3,2.3c0,1.2 -1,2.3 -2.3,2.3c-1.2,0 -2.3,-1 -2.3,-2.3c0.1,-1.3 1.1,-2.3 2.3,-2.3l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m137.6,125.2l45.2,0l0,13.5l-45.2,0l0,-13.5l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path><path data-v-9833e8b2="" transform="scale(0.13157894736842105)" fill="none" stroke="rgba(68, 83, 109, 1)" paint-order="fill stroke markers" d="m160.2,129.7c1.2,0 2.3,1 2.3,2.3c0,1.2 -1,2.3 -2.3,2.3c-1.2,0 -2.3,-1 -2.3,-2.3c0.1,-1.3 1.1,-2.3 2.3,-2.3l0,0z" stroke-width="5" stroke-miterlimit="10" stroke-dasharray=""></path></g></svg>';
+
+// 基本SVG图标库
 const svgIcons = {
   'check': '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M406.656 706.944L195.84 496.256a32 32 0 1 0-45.248 45.248l237.44 237.44a32 32 0 0 0 45.248 0l454.656-454.656a32 32 0 1 0-45.248-45.248L406.592 706.944h.064z"></path></svg>',
-  'arrow-left': '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M609.408 149.376 277.76 489.6a32 32 0 0 0 0 44.672l331.648 340.352a32 32 0 0 0 45.696-44.544L346.24 512l308.864-318.08a32 32 0 0 0-45.696-44.544z"></path></svg>'
-  // 可以根据需要添加更多图标
+  'arrow-left': '<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg"><path d="M609.408 149.376 277.76 489.6a32 32 0 0 0 0 44.672l331.648 340.352a32 32 0 0 0 45.696-44.544L346.24 512l308.864-318.08a32 32 0 0 0-45.696-44.544z"></path></svg>',
+  '智慧城市/智慧交通/办公用电': officeSvg
 };
+
+// 缓存已加载的SVG
+const svgCache = {};
 
 export default {
   name: 'SvgIcon',
@@ -38,24 +36,21 @@ export default {
     config: {
       type: Object,
       default: () => ({
-        // 确保有一个默认的 customize 结构，防止初始渲染时出错
         customize: {
-          iconClass: 'check', // 默认图标
+          iconClass: '智慧城市/智慧交通/办公用电', // 默认图标路径
           color: '#333333',
           size: '32px'
         },
-        w: 50, // 默认宽度
-        h: 50  // 默认高度
+        w: 50,
+        h: 50
       })
     }
-    // predefineThemeColors 移除了，因为它在 index.vue 中未使用
   },
   computed: {
     ...mapState({
-      // chartList: state => state.bigScreen.pageInfo.chartList // 如果不直接使用 chartList，可以移除
+      // chartList: state => state.bigScreen.pageInfo.chartList
     }),
     containerStyle() {
-      // 使用组件自身的宽高配置来控制容器大小
       return {
         width: `${this.config.w || 50}px`,
         height: `${this.config.h || 50}px`,
@@ -65,34 +60,50 @@ export default {
       };
     },
     iconSvgStyle() {
-      let size = '32px'; // 默认大小
+      let size = '32px';
       if (this.config && this.config.customize && this.config.customize.size) {
-        // 简单处理，如果用户输入不带单位，则默认为 px
         size = /^\d+$/.test(this.config.customize.size) ? `${this.config.customize.size}px` : this.config.customize.size;
       }
       
-      // 允许使用百分比，相对于容器大小
       const isPercentageSize = size.includes('%');
+      const color = (this.config && this.config.customize && this.config.customize.color) ? this.config.customize.color : '#333333';
 
       return {
-        fill: (this.config && this.config.customize && this.config.customize.color) ? this.config.customize.color : '#333333',
-        width: isPercentageSize ? size : (this.config.w && this.config.h ? '100%' : size) , // 如果是百分比，则使用它，否则如果容器有大小，则100%填充，否则使用具体size
+        color: color,
+        stroke: color,
+        fill: color,
+        width: isPercentageSize ? size : (this.config.w && this.config.h ? '100%' : size),
         height: isPercentageSize ? size : (this.config.w && this.config.h ? '100%' : size),
-        maxWidth: `${this.config.w || 50}px`, // 防止SVG超出容器
-        maxHeight: `${this.config.h || 50}px` // 防止SVG超出容器
+        maxWidth: `${this.config.w || 50}px`,
+        maxHeight: `${this.config.h || 50}px`
       };
+    },
+    svgContent() {
+      const iconPath = this.config?.customize?.iconClass || '智慧城市/智慧交通/办公用电';
+      
+      // 检查是否已有预定义图标
+      if (svgIcons[iconPath]) {
+        return svgIcons[iconPath];
+      }
+      
+      // 尝试从缓存获取
+      if (svgCache[iconPath]) {
+        return svgCache[iconPath];
+      }
+      
+      // 如果是有效路径，返回占位符
+      return `<svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <rect width="1024" height="1024" fill="none" stroke="currentColor" stroke-width="2" />
+        <text x="512" y="512" font-size="32" text-anchor="middle" alignment-baseline="middle" fill="currentColor">${iconPath}</text>
+      </svg>`;
     }
   },
-  mounted () {
-    // console.log("SvgIcon config on mount:", JSON.parse(JSON.stringify(this.config)));
-  },
-  methods: {
-    getSvgContent() {
-      if (this.config && this.config.customize && this.config.customize.iconClass) {
-        const iconName = this.config.customize.iconClass;
-        return getSvgIcon(iconName);
+  watch: {
+    'config.customize.iconClass': {
+      handler(newVal) {
+        // 当图标路径改变时，可以在这里添加加载逻辑
+        console.log('Icon path changed:', newVal);
       }
-      return getSvgIcon('check'); // 默认使用check图标
     }
   }
 }
@@ -100,18 +111,15 @@ export default {
 
 <style lang="scss" scoped>
 .svg-icon-viewer {
-  // 移除之前调试用的 padding 和 font-family
-  // width: 100%; // 改为由 config.w 控制
-  // height: 100%; // 改为由 config.h 控制
-  // padding: 10px;
-  // box-sizing: border-box;
-  // font-family: 'Courier New', Courier, monospace; 
-  overflow: hidden; // 确保SVG不会溢出容器
+  overflow: hidden;
 }
 
 .icon-svg {
-  display: inline-block; // 或者 block，取决于布局需求
-  vertical-align: middle; // 如果是inline-block，有助于对齐
+  display: inline-block;
+  vertical-align: middle;
+  width: 100%;
+  height: 100%;
+  
   :deep(svg) {
     width: 100%;
     height: 100%;
