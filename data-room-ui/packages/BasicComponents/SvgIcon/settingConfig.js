@@ -50,8 +50,7 @@ const customConfig = {
   // Customize object holds the specific, unique properties of the SvgIcon
   customize: {
     iconClass: 'check',     // Default icon ID (e.g., filename without extension, like 'check' for 'check.svg')
-    color: '#333333',       // Default icon color
-    size: '32px',          // Default icon size (e.g., "32px", "2em")
+    color: '#333333',       // Default icon color         // Default icon size (e.g., "32px", "2em")
     // className: ''       // Optional: if you want to allow users to add custom CSS classes to the SvgIcon wrapper
   }
 }

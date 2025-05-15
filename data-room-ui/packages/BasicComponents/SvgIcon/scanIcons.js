@@ -27,27 +27,20 @@ function scanDirectory(dir) {
       const subResults = scanDirectory(fullPath);
       results.push(...subResults);
     } else if (item.isFile() && item.name.endsWith('.svg')) {
-      // 读取SVG文件内容
+      // 读取SVG文件
       try {
-        const content = fs.readFileSync(fullPath, 'utf8');
         // 使用相对路径
         const relativePath = path.relative(ICONS_DIR, fullPath).replace(/\\/g, '/');
         const category = path.dirname(relativePath) !== '.' ? path.dirname(relativePath) : '';
         const iconName = item.name.replace('.svg', '');
         
-        // 生成ID：使用目录层次作为前缀
-        const idParts = category ? category.split('/') : [];
-        idParts.push(iconName);
-        const iconId = idParts.join('-');
-        
+        // 简化的数据结构，只保留分类和名称
         results.push({
-          path: relativePath,  // 相对路径，方便跨平台
           category: category || '常用',
-          name: iconName,
-          id: iconId
+          name: iconName
         });
       } catch (err) {
-        console.error(`读取文件 ${fullPath} 失败:`, err);
+        console.error(`处理文件 ${fullPath} 失败:`, err);
       }
     }
   }
@@ -130,11 +123,6 @@ function generatePreviewHtml(icons) {
       white-space: nowrap;
       width: 100%;
     }
-    .icon-id {
-      font-size: 10px;
-      color: #666;
-      margin-top: 5px;
-    }
     .stats {
       text-align: center;
       margin-bottom: 20px;
@@ -158,14 +146,13 @@ function generatePreviewHtml(icons) {
 `;
     
     categoryIcons.forEach(icon => {
-      // 这里不再直接使用icon.content，因为我们不再存储内容
+      const iconPath = `${icon.category}/${icon.name}.svg`.replace(/^\//, '');
       html += `
       <div class="icon-item">
         <div class="icon-preview">
-          <img src="icons/${icon.path}" alt="${icon.name}" style="max-width:100%; max-height:100%;">
+          <img src="icons/${iconPath}" alt="${icon.name}" style="max-width:100%; max-height:100%;">
         </div>
         <div class="icon-name">${icon.name}</div>
-        <div class="icon-id">${icon.id}</div>
       </div>
 `;
     });
