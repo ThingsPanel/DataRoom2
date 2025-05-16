@@ -16,6 +16,19 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+      case 'texts10':        // 文本
+      return {
+        name: '文本10',
+        title: '文本10',
+        icon: Icon.getNameList()[0],
+        className:
+          'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
     case 'numbers': // 数字
       return {
         name: '数字',

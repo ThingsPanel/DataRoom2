@@ -20,7 +20,7 @@ export default {
         // 兼容边框配置
         pageInfo.chartList.forEach((chart) => {
           // 对数据源的方式进行兼容
-          if (chart.dataSource && ['texts', 'numbers'].includes(chart.type)) {
+          if (chart.dataSource && ['texts', 'numbers', 'texts10'].includes(chart.type)) {
             if (chart.dataSource.source === 'dataset' && (!chart.dataSource.businessKey)) {
               chart.dataSource.source = 'static'
             }

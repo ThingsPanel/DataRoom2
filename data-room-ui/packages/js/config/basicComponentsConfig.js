@@ -14,6 +14,7 @@ import { setModules, dataModules } from 'data-room-ui/js/utils/configImport'
 const typeList = [
   // 1. 基础文本类 - 数据展示类
   'texts', // 文本组件
+  'texts10', // 文本组件10
   'numbers', // 数字组件
   'marquee', // 跑马灯/文字滚动
   'currentTime', // 当前时间
