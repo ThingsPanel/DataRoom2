@@ -293,7 +293,6 @@ export default {
           this.keyList = []
         }
       } catch (error) {
-        console.error('获取设备指标数据失败:', error)
         Message.error('获取设备指标数据失败')
       } finally {
         this.loading = false

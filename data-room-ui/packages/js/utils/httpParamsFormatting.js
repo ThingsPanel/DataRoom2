@@ -102,7 +102,6 @@ function replaceParams (customConfig) {
     newConfig.params = evalArrFunc(newConfig.paramsList, newConfig.params)
     newConfig.body = evalStrFunc(newConfig.paramsList, newConfig.body)
   } catch (error) {
-    console.error('参数替换错误:', error)
   }
   return newConfig
 }
@@ -120,7 +119,6 @@ function evalStrFunc (paramsList, string) {
     })
     return processedString
   } catch (error) {
-    console.error('字符串参数处理错误:', error)
     return string || ''
   }
 }
@@ -156,7 +154,6 @@ function evalArrFunc (paramsList, arr) {
     }, {})
     return result
   } catch (error) {
-    console.error('数组参数处理错误:', error)
     return {}
   }
 }

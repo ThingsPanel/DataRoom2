@@ -40,7 +40,6 @@ function scanDirectory(dir) {
           name: iconName
         });
       } catch (err) {
-        console.error(`处理文件 ${fullPath} 失败:`, err);
       }
     }
   }
@@ -173,12 +172,10 @@ function generatePreviewHtml(icons) {
 
 // 主函数
 function main() {
-  console.log(`扫描图标目录: ${ICONS_DIR}`);
   
   try {
     // 检查图标目录是否存在
     if (!fs.existsSync(ICONS_DIR)) {
-      console.error('错误: 图标目录不存在!');
       return;
     }
     
@@ -186,7 +183,6 @@ function main() {
     const icons = scanDirectory(ICONS_DIR);
     
     if (icons.length === 0) {
-      console.warn('警告: 未找到任何SVG图标!');
       return;
     }
     
@@ -196,23 +192,18 @@ function main() {
       JSON.stringify(icons, null, 2),
       'utf8'
     );
-    console.log(`已生成图标清单: ${OUTPUT_FILE}`);
-    
+
     // 生成HTML预览
     const previewHtml = generatePreviewHtml(icons);
     fs.writeFileSync(PREVIEW_FILE, previewHtml, 'utf8');
-    console.log(`已生成预览HTML: ${PREVIEW_FILE}`);
     
     // 输出统计信息
     const categories = [...new Set(icons.map(icon => icon.category))];
-    console.log(`总计找到 ${icons.length} 个SVG图标，分布在 ${categories.length} 个分类中:`);
     categories.forEach(category => {
       const count = icons.filter(icon => icon.category === category).length;
-      console.log(`- ${category}: ${count} 个图标`);
     });
     
   } catch (error) {
-    console.error('扫描过程中发生错误:', error);
   }
 }
 

@@ -285,8 +285,6 @@ export default {
   },
   mounted () {
     this.nodeDrag()
-    console.log(this.menuList,"menuList")
-    console.log(this.menuList,"menuList")
   },
   methods: {
     ...mapMutations('bigScreen', ['changeActiveCode']),

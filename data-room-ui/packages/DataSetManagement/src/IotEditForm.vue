@@ -955,11 +955,9 @@ export default {
               // 确保数据路径设置正确
               this.setDataPath()
             } else {
-              console.error('获取数据集详情失败:', response)
               Message.error('获取数据集详情失败')
             }
           } catch (error) {
-            console.error('获取数据集详情出错:', error)
             Message.error('获取数据集详情出错')
           }
         } else {
@@ -1027,7 +1025,6 @@ export default {
         this.updateParams()
 
       } catch (error) {
-        console.error('初始化表单数据失败:', error)
       }
     },
 
@@ -1190,7 +1187,6 @@ export default {
         this.saveText = ''
         this.goBack()
       }).catch((error) => {
-        console.error('保存失败:', error)
         this.saveloading = false
         this.saveText = ''
         Message.error('保存失败')
@@ -1561,7 +1557,6 @@ export default {
             Message.success('执行成功')
             this.executeLoading = false
           }).catch((error) => {
-            console.error('执行失败:', error)
             Message.error('执行失败: ' + (error.message || '未知错误'))
             this.responseData = null
             this.executeLoading = false
@@ -1584,7 +1579,6 @@ export default {
             Message.success('执行成功')
             this.executeLoading = false
           }).catch((error) => {
-            console.error('执行失败:', error)
             Message.error('执行失败: ' + (error.message || '未知错误'))
             this.responseData = null
             this.executeLoading = false
@@ -1604,7 +1598,6 @@ export default {
             Message.success('执行成功')
             this.executeLoading = false
           }).catch((error) => {
-            console.error('执行失败:', error)
             Message.error('执行失败: ' + (error.message || '未知错误'))
             this.responseData = null
             this.executeLoading = false
@@ -1627,7 +1620,6 @@ export default {
             Message.success('执行成功')
             this.executeLoading = false
           }).catch((error) => {
-            console.error('执行失败:', error)
             Message.error('执行失败: ' + (error.message || '未知错误'))
             this.responseData = null
             this.executeLoading = false
@@ -1664,7 +1656,6 @@ export default {
 
         this.parsedResponseData = result
       } catch (error) {
-        console.error('解析响应数据失败:', error)
         this.parsedResponseData = null
       }
     },
@@ -1724,10 +1715,8 @@ export default {
           }
 
         } else {
-          console.error('获取设备列表响应为空')
         }
       } catch (error) {
-        console.error('获取设备列表失败:', error)
         this.deviceList = []
         this.filteredDeviceList = []
       } finally {
@@ -1875,7 +1864,6 @@ export default {
           }
         }
       } catch (error) {
-        console.error('获取设备数据标识失败:', error)
         Message.warning('获取设备数据标识失败: ' + (error.message || error))
       } finally {
         this.loading = false

@@ -79,7 +79,6 @@ export default {
     }
   },
   mounted() {
-    // console.log('MyComponent config:', this.config);
   }
 };
 </script>
@@ -272,7 +271,6 @@ export default {
   watch: {
     // 可以添加 watcher 来响应配置变化或进行验证
     // 'config.customize.text'(newVal) {
-    //   console.log('Text changed to:', newVal);
     // }
   },
   methods: {

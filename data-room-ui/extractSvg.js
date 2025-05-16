@@ -45,36 +45,29 @@ function extractSvgFromTxt(inputFilePath) {
     // 保存SVG文件
     const outputFilePath = path.join(outputDir, `${fileName}.svg`);
     fs.writeFileSync(outputFilePath, svg);
-    console.log(`已保存: ${outputFilePath}`);
   }
   
   // 如果没有找到匹配，也尝试直接提取SVG
   if (count === 0) {
-    console.log('没有找到匹配的嵌套div结构，尝试直接提取SVG...');
     const svgRegex = /<svg[\s\S]*?<\/svg>/g;
     const svgMatches = content.match(svgRegex);
     
     if (!svgMatches) {
-      console.log('没有找到SVG内容');
       return;
     }
     
     svgMatches.forEach((svg, index) => {
       const outputFilePath = path.join(outputDir, `svg_${index + 1}.svg`);
       fs.writeFileSync(outputFilePath, svg);
-      console.log(`已保存: ${outputFilePath}`);
     });
     
-    console.log(`共提取了 ${svgMatches.length} 个SVG文件，保存到 ${outputDir} 目录`);
     return;
   }
   
-  console.log(`共提取了 ${count} 个SVG文件，保存到 ${outputDir} 目录`);
 }
 
 // 检查命令行参数
 if (process.argv.length < 3) {
-  console.log('使用方法: node extractSvg.js <txt文件路径>');
   process.exit(1);
 }
 

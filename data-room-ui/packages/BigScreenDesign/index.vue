@@ -506,7 +506,6 @@ export default {
             }
           }
         } catch (error) {
-          console.error('执行 styleHandler 失败:', error);
         }
       });
     },
@@ -589,7 +588,6 @@ export default {
     },
     // 处理选中的本地图片
     handleLocalSourceImg(img) {
-      console.log('选中的本地图片:', img)
     }
   }
 }

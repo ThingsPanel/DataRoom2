@@ -501,7 +501,6 @@ export default {
                   pageInfo.coverPicture = compressCoverPicture
                   this.initialCoverPicture = compressCoverPicture // 更新封面缓存
                 } catch (compressError) {
-                  console.error('封面压缩失败:', compressError)
                   this.$message.warning('封面压缩失败，将使用上次保存的封面')
                   // 压缩失败，继续使用 initialCoverPicture
                 }
@@ -520,7 +519,6 @@ export default {
           return res
         }
       } catch (error) {
-        console.error(isAutoSave ? '自动保存失败:' : '保存失败:', error)
         if (!isAutoSave) {
           this.saveLoading = false
           this.$message.error('保存失败')
@@ -617,7 +615,6 @@ export default {
         return chart
       })
       // 打印保存前的 chartList，调试用
-      console.log('handleSaveData 保存前 chartList:', chartList)
       return cloneDeep({
         ...this.pageInfo,
         chartList: newChartList
@@ -704,7 +701,6 @@ export default {
         document.body.removeChild(link)
         URL.revokeObjectURL(url)
       } catch (error) {
-        console.error('导出 JSON 失败:', error)
         this.$message.error('导出 JSON 失败')
       }
     },
@@ -753,12 +749,10 @@ export default {
               this.$message.error('导入的 JSON 文件格式不正确')
             }
           } catch (error) {
-            console.error('导入 JSON 失败:', error)
             this.$message.error('导入 JSON 文件失败，请检查文件格式')
           }
         }
         reader.onerror = (error) => {
-          console.error('读取文件失败:', error)
           this.$message.error('读取文件失败')
         }
         reader.readAsText(file)

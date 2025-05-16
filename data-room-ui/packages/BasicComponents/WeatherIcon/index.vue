@@ -58,7 +58,6 @@ export default {
           const fetchedCode = data.data[0][metricField];
           if (fetchedCode != null) {
              newIconCode = String(fetchedCode);
-             console.log(`[WeatherIcon] Fetched iconCode '${newIconCode}' from dataset field '${metricField}'.`);
           }
         } 
       } 

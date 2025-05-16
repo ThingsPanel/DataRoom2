@@ -35,7 +35,6 @@ const setupPolling = (config, makeRequest, interval) => {
       }
       
     } catch (error) {
-      console.error('轮询请求失败:', error)
     }
   }, interval)
   

@@ -189,7 +189,6 @@ export function initPointsFromConfig(config) {
       ];
     }
   } catch (error) {
-    console.error('初始化点失败:', error);
     return [
       { x: config.w * 0.2, y: config.h * 0.5 },
       { x: config.w * 0.8, y: config.h * 0.5 }
@@ -238,6 +237,5 @@ export function savePoints(points, config, emitUpdateConfig, changeChartConfig) 
       changeChartConfig(newConfig);
     }
   } catch (error) {
-    console.error('保存点位置失败:', error);
   }
 } 

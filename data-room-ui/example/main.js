@@ -37,8 +37,6 @@ Vue.prototype.Column = Column
 // !! 新增 VChart 主题注册 !!
 
 allThemeMap.forEach((theme, name) => {
-  console.log('theme',name);
-  console.log('name',name);
   VChart.ThemeManager.registerTheme(name, theme);
 
 });

@@ -66,8 +66,6 @@ export default {
                 try {
                     this.chart.setOption(newOption, true); // Use notMerge = true to avoid unexpected merges
                 } catch (e) {
-                    console.error(`[EchartsCore] Error setting option for ${this.config?.name}:`, e);
-                    console.error(`[EchartsCore] Option causing error:`, JSON.stringify(newOption));
                 }
             }
         },
@@ -93,10 +91,8 @@ export default {
              // Don't set option here, watcher will handle it after computedOption is ready
              this.registerEvent(); // Register events after init
           } catch(e) {
-             console.error(`[EchartsCore] Error initializing ECharts for ${this.config?.name}:`, e);
           }
       } else {
-           console.error(`[EchartsCore] Chart container #${this.chartId} not found.`);
       }
     },
     disposeChart() {
@@ -104,7 +100,6 @@ export default {
         try {
             this.chart.dispose();
         } catch (e) {
-             console.error(`[EchartsCore] Error disposing ECharts instance for ${this.config?.name}:`, e);
         }
         this.chart = null;
       }
@@ -174,7 +169,6 @@ export default {
             const handlerFn = new Function('option', 'echarts', workingConfig.optionHandler);
             handlerFn(baseOption, echarts); // Pass echarts object to handler
           } catch (e) {
-            console.error(`[EchartsCore] Error executing optionHandler for ${workingConfig.name}:`, e);
           }
         }
         

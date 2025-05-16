@@ -166,7 +166,6 @@ export default {
           this.setupPolling()
         }
       } catch (error) {
-        console.error('动态数据获取失败:', error)
       }
     },
     setupPolling () {

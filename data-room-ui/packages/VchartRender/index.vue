@@ -86,7 +86,6 @@ export default {
         resizeObserver.observe(dragSelect)
         this.$_resizeObserver = resizeObserver
     } else {
-        console.warn(`[VchartRender] Could not find element to observe for resize.`)
     }
   },
   beforeDestroy () {
@@ -125,13 +124,11 @@ export default {
                     } else {
                       this.processedData = []
                     }
-                    console.log('[VchartRender chartInit - initialLoad] processedData updated:', this.processedData)
                 })
                 .catch((error) => {
                     this.setLoading(false)
                     this.processedData = []
                     this.showChart = false
-                    console.error("[VchartRender chartInit] Error fetching initial data:", error)
                 })
         } else {
             this.setLoading(true)
@@ -141,14 +138,12 @@ export default {
                     if (finalConfig && finalConfig.hasOwnProperty('processedDataSource')) {
                          this.processedData = cloneDeep(finalConfig.processedDataSource)
                     }
-                    console.log('[VchartRender chartInit - updateLoad] processedData (potentially re-set from finalConfig):', this.processedData)
                     this.showChart = true
                 })
                 .catch(error => {
                     this.setLoading(false)
                     this.processedData = []
                     this.showChart = false
-                    console.error("[VchartRender chartInit] Error fetching update data:", error)
                 })
         }
     },
@@ -205,7 +200,6 @@ export default {
                   const parsedValue = JSON.parse(trimmedValue);
                   valueToProcess = parsedValue;
                 } catch (e) {
-                  console.log(`[VchartRender changeStyle] Failed to parse string as JSON for path ${directPathInOption}, using as plain string. Error:`, e.message);
                 }
               }
             }
@@ -253,7 +247,6 @@ export default {
                 _.set(config.option, directPathInOption, valueToProcess);
               }
             } catch (e) {
-              console.error(`[VchartRender changeStyle] Error processing path "${directPathInOption}":`, e);
             }
           } 
         });

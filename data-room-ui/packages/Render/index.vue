@@ -318,7 +318,6 @@ export default {
           y: e.clientY
         })
       } catch (error) {
-        console.error('处理拖放事件时出错:', error)
       }
     },
     /**
@@ -444,11 +443,8 @@ export default {
       // 处理 customComponent 或 threeJs 类型
       // --- 优先检查 chartType --- 
       if (_chart.chartType === 'threeJs') {
-         console.log('检测到 chartType=threeJs，识别为3D模型组件，保留原有配置');
          // 保留option，可能后续需要特殊处理主题等
-      } 
-      // --- 如果 chartType 不为 threeJs，再检查 type 是否为 customComponent --- 
-      else if (_chart.type === 'customComponent') {
+      }  else if (_chart.type === 'customComponent') {
         
         // G2Plot处理逻辑
         const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name);

@@ -99,7 +99,6 @@ const pageMixins = {
       this.getDataList()
     },
     getDataList () {
-      console.error('你应该重写getDataList方法')
     },
     // 每页大小改变触发
     sizeChangeHandle (val) {

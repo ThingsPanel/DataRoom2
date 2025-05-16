@@ -79,7 +79,6 @@ const vchartList = getVchartList(files)
   // 按照排序列表组织图表
   sortList.forEach((chartName) => {
     if (!configMapList[chartName]) {
-      console.warn(`Chart not found: ${chartName}`)
       return
     }
     

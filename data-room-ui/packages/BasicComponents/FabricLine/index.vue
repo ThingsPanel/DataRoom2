@@ -543,7 +543,6 @@ export default {
       });
 
       if (closestAnchorIndex !== -1) {
-        // console.log(`Anchor point ${closestAnchorIndex} hit!`);
         event.stopPropagation();
         this.pointDragHandler.handlePointMouseDown(event, closestAnchorIndex, this.points);
         return;
@@ -555,7 +554,6 @@ export default {
         const handleTolerance = handleVisualRadius + HIT_SLOP;
         const handleToleranceSq = handleTolerance * handleTolerance;
 
-        // console.log(`Checking all handles. Mouse: (${svgMousePoint.x.toFixed(1)}, ${svgMousePoint.y.toFixed(1)}), HandleTolerance: ${handleTolerance.toFixed(1)}`);
 
         // 遍历所有点来检查它们的手柄
         for (let index = 0; index < this.points.length; index++) {
@@ -566,9 +564,7 @@ export default {
             const dx_cp1 = point.cp1x - svgMousePoint.x;
             const dy_cp1 = point.cp1y - svgMousePoint.y;
             const distSq_cp1 = dx_cp1 * dx_cp1 + dy_cp1 * dy_cp1;
-            // console.log(` Point ${index} - DistSq to CP1 (${point.cp1x.toFixed(1)}, ${point.cp1y.toFixed(1)}): ${distSq_cp1.toFixed(1)} (TolSq: ${handleToleranceSq.toFixed(1)})`);
             if (distSq_cp1 <= handleToleranceSq) {
-              // console.log(` --> CP1 handle of point ${index} HIT!`);
               event.stopPropagation();
               // 确保将正确的 index 传递给处理器
               this.controlHandleDragHandler.handleMouseDown(event, index, 'cp1');
@@ -581,9 +577,7 @@ export default {
             const dx_cp2 = point.cp2x - svgMousePoint.x;
             const dy_cp2 = point.cp2y - svgMousePoint.y;
             const distSq_cp2 = dx_cp2 * dx_cp2 + dy_cp2 * dy_cp2;
-            // console.log(` Point ${index} - DistSq to CP2 (${point.cp2x.toFixed(1)}, ${point.cp2y.toFixed(1)}): ${distSq_cp2.toFixed(1)} (TolSq: ${handleToleranceSq.toFixed(1)})`);
             if (distSq_cp2 <= handleToleranceSq) {
-              // console.log(` --> CP2 handle of point ${index} HIT!`);
               event.stopPropagation();
               // 确保将正确的 index 传递给处理器
               this.controlHandleDragHandler.handleMouseDown(event, index, 'cp2');
@@ -591,7 +585,6 @@ export default {
             }
           }
         }
-        // console.log("No handle hit after checking all points.");
       }
       // 如果啥也没命中，事件继续，handleClick 可能被触发
     },
@@ -616,7 +609,6 @@ export default {
           this._updateAnimation();
         });
       } catch (err) {
-        console.error("FabricLine: Error initializing drawing editor", err);
       }
     },
     handleResize () {
@@ -1006,7 +998,6 @@ export default {
           this.updateLine();
         }
       } catch (err) { 
-        console.error('FabricLine: Error loading data:', err); 
       }
       finally {
         this.$nextTick(() => { this.isDataLoading = false; });
@@ -1076,44 +1067,31 @@ export default {
       }
     },
     _renderControlHandles() {
-      console.log("--- _renderControlHandles called ---"); 
-      console.log("Current activeCode:", this.activeCode); 
-      console.log("Current config.code:", this.config ? this.config.code : 'config is null'); 
-      console.log("Current lineShapeType:", this.lineShapeType); 
-      console.log("this.draw exists:", !!this.draw); 
 
       if (this.controlHandlesGroup) {
         this.controlHandlesGroup.remove();
         this.controlHandlesGroup = null;
-        console.log("Cleared old controlHandlesGroup"); 
       }
 
       const configExists = this.config && typeof this.config.code !== 'undefined';
       const codesMatch = configExists && this.activeCode === this.config.code;
       
-      console.log("Config exists for code check:", configExists); 
-      console.log("Codes match (activeCode === config.code):", codesMatch); 
 
       // const isActive = this.activeCode && this.config && this.config.code && (this.activeCode === this.config.code);
       // 使用分解后的条件，方便调试
       const isActive = !!(this.activeCode && configExists && codesMatch);
-      console.log("Final isActive for rendering handles:", isActive); 
 
       if (!isActive) {
-        console.log("Handles not rendered because !isActive"); 
         return; 
       }
 
       if (this.lineShapeType !== 'cubicBezier') {
-        console.log("Handles not rendered because lineShapeType is not cubicBezier"); 
         return;
       }
       if (!this.draw) {
-        console.log("Handles not rendered because this.draw is null"); 
         return;
       }
 
-      console.log("Proceeding to render handles..."); 
       
       this.controlHandlesGroup = this.draw.group();
       const handleRadius = Math.max(2, (this.pointRadius || 5) / 2);
@@ -1143,7 +1121,6 @@ export default {
         }
       });
       this.controlHandlesGroup.front();
-      console.log("Handles should now be visible."); 
     },
     _updateControlPointsForPoint(index) {
       if (index < 0 || index >= this.points.length) return;

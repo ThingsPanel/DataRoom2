@@ -83,7 +83,6 @@ export default {
     // 销毁 ResizeObserver
     if (this.resizeObserver) {
       this.resizeObserver.disconnect();
-      console.log(`[VchartCore] ResizeObserver已从 #${this.chartId} 分离`);
     }
     // 销毁图表实例
     this.disposeChart();
@@ -97,7 +96,6 @@ export default {
     // 计算VChart所需的spec配置
     computeSpec(resdata) {
       if(resdata?.length>0){
-        console.log('resdata',resdata);
         this.config.option.spec.data[0].values = resdata;
       }
       return  this.config.option.spec||{}; // 返回空对象以避免错误
@@ -115,20 +113,16 @@ export default {
       this.$nextTick(() => {
         const chartDom = document.getElementById(this.chartId);
         if (!chartDom) {
-          console.error(`[VchartCore initChart] 找不到图表容器 #${this.chartId}`);
           return;
         }
         this.disposeChart();
         try {
           const rect = chartDom.getBoundingClientRect();
           if (rect.width === 0 || rect.height === 0) {
-            console.warn(`[VchartCore initChart] 容器 #${this.chartId} 尺寸为零 (${rect.width}x${rect.height})，可能影响渲染。`);
           }
           
           const spec = this.computeSpec(chartData);
-          console.log('spec999',spec);
           if (!spec || Object.keys(spec).length === 0) {
-            console.error('[VchartCore initChart] computeSpec returned an empty or invalid spec. Aborting VChart creation.');
             this.$emit('chart-error', { message: '无法获取有效的spec配置 (computeSpec返回空)' });
             return;
           }
@@ -151,7 +145,6 @@ export default {
       if (!this.chart) return;
       this.chart.off('click'); // 先移除，避免重复绑定
       this.chart.on('click', (params) => {
-        // console.log('[VchartCore] 图表点击事件:', params);
         if (params && params.datum) { // VChart 通常将点击的数据放在 params.datum
           this.$emit('linkage-trigger', params.datum); // 使用 params.datum
         } else if (params && params.data) { // 兼容旧的可能结构
@@ -164,27 +157,21 @@ export default {
     // 调整图表大小
     resizeChart() {
       if (!this.chart || !this.chartInitialized) {
-        // console.log('[VchartCore resizeChart] 图表未就绪，跳过resize。');
         return;
       }
       const chartDomElement = document.getElementById(this.chartId);
       if (!chartDomElement) {
-        // console.error(`[VchartCore resizeChart] 找不到图表容器 #${this.chartId}。`);
         return;
       }
       const width = chartDomElement.offsetWidth;
       const height = chartDomElement.offsetHeight;
       if (width === 0 || height === 0) {
-        // console.warn(`[VchartCore resizeChart] 容器尺寸 (${width}x${height}) 为零或无效。跳过VChart resize。`);
         return; 
       }
       this.$nextTick(() => {
         try {
-          // console.log(`[VchartCore resizeChart] 正在为容器 #${this.chartId} (尺寸 ${width}x${height}) 调用 VChart.resize()。`);
           this.chart.resize();
-          // console.log('[VchartCore resizeChart] 图表大小已成功调整。');
         } catch (e) {
-          console.error(`[VchartCore resizeChart] 调整图表 #${this.chartId} 大小时出错:`, e);
         }
       });
     },
@@ -193,14 +180,11 @@ export default {
     disposeChart() {
       if (this.chart) {
         try {
-          // console.log('[VchartCore] Releasing VChart instance...');
           this.chart.release();
         } catch (e) {
-          console.error('[VchartCore] Error releasing VChart instance:', e);
         }
         this.chart = null;
         this.chartInitialized = false;
-        // console.log('[VchartCore] VChart instance released.');
       }
     },
     
@@ -212,7 +196,6 @@ export default {
         value: Math.floor(Math.random() * 100) + 50, // 模拟一个值
         category: ['A', 'B', 'C', 'D', 'E'][Math.floor(Math.random() * 5)] // 模拟一个类别
       };
-      console.log('[VchartCore] 模拟触发linkage-trigger事件，数据:', mockData);
       this.$emit('linkage-trigger', mockData);
     },
     

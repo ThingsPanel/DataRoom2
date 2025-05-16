@@ -245,7 +245,6 @@ export default {
       document.removeEventListener('mouseup', this.stopRotate)
     },
     handleError(error) {
-      console.warn('Chart render error:', error)
       // 可以在这里添加错误处理逻辑，比如显示错误提示或重置图表
     },
     getWrapStyle() {
@@ -350,7 +349,6 @@ export default {
         }
         return config
       } catch (error) {
-        console.error('RenderCard changeStyle 执行出错:', error, config)
         return config
       }
     },

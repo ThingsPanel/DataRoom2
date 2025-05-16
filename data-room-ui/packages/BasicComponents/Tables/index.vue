@@ -108,7 +108,6 @@ export default {
   },
   watch: {
     activeItemConfig (val) {
-      console.dir(val)
     }
   },
   created () {},

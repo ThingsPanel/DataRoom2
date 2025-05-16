@@ -249,7 +249,6 @@
             },
             // 错误回调
             function(error) {
-                console.error('模型加载错误:', error);
                 statusElement.textContent = "模型加载错误! 显示备用模型...";
                 
                 createFallbackBridge();

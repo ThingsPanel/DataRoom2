@@ -16,7 +16,6 @@ export function saveScreen (data) {
         try {
           chartOption = JSON.parse(item.option);
         } catch (e) {
-          console.error('[saveScreen] Failed to parse item.option for', item.code, e);
           chartOption = {}; // Default to empty object on parse error
         }
       } else if (typeof item.option === 'object' && item.option !== null) {
@@ -31,16 +30,13 @@ export function saveScreen (data) {
 
       // Retain full setting structure for 'vchartComponent' and 'threeJs' based on chartType
       if (item.chartType === 'vchartComponent' || item.chartType === 'threeJs') {
-        console.log(`[saveScreen] 保留 ${item.name || item.code} 的完整 setting (chartType=${item.chartType})`);
         // No change to item.setting, it remains as is
       } else {
         // For other types, simplify setting to only field and value
-        console.log(`[saveScreen] 简化前 ${item.name || item.code} 的 setting:`, item.setting);
         item.setting = item.setting?.map((x) => {
           const { field, value } = x;
           return { field, value };
         }) || []; // Ensure if setting is null/undefined, it becomes an empty array
-        console.log(`[saveScreen] 简化后 ${item.name || item.code} 的 setting:`, item.setting);
       }
     }
   });

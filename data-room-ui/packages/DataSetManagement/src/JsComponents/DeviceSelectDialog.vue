@@ -210,7 +210,6 @@ export default {
 
         return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
       } catch (error) {
-        console.error('时间格式化错误:', error);
         return '未上报';
       }
     },
@@ -277,7 +276,6 @@ export default {
           }
         }
       } catch (error) {
-        console.error('获取设备列表失败:', error)
         Message.error('获取设备列表失败')
       } finally {
         this.loading = false

@@ -119,7 +119,6 @@ export default {
         try {
             this.chart.destroy();
         } catch (destroyError) {
-            console.error(`[PlotRender newChart] Error destroying previous chart instance for ${config?.code}:`, destroyError);
         }
         this.chart = null; // Reset chart instance variable
       }
@@ -133,8 +132,6 @@ export default {
           this.chart.render();
           this.registerEvent();
       } catch (renderError) {
-          console.error(`[PlotRender newChart] Error during G2Plot instantiation or rendering for ${config?.name || config?.code}:`, renderError);
-          console.error(`[PlotRender newChart] Config option that caused the error:`, config.option); // Log config again on error
       }
     },
     /**
@@ -194,8 +191,6 @@ export default {
         const xField = option?.xField; // 获取 x 轴字段名
 
         // --- Add Log: Inspect data before eval ---
-        console.log(`[PlotRender dataFormatting] Raw data before eval for ${config?.name}:`, JSON.stringify(rawData));
-        console.log(`[PlotRender dataFormatting] config.dataHandler for ${config?.name}:`, config.dataHandler);
         // --- End Log ---
 
         if (config.dataHandler || config.name === 'YiBiaoPan') { // 如果有 handler 或者 是仪表盘，就尝试执行
@@ -204,7 +199,6 @@ export default {
             let handlerScript = config.dataHandler;
             // --- Runtime Fix: Force correct handler for YiBiaoPan --- 
             if (config.name === 'YiBiaoPan') {
-              console.log(`[PlotRender dataFormatting] Applying runtime fix: Using corrected dataHandler for YiBiaoPan.`);
               handlerScript = `
                 let value = 0; 
                 try {
@@ -229,7 +223,6 @@ export default {
                     } else { value = 0; }
                   } else { value = 0; }
                 } catch (scriptError) {
-                    console.error('YiBiaoPan dataHandler (runtime fix): Unexpected error during execution:', scriptError);
                     value = 0;
                 }
                 option.percent = value;
@@ -239,9 +232,7 @@ export default {
 
             if (handlerScript) { // 确保有脚本再执行
               const dataHandlerFn = new Function('data', 'setting', 'option', handlerScript);
-              console.log(`[PlotRender dataFormatting] Executing dataHandlerFn for ${config?.name}...`);
               dataHandlerFn(rawData, setting, option);
-              console.log(`[PlotRender dataFormatting] Raw data *after* successful dataHandlerFn execution for ${config?.name}:`, JSON.stringify(rawData));
                // --- Add Final Check for option.percent (Gauge) --- 
                if (config.name === 'YiBiaoPan') {
                   if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
@@ -251,7 +242,6 @@ export default {
                // --- End Final Check ---
             }
           } catch (e) {
-            console.error(`[PlotRender dataFormatting] Error during dataHandlerFn execution for ${config?.name}:`, e);
              // --- Add Final Check for option.percent (Gauge) even on error --- 
              if (config.name === 'YiBiaoPan') {
                 if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
@@ -277,9 +267,7 @@ export default {
                   } else {
                       newItem[yField] = numericValue;
                       // --- Add Log: Verify conversion inside map ---
-                      if (index < 5) { // 只打印前几个，避免日志过多
-                         console.log(`[PlotRender dataFormatting] Item ${index} for ${config?.name} - yField '${yField}' converted: ${originalValue} -> ${newItem[yField]} (Type: ${typeof newItem[yField]})`);
-                      }
+                     
                       // --- End Log ---
                   }
               }
@@ -297,11 +285,9 @@ export default {
               return newItem;
            });
              // --- Add Log: Verify processedData before assignment ---
-             console.log(`[PlotRender dataFormatting] Processed data for ${config?.name} (first 5 items):`, JSON.stringify(processedData.slice(0, 5)));
              // --- End Log ---
         } else {
            // --- Add Log: Handle case where rawData is not an array --- 
-           console.error(`[PlotRender dataFormatting] rawData is not an array after potential eval for ${config?.name}. Assigning empty array. rawData:`, rawData);
            processedData = []; // 如果不是数组，则使用空数组，防止 map 报错
         }
          // --- End Modify --- 
@@ -319,7 +305,6 @@ export default {
         } else {
           // --- Modify: Ensure assignment happens --- 
           config.option.data = processedData; 
-          console.log(`[PlotRender dataFormatting] Assigned processedData to config.option.data for ${config?.name}`);
           // --- End Modify ---
         }
       } else {
@@ -344,7 +329,6 @@ export default {
           // 此处函数处理config
           eval(this.config.optionHandler)
         } catch (e) {
-          console.error(e)
         }
       }
       // 只有样式改变时更新主题配置，切换主题时不需要保存

@@ -60,7 +60,6 @@ class DrawModeManager {
       // 监听Ctrl键
       KeyboardManager.onCombination('ctrl', this.handleCtrlStateChange.bind(this));
     } catch (err) {
-      console.error('初始化键盘管理器失败:', err);
     }
   }
   

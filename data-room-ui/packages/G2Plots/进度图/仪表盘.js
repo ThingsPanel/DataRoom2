@@ -256,7 +256,6 @@ const dataHandler = `
        value = 0; // fieldName not found
     }
   } catch (scriptError) {
-      console.error('YiBiaoPan dataHandler: Unexpected error during execution:', scriptError);
       value = 0; // Assign default on error
   }
   // Always assign the final value (even if it's the default 0)

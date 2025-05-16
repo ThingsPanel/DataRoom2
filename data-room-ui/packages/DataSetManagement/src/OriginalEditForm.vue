@@ -640,7 +640,6 @@ export default {
           })
           this.getPreViewData(fieldDescMap)
         } catch (error) {
-          console.error(error)
         }
       },
       deep: true,
@@ -672,7 +671,6 @@ export default {
           try {
             this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
           } catch (error) {
-            console.error(error)
           }
         })
       }
@@ -704,7 +702,6 @@ export default {
             try {
               this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
             } catch (error) {
-              console.error(error)
             }
           })
         }

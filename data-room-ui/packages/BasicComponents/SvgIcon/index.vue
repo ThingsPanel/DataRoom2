@@ -37,7 +37,6 @@ export default {
   },
   mounted() {
     const iconClass = this.config && this.config.customize ? this.config.customize.iconClass : 'check';
-    console.log(Icon.getIconByName(iconClass));
   },
   computed: {
     // 从config中获取图标名称

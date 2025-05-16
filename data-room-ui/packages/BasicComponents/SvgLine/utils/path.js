@@ -122,7 +122,6 @@ export function findClickedLineSegment(x, y, points, threshold = 8) {
   
   // 防御性检查
   if (!points || !Array.isArray(points) || points.length < 2) {
-    console.error('findClickedLineSegment: 点集合无效或少于2个点');
     return -1;
   }
   
@@ -137,7 +136,6 @@ export function findClickedLineSegment(x, y, points, threshold = 8) {
     // 防御性检查
     if (!p1 || typeof p1.x !== 'number' || typeof p1.y !== 'number' ||
         !p2 || typeof p2.x !== 'number' || typeof p2.y !== 'number') {
-      console.error(`findClickedLineSegment: 第${i}个线段的点无效`, { p1, p2 });
       continue;
     }
     

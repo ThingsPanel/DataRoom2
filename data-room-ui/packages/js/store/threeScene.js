@@ -86,14 +86,12 @@ const actions = {
           
           resolve(sceneInstance)
         } catch (error) {
-          console.error('初始化场景失败:', error)
           commit('SET_LOADED', false)
           reject(error)
         }
       }
       
       script.onerror = (err) => {
-        console.error('引擎脚本加载失败:', err)
         commit('SET_LOADED', false)
         reject(new Error('脚本加载失败'))
       }

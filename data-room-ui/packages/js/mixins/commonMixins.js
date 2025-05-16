@@ -24,13 +24,11 @@ export default {
   created() {
     this.debouncedGetDataByExpression = debounce((config) => {
       // Log when debounced function actually executes
-      console.log(`[Diag] Executing debouncedGetDataByExpression for ${config?.title || config?.code}`);
       this.getDataByExpression(config);
     }, 1500);
 
     this.debouncedChangeData = debounce((config, filterList) => {
       // Log when debounced function actually executes
-      console.log(`[Diag] Executing debouncedChangeData for ${config?.title || config?.code}`);
       this.changeData(config, filterList);
     }, 1500);
   },
@@ -38,7 +36,6 @@ export default {
     'config.expression': { // 表达式发生变化
       handler (val) {
         // Log watcher trigger
-        console.log(`[Diag] Watcher triggered: config.expression for ${this.config?.title || this.config?.code}`);
         this.debouncedGetDataByExpression(this.config)
       }
     },
@@ -53,7 +50,6 @@ export default {
       handler (val, old) {
         if (val && Object.keys(val).length && JSON.stringify(val) !== JSON.stringify(old)) {
           // Log watcher trigger
-          console.log(`[Diag] Watcher triggered: currentDataset for ${this.config?.title || this.config?.code}`);
           this.debouncedGetDataByExpression(this.config)
         }
       },
@@ -63,7 +59,6 @@ export default {
       handler (val, old) {
         if (val && Object.keys(val).length && JSON.stringify(val) !== JSON.stringify(old)) {
           // Log watcher trigger
-          console.log(`[Diag] Watcher triggered: currentComputedDatas for ${this.config?.title || this.config?.code}`);
           this.debouncedGetDataByExpression(this.config)
         }
       },
@@ -147,7 +142,6 @@ export default {
      */
     chartInit () {
       // Log chartInit call
-      console.log(`[Diag] chartInit called for ${this.config?.title || this.config?.code}`);
       let config = this.config
       // key和code相等，说明是一进来刷新，调用list接口
       if (this.isPreview) {
@@ -202,7 +196,6 @@ export default {
             // Update the fieldList in the response object (assuming this is used later)
             res.fieldList = fieldList;
           } catch (e) {
-            console.error('[changeDataByCode] Error augmenting fieldList:', e);
           }
           // --- END: Augment fieldList --- 
 
@@ -252,7 +245,6 @@ export default {
                   startPolling(requestConfig, 
                     (result) => {
                       if (!result || !result.data) {
-                        console.error('IoT数据返回格式错误:', result)
                         return
                       }
 
@@ -287,7 +279,6 @@ export default {
                       })
                     },
                     (error) => {
-                      console.error('IoT数据轮询出错:', error)
                       // 如果是认证错误，尝试更新token
                       if (error.response && error.response.status === 401) {
                         requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
@@ -326,7 +317,6 @@ export default {
                 const scriptMethod = new Function(scriptAfterReplacement)
                 _res.data = scriptMethod()
               } catch (error) {
-                console.info('JS数据集脚本执行失败', error)
               }
             }
           }
@@ -340,7 +330,6 @@ export default {
           this.changeChartConfig(config)
           resolve(config)
         }).catch(err => {
-          console.info(err)
           config.loading = false
           resolve(config)
         })
@@ -400,7 +389,6 @@ export default {
             // Update the fieldList in the response object
             res.fieldList = fieldList;
           } catch (e) {
-            console.error('[changeData] Error augmenting fieldList:', e);
           }
           // --- END: Augment fieldList --- 
 
@@ -448,7 +436,6 @@ export default {
                   startPolling(requestConfig, 
                     (result) => {
                       if (!result || !result.data) {
-                        console.error('IoT数据返回格式错误:', result)
                         return
                       }
                       // 处理返回数据
@@ -465,7 +452,6 @@ export default {
                       this.changeChartConfig(config)
                     },
                     (error) => {
-                      console.error('IoT数据轮询出错:', error)
                       // 如果是认证错误，尝试更新token
                       if (error.response && error.response.status === 401) {
                         requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')

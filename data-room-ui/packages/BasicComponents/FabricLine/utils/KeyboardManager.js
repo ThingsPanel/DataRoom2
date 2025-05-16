@@ -48,9 +48,7 @@ class KeyboardManager {
     
     this.initialized = true;
     
-    if (this.debug) {
-      console.log('KeyboardManager 初始化完成');
-    }
+  
   }
   
   /**
@@ -72,9 +70,7 @@ class KeyboardManager {
     
     this.initialized = false;
     
-    if (this.debug) {
-      console.log('KeyboardManager 已销毁');
-    }
+   
   }
   
   /**
@@ -89,15 +85,10 @@ class KeyboardManager {
     if (event.ctrlKey || key === 'control' || key === 'ctrl') {
       this.keysPressed.set('ctrl', true);
       this.keysPressed.set('control', true);
-      
-      if (this.debug) {
-        console.log('Ctrl键已按下 (特殊处理)');
-      }
+    
     }
     
-    if (this.debug) {
-      console.log(`键盘按下: ${key}`);
-    }
+    
     
     // 如果按键状态未改变，不触发事件
     if (this.keysPressed.get(key) && key !== 'ctrl' && key !== 'control') return;
@@ -127,14 +118,10 @@ class KeyboardManager {
       this.keysPressed.set('ctrl', false);
       this.keysPressed.set('control', false);
       
-      if (this.debug) {
-        console.log('Ctrl键已释放 (特殊处理)');
-      }
+    
     }
     
-    if (this.debug) {
-      console.log(`键盘释放: ${key}`);
-    }
+ 
     
     // 更新按键状态
     this.keysPressed.set(key, false);
@@ -157,9 +144,6 @@ class KeyboardManager {
       
       callbacks.forEach(callback => callback(isActive));
       
-      if (this.debug) {
-        console.log(`组合键 '${combination}' 状态: ${isActive ? '激活' : '未激活'}`);
-      }
     });
   }
   
@@ -180,9 +164,7 @@ class KeyboardManager {
     
     this.keyCallbacks[eventType].get(lowercaseKey).push(callback);
     
-    if (this.debug) {
-      console.log(`已注册 ${eventType} 事件回调: ${lowercaseKey}`);
-    }
+   
   }
   
   /**
@@ -204,9 +186,7 @@ class KeyboardManager {
     if (index !== -1) {
       callbacks.splice(index, 1);
       
-      if (this.debug) {
-        console.log(`已移除 ${eventType} 事件回调: ${lowercaseKey}`);
-      }
+     
     }
   }
   
@@ -224,9 +204,7 @@ class KeyboardManager {
     
     this.combinationCallbacks.get(normalizedCombination).push(callback);
     
-    if (this.debug) {
-      console.log(`已注册组合键回调: ${normalizedCombination}`);
-    }
+ 
   }
   
   /**
@@ -245,9 +223,7 @@ class KeyboardManager {
     if (index !== -1) {
       callbacks.splice(index, 1);
       
-      if (this.debug) {
-        console.log(`已移除组合键回调: ${normalizedCombination}`);
-      }
+   
     }
   }
   

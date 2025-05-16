@@ -121,7 +121,6 @@ export default {
         try {
           this.config = await this.changeData(config)
         } catch (e) {
-          console.error(e)
         }
       }
     },
@@ -209,7 +208,6 @@ export default {
             // 此处函数处理data
             eval(config.dataHandler)
           } catch (e) {
-            console.error(e)
           }
         }
         config.option.data = data
@@ -231,7 +229,6 @@ export default {
           // 此处函数处理config
           eval(this.config.optionHandler)
         } catch (e) {
-          console.error(e)
         }
       }
       // 只有样式改变时更新主题配置，切换主题时不需要保存

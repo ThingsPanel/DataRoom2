@@ -180,14 +180,11 @@ export default {
   methods: {
     initSvg() {
       if (!this.$refs.svgContainer) {
-        console.warn('HorizontalLine: svgContainer ref not found');
         return;
       }
-      console.log('HorizontalLine: initSvg - config:', this.config);
       try {
         // 检查是否已经存在 SVG 实例
         if (this.draw) {
-          console.log('HorizontalLine: SVG instance already exists, removing it first');
           this._clearAnimation();
           this.draw.remove();
           this.draw = null;
@@ -208,21 +205,17 @@ export default {
             'vector-effect': 'non-scaling-stroke'
           });
           
-        console.log('HorizontalLine: SVG initialized - draw:', this.draw, 'line:', this.line);
         this.updateLineStyle();
         
         // 初始化后启动动画
         this._updateAnimation();
       } catch (err) {
-        console.error('HorizontalLine: Failed to initialize SVG:', err);
       }
     },
     updateLinePath() {
       if (!this.line || !this.draw) {
-        console.warn('HorizontalLine: updateLinePath - line or draw is null');
         return;
       }
-      console.log(`HorizontalLine: updateLinePath - svgWidth: ${this.svgWidth}, svgHeight: ${this.svgHeight}`);
       try {
         const yPos = this.svgHeight / 2;
         
@@ -242,12 +235,10 @@ export default {
           'shape-rendering': 'auto',
           'vector-effect': 'non-scaling-stroke'
         });
-        console.log('HorizontalLine: Line after plot:', this.line.attr(['x1', 'y1', 'x2', 'y2']));
         
         // 更新箭头
         this.updateArrows();
       } catch (err) {
-        console.error('HorizontalLine: Failed to update line path:', err);
         // 如果更新路径失败，尝试重新创建线条
         try {
           if (this.line) this.line.remove();
@@ -260,16 +251,13 @@ export default {
           this.updateLineStyle();
           this.updateArrows();
         } catch (e) {
-          console.error('HorizontalLine: Failed to recreate line:', e);
         }
       }
     },
     updateLineStyle() {
       if (!this.line) {
-        console.warn('HorizontalLine: updateLineStyle - line is null');
         return;
       }
-      console.log('HorizontalLine: updateLineStyle - config:', this.config);
       try {
         const strokeAttrs = {
           width: this.lineWidth,
@@ -281,9 +269,7 @@ export default {
           strokeAttrs.dasharray = null;
         }
         this.line.stroke(strokeAttrs);
-        console.log('HorizontalLine: Line after stroke:', this.line.attr(['stroke', 'stroke-width', 'stroke-dasharray']));
       } catch (err) {
-        console.error('HorizontalLine: Failed to update line style:', err);
       }
     },
     updateStyle(){
@@ -300,24 +286,20 @@ export default {
     },
     handleResize () {
       if (!this.$refs.svgContainer) {
-        console.warn('HorizontalLine: handleResize - svgContainer ref not found');
         return;
       }
       
       const newWidth = this.$refs.svgContainer.clientWidth;
       const newHeight = this.$refs.svgContainer.clientHeight;
 
-      console.log(`HorizontalLine: handleResize - newWidth: ${newWidth}, newHeight: ${newHeight}, old svgWidth: ${this.svgWidth}, old svgHeight: ${this.svgHeight}`);
       
       // 检查尺寸是否有效
       if (newWidth <= 0 || newHeight <= 0) {
-        console.warn(`HorizontalLine: handleResize detected invalid dimensions: ${newWidth}x${newHeight}, skipping update`);
         return;
       }
 
       // 检查尺寸是否实际变化
       if (newWidth === this.svgWidth && newHeight === this.svgHeight) {
-        console.log('HorizontalLine: handleResize - dimensions unchanged, skipping update');
         return;
       }
 
@@ -326,18 +308,15 @@ export default {
       
       // 确保 SVG 实例存在
       if (!this.draw) {
-        console.warn("HorizontalLine: handleResize - SVG instance missing, reinitializing");
         return this.initSvg();
       }
       
       try {
         // 更新 SVG 画布大小
         this.draw.size(this.svgWidth, this.svgHeight);
-        console.log('HorizontalLine: SVG size updated:', this.draw.attr(['width', 'height']));
-        
+
         // 确保线条存在
         if (!this.line) {
-          console.warn("HorizontalLine: handleResize - line is missing, creating new line");
           this.line = this.draw.line(0, this.svgHeight / 2, this.svgWidth, this.svgHeight / 2)
             .attr({ 'stroke-linecap': 'butt' });
           this.updateLineStyle();
@@ -349,14 +328,12 @@ export default {
         // 更新动画
         this._updateAnimation();
       } catch (err) {
-        console.error('HorizontalLine: Failed to update SVG during resize:', err);
         // 如果更新失败，尝试完全重新初始化
         this._clearAnimation();
         if (this.draw) {
           try {
             this.draw.remove();
           } catch (e) {
-            console.error('HorizontalLine: Error removing draw:', e);
           }
           this.draw = null;
         }
@@ -365,7 +342,6 @@ export default {
     },
     setupResizeObserver() {
       if (!this.$refs.svgContainer) {
-        console.warn('HorizontalLine: setupResizeObserver - svgContainer ref not found');
         return;
       }
       
@@ -379,9 +355,7 @@ export default {
           this.debouncedHandleResize();
         });
         this.resizeObserver.observe(this.$refs.svgContainer);
-        console.log('HorizontalLine: ResizeObserver setup successfully');
       } catch (err) {
-        console.error('HorizontalLine: Failed to setup ResizeObserver:', err);
         // 降级处理：如果ResizeObserver不可用，使用window resize事件
         window.addEventListener('resize', this.debouncedHandleResize);
       }
@@ -394,7 +368,6 @@ export default {
           try {
             runner.cancel();
           } catch (e) {
-            console.error('HorizontalLine: Error canceling animation runner:', e);
           }
         }
       });
@@ -405,16 +378,13 @@ export default {
           try {
             el.remove();
           } catch (e) {
-            console.error('HorizontalLine: Error removing animation element:', e);
           }
         }
       });
       this.animationElements = [];
     },
     _updateAnimation() {
-      console.log('HorizontalLine: _updateAnimation called - draw exists:', !!this.draw, 'line exists:', !!this.line);
       if (!this.draw || !this.line) {
-        console.warn('HorizontalLine: _updateAnimation - draw or line is null, clearing animation');
         return this._clearAnimation();
       }
       
@@ -422,33 +392,20 @@ export default {
       this._clearAnimation();
 
       if (!this.animationActive || this.animationType === 'none') {
-        console.log('HorizontalLine: _updateAnimation - animation not active or type is none');
         return;
       }
 
       // 确保线条有有效的路径/长度用于动画
       if (this.lineWidth <= 0 || this.svgWidth <= 0 || this.svgHeight <= 0) {
-        console.warn('HorizontalLine: _updateAnimation - invalid dimensions:', { 
-          lineWidth: this.lineWidth, 
-          svgWidth: this.svgWidth,
-          svgHeight: this.svgHeight
-        });
         return;
       }
 
       // 优化：避免在小尺寸下启动动画，减少卡顿
       if (this.svgWidth < 50) {
-        console.warn('HorizontalLine: _updateAnimation - component too small for animation');
         return;
       }
 
-      console.log('HorizontalLine: Starting animation with config:', {
-        animationActive: this.animationActive,
-        animationType: this.animationType,
-        animationDirection: this.animationDirection,
-        animationSpeed: this.animationSpeed,
-        animationLoop: this.animationLoop
-      });
+      // 确保速度设置正确传递给动画函数
 
       // 确保速度设置正确传递给动画函数
       // 直接使用原始速度值，不再进行额外的调整
@@ -466,21 +423,18 @@ export default {
       };
 
       // 打印实际传递的速度值，用于调试
-      console.log('HorizontalLine: Actual animation speed passed to animation function:', this.animationSpeed);
 
       let animationResult = { elements: [], runners: [] };
 
       try {
         // 确保SVG.js已正确加载
         if (!this.draw.circle) {
-          console.error('HorizontalLine: SVG.js not properly loaded, draw.circle method missing');
           return;
         }
         
         // 测试创建一个简单的圆形，确认SVG绘图功能正常
         const testCircle = this.draw.circle(5).fill('#ff0000').move(-10, -10);
         testCircle.remove();
-        console.log('HorizontalLine: SVG drawing test successful');
         
         switch (this.animationType) {
           case 'droplet':
@@ -488,21 +442,14 @@ export default {
             break;
           case 'flow':
             // 直接在此处调试流水动画
-            console.log('HorizontalLine: Creating flow animation with line:', 
-              this.line.attr(['x1', 'y1', 'x2', 'y2']), 
-              'type:', this.line.type);
+       
               
             animationResult = startFlowAnimation(this.draw, this.line, animationConfig);
             break;
         }
-        console.log('HorizontalLine: Animation result:', {
-          elementsCount: animationResult.elements?.length,
-          runnersCount: animationResult.runners?.length
-        });
+      
 
-        if (!animationResult.elements?.length) {
-          console.warn('HorizontalLine: Animation returned no elements');
-        }
+      
 
         this.animationElements = animationResult.elements || [];
         this.animationRunners = animationResult.runners || [];
@@ -513,7 +460,6 @@ export default {
               try {
                 el.front();
               } catch (e) {
-                console.error('HorizontalLine: Error calling front() on animation element:', e);
               }
             }
           });
@@ -521,12 +467,10 @@ export default {
             try {
               this.line.back();
             } catch (e) {
-              console.error('HorizontalLine: Error calling back() on line:', e);
             }
           }
         }
       } catch (e) {
-        console.error('HorizontalLine: Error in _updateAnimation:', e);
         this._clearAnimation();
       }
     },
@@ -534,7 +478,6 @@ export default {
     updateArrows() {
       // 确保绘图实例和线条存在
       if (!this.draw || !this.line) {
-        console.warn('HorizontalLine: updateArrows - draw or line is null');
         return;
       }
       
@@ -585,7 +528,6 @@ export default {
           );
         }
       } catch (err) {
-        console.error('HorizontalLine: Failed to update arrows:', err);
       }
     },
     
@@ -663,7 +605,6 @@ export default {
           }
           
           default:
-            console.warn(`HorizontalLine: Unknown arrow style: ${style}`);
             return null;
         }
         
@@ -674,7 +615,6 @@ export default {
         
         return arrow;
       } catch (err) {
-        console.error('HorizontalLine: Failed to create arrow:', err);
         return null;
       }
     },

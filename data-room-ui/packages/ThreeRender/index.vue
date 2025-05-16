@@ -95,7 +95,6 @@ export default {
               config = this.transformSettingToOption(config, 'data');
           } 
       } catch (e) {
-          console.error('[dataFormatting] 调用 transformSettingToOption 时出错:', e);
       }
       // --- 同步逻辑结束 ---
 
@@ -214,7 +213,6 @@ export default {
           try {
             config.theme = settingToTheme(_.cloneDeep(config), this.customTheme)
           } catch (e) {
-            console.error('设置主题失败:', e)
           }
         }
 
@@ -226,13 +224,11 @@ export default {
               this.changeActiveItemConfig(config)
             }
           } catch (e) {
-            console.error('更新配置失败:', e)
           }
         }
 
         return config
       } catch (error) {
-        console.error('changeStyle方法执行出错:', error)
         return config || this.config || {}
       }
     },

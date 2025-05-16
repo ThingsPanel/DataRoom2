@@ -272,7 +272,6 @@ export function download (url, headers = {}, params = {}, body = {}) {
         message: '服务异常',
         type: 'error'
       })
-      console.error('服务异常')
     })
   })
 }

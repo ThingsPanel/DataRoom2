@@ -97,7 +97,6 @@ export default {
         resizeObserver.observe(dragSelect)
         this.$_resizeObserver = resizeObserver
     } else {
-        console.warn(`[EchartsRender] Could not find element to observe for resize.`)
     }
   },
   beforeDestroy () {
@@ -130,7 +129,6 @@ export default {
                     this.setLoading(false)
                     this.processedData = []
                     this.showChart = false
-                    console.error("[EchartsRender chartInit] Error fetching initial data:", error)
                 })
         } else {
             this.setLoading(true)
@@ -148,7 +146,6 @@ export default {
                     this.setLoading(false)
                     this.processedData = []
                     this.showChart = false
-                    console.error("[EchartsRender chartInit] Error fetching update data:", error)
                 })
         }
     },
@@ -168,7 +165,6 @@ export default {
           this.setLoading(false)
           this.processedData = []
           this.showChart = false
-          console.error("[EchartsRender dataInit] Error fetching linked data:", error)
         })
     },
     dataFormatting (config, data) {
@@ -184,13 +180,11 @@ export default {
             }
           } catch (e) {
             processedDataSource = []
-            console.error(`[EchartsRender dataFormatting] Error executing dataHandler for ${config.name}:`, e)
           }
         }
         config.processedDataSource = processedDataSource
       } else {
         processedDataSource = []
-        console.warn(`[EchartsRender dataFormatting] API data fetch failed for ${config.name}`)
         config.processedDataSource = processedDataSource
       }
 

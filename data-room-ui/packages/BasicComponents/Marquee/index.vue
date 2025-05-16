@@ -263,7 +263,6 @@ export default {
             // 此处函数处理data
             eval(config.dataHandler)
           } catch (e) {
-            console.info(e)
           }
         }
         config.option.data = data
@@ -371,7 +370,6 @@ export default {
           try {
             this.audio.play()
           } catch (e) {
-            console.info(e)
           }
         }
         if (this.speech) {
@@ -382,7 +380,6 @@ export default {
           try {
             this.audio.pause()
           } catch (e) {
-            console.info(e)
           }
         }
         if (this.speech) {

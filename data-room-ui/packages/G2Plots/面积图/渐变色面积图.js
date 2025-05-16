@@ -545,7 +545,6 @@ const dataHandler = `
           // 格式化为 HH:00 字符串
           item.fxTime = String(hours).padStart(2, '0') + ':00'; 
         } catch (e) {
-          console.error('[渐变色面积图 dataHandler] Error processing fxTime:', item.fxTime, e);
           item.fxTime = 'Invalid Time'; // 或者设置为 null 或其他默认值
         }
       }

@@ -154,7 +154,6 @@ export default {
           this.registerClickEvent(config)
           return
         } catch(e) {
-          console.error('加载本地地图数据失败:', e)
         }
       }
 
@@ -175,7 +174,6 @@ export default {
         // 注册点击事件
         this.registerClickEvent(config)
       } catch(e) {
-        console.error('获取地图数据失败:', e)
         this.$message({
           message: '获取地图数据失败',
           type: 'error'
@@ -391,7 +389,6 @@ export default {
           echarts.registerMap(params.name, geoJsonObj)
           this.charts.setOption(this.option, true)
         } catch (error) {
-          console.error('下钻操作失败:', error)
           this.$message({
             message: '下钻操作失败',
             type: 'error'

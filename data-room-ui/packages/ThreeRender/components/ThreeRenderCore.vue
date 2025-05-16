@@ -268,7 +268,6 @@ export default {
       try {
         const container = this.$refs.container;
         if (!container) {
-           console.error('[ThreeRenderCore initThree] Container not found.');
            return;
         }
         this.containerWidth = container.clientWidth;
@@ -331,7 +330,6 @@ export default {
         // Start Animation Loop
         this.animate();
       } catch (err) {
-        console.error("Error initializing Three.js:", err);
         this.error = "Failed to initialize 3D view.";
       }
     },
@@ -370,7 +368,6 @@ export default {
 
     loadModel() {
       if (!this.scene) {
-        console.error('[ThreeRenderCore loadModel] Scene not initialized.');
         return;
       }
 
@@ -389,7 +386,6 @@ export default {
 
       if (!modelPath) {
         this.error = 'Model path is not specified in config.option.customize';
-        console.error('[ThreeRenderCore loadModel]', this.error);
         this.loading = false;
         return;
       }
@@ -421,7 +417,6 @@ export default {
         },
         (xhr) => {
           // Progress indicator (optional)
-          // console.log((xhr.loaded / xhr.total * 100) + '% loaded');
         },
         (loadError) => {
           this.error = `Failed to load model: ${loadError.message || 'Unknown error'}`;
@@ -471,7 +466,6 @@ export default {
             this.camera.near = Math.max(0.1, distance / 100); // Ensure near > 0
             this.camera.far = distance * 100;
         } catch (e) {
-             console.error('[ThreeRenderCore] Error applying custom camera view:', e);
              // Fallback to default fitting if error occurs
              this.fitCameraToModelFallback(targetModel);
         }
@@ -607,7 +601,6 @@ export default {
          navigator.clipboard.writeText(configString)
         
        } catch (e) {
-         console.error('[ThreeRenderCore] Error stringifying config: ', e);
        }
      },
 
@@ -622,7 +615,6 @@ export default {
                     // Directly assign camelCase or kebab-case (browser handles most)
                     element.style[prop] = styleObject[prop];
                 } catch (e) {
-                    console.warn(`[applyStyles] Failed to apply style ${prop}: ${styleObject[prop]}`, e);
                 }
             }
         }
@@ -649,7 +641,6 @@ export default {
       if (!container || !Array.isArray(dataPoints)) {
         return;
       }
-      console.log(`[ThreeRenderCore] Recreating ${dataPoints.length} HTML labels...`);
 
       const initialDataArray = this.config?.option?.data || [];
       const initialDataMap = new Map(initialDataArray.map(item => item && item.id !== undefined ? [item.id, item.value] : null).filter(Boolean));
@@ -660,9 +651,6 @@ export default {
         }
         const pointId = point.id || `label-${index}`;
 
-        console.log(`[ThreeRenderCore createHtmlLabels] Processing point ${index} (ID: ${pointId}):`,
-                     JSON.parse(JSON.stringify(point))
-                    );
 
         // Create elements
         const labelElement = document.createElement('div');
@@ -756,7 +744,6 @@ export default {
              }
         }
       });
-       console.log(`[ThreeRenderCore] Finished recreating ${this.htmlLabels.length} HTML labels.`);
        this.$nextTick(() => {
            if (this.camera && this.renderer) {
              this.updateHtmlLabelPositions();
@@ -973,7 +960,6 @@ export default {
 
             } 
         });
-         console.log('[ThreeRenderCore] Finished updating static label content and styles.');
     },
     // -------------------------------------------------
   }

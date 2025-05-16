@@ -111,14 +111,11 @@ async function processSvgFile(filePath) {
     
     if (needWriteBack) {
       await writeFile(filePath, content, 'utf8');
-      console.log(`已处理: ${filePath}`);
       return true;
     } else {
-      console.log(`跳过: ${filePath} (没有需要处理的内容)`);
       return false;
     }
   } catch (error) {
-    console.error(`处理文件 ${filePath} 时出错:`, error);
     return false;
   }
 }
@@ -149,7 +146,6 @@ async function processDirectory(directory) {
     
     return processed;
   } catch (error) {
-    console.error(`处理目录 ${directory} 时出错:`, error);
     return 0;
   }
 }
@@ -181,31 +177,22 @@ async function main() {
     iconsDir = normalizePath(args[0]);
   }
   
-  console.log('SVG颜色转换工具');
-  console.log('----------------');
-  console.log(`处理目录: ${iconsDir}`);
   
   try {
     // 检查目录是否存在
     await stat(iconsDir);
   } catch (error) {
-    console.error(`错误: 目录 ${iconsDir} 不存在。`);
     process.exit(1);
   }
   
-  console.log('开始处理SVG图标...');
   
   const startTime = Date.now();
   const totalProcessed = await processDirectory(iconsDir);
   const endTime = Date.now();
   
-  console.log('\n处理完成!');
-  console.log(`共转换了 ${totalProcessed} 个SVG图标。`);
-  console.log(`耗时: ${((endTime - startTime) / 1000).toFixed(2)}秒`);
 }
 
 // 直接执行主函数
 main().catch(error => {
-  console.error('发生错误:', error);
   process.exit(1);
 }); 

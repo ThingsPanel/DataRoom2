@@ -218,7 +218,6 @@ export default {
   mounted() {
     // 确保config和customize对象都存在
     if (!this.config || !this.config.customize) {
-      console.warn('CanvasLine setting: config or customize is undefined');
       return;
     }
     

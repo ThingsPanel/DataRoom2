@@ -118,7 +118,6 @@ export default {
         const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
         return weekdays[dayIndex];
       } catch (e) {
-        console.error("Error parsing date for weekday:", dateStr, e);
         return '日期格式错误';
       }
     },
@@ -126,7 +125,6 @@ export default {
       let dataList = [] // 默认空数组
       if (data.success) {
         if (data.data instanceof Array) {
-          console.log("MultiMetricCard Data", data.data)
           dataList = data.data
         } else{
           dataList=[]

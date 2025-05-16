@@ -8,10 +8,8 @@ import { SVG } from '@svgdotjs/svg.js';
  * @returns {Object} 动画元素和运行器
  */
 export function startDropletAnimation(draw, pathElement, config) {
-  console.log('AnimationUtils: Starting droplet animation with config:', config);
   
   if (!draw || !pathElement) {
-    console.warn('AnimationUtils: Droplet - draw or pathElement is null');
     return { elements: [], runners: [] };
   }
 
@@ -37,7 +35,6 @@ export function startDropletAnimation(draw, pathElement, config) {
       return { elements: [], runners: [] };
     }
   } catch (err) {
-    console.error('AnimationUtils: Droplet - Error getting path info:', err);
     return { elements: [], runners: [] };
   }
 
@@ -115,10 +112,8 @@ export function startDropletAnimation(draw, pathElement, config) {
  * @returns {Object} 动画元素和运行器
  */
 export function startFlowAnimation(draw, pathElement, config) {
-  console.log('AnimationUtils: Starting flow animation with config:', config);
   
   if (!draw || !pathElement) {
-    console.warn('AnimationUtils: Flow - draw or pathElement is null');
     return { elements: [], runners: [] };
   }
 
@@ -133,18 +128,14 @@ export function startFlowAnimation(draw, pathElement, config) {
       x2 = parseFloat(pathElement.attr('x2') || 0);
       y2 = parseFloat(pathElement.attr('y2') || 0);
       pathLength = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-      console.log('AnimationUtils: Flow - Line coordinates:', { x1, y1, x2, y2, pathLength });
     } else {
       pathLength = pathElement.length();
-      console.log('AnimationUtils: Flow - Path length:', pathLength);
     }
     
     if (pathLength <= 0) {
-      console.warn('AnimationUtils: Flow - Invalid path length:', pathLength);
       return { elements: [], runners: [] };
     }
   } catch (err) {
-    console.error('AnimationUtils: Flow - Error getting path info:', err);
     return { elements: [], runners: [] };
   }
 
@@ -160,7 +151,6 @@ export function startFlowAnimation(draw, pathElement, config) {
     const flowThickness = Math.max(1, config.flowThickness || 4);
     const isForward = config.animationDirection !== 'backward';
     
-    console.log('AnimationUtils: Flow - Using continuous CSS animation');
     
     // 创建两条流水线，错开位置
     for (let i = 0; i < 2; i++) {
@@ -192,7 +182,6 @@ export function startFlowAnimation(draw, pathElement, config) {
     
     // 计算动画时长 - 速度越大，时长越短
     const duration = Math.max(200, Math.min(2000, 1000 / speed));
-    console.log('AnimationUtils: Flow - Animation duration:', duration, 'ms');
     
     // 使用CSS动画实现完全流畅的效果
     const styleElement = document.createElement('style');
@@ -244,7 +233,6 @@ export function startFlowAnimation(draw, pathElement, config) {
       runners: animationRunners
     };
   } catch (err) {
-    console.error('AnimationUtils: Flow - Error creating continuous flow animation:', err);
     return { elements: [], runners: [] };
   }
 }

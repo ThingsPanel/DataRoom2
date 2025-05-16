@@ -169,7 +169,6 @@ export const sendRequest = async (config) => {
 export const startPolling = (config, callback, errorCallback) => {
   // 必须提供组件ID
   if (!config.componentId) {
-    console.error('必须提供组件ID来启动轮询')
     return null
   }
   
@@ -218,7 +217,6 @@ export const startPolling = (config, callback, errorCallback) => {
  */
 export const stopPolling = (componentId) => {
   if (!componentId) {
-    console.error('必须提供组件ID来停止轮询')
     return
   }
   
