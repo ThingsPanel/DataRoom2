@@ -9,6 +9,17 @@ export const settingConfig = {
     }
   }
 }
+
+// 箭头样式选项
+export const ArrowStyleOptions = [
+  { label: '无', value: 'none' },
+  { label: '标准箭头', value: 'arrow' },
+  { label: '三角形', value: 'triangle' },
+  { label: '圆形', value: 'circle' },
+  { label: '方形', value: 'square' },
+  { label: '菱形', value: 'diamond' }
+]
+
 const customConfig = {
   type: 'verticalLine',
   root: {
@@ -36,6 +47,15 @@ const customConfig = {
     enableLineDash: false,
     lineDashValue: 5,
     lineGapValue: 5,
+    
+    // 箭头样式设置 - 新增
+    startArrowStyle: 'none', // 起点箭头样式：none, arrow, triangle, circle, square, diamond
+    startArrowSize: 6,       // 起点箭头大小
+    startArrowColor: '',     // 起点箭头颜色，为空时继承线条颜色
+    
+    endArrowStyle: 'none',   // 终点箭头样式：none, arrow, triangle, circle, square, diamond
+    endArrowSize: 6,         // 终点箭头大小
+    endArrowColor: '',       // 终点箭头颜色，为空时继承线条颜色
 
     // 动画属性
     animationActive: false,

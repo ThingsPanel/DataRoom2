@@ -9,6 +9,17 @@ export const settingConfig = {
     }
   }
 }
+
+// 箭头样式选项
+export const ArrowStyleOptions = [
+  { label: '无', value: 'none' },
+  { label: '标准箭头', value: 'arrow' },
+  { label: '三角形', value: 'triangle' },
+  { label: '圆形', value: 'circle' },
+  { label: '方形', value: 'square' },
+  { label: '菱形', value: 'diamond' }
+]
+
 const customConfig = {
   type: 'horizontalLine',
   root: {
@@ -54,6 +65,15 @@ const customConfig = {
     lineDashValue: 5,
     lineGapValue: 5,
 
+    // 箭头样式设置 - 新增
+    startArrowStyle: 'none', // 起点箭头样式：none, arrow, triangle, circle, square, diamond
+    startArrowSize: 6,       // 起点箭头大小
+    startArrowColor: '',     // 起点箭头颜色，为空时继承线条颜色
+    
+    endArrowStyle: 'none',   // 终点箭头样式：none, arrow, triangle, circle, square, diamond
+    endArrowSize: 6,         // 终点箭头大小
+    endArrowColor: '',       // 终点箭头颜色，为空时继承线条颜色
+    
     // Animation properties (adapted from FabricLine)
     animationActive: false,
     animationType: 'none', // 'none', 'droplet', 'flow'
@@ -64,7 +84,7 @@ const customConfig = {
     dropletSize: 3,              // Droplet radius
     flowColor: '#40a9ff',        // Flow animation color (can be same as lineColor)
     flowThickness: 4,          // Flow animation thickness (defaults to lineWidth)
-    flowDensity: 10            // Flow animation dash density
+    flowDensity: 10            // Flow animation density
   }
 }
 export const dataConfig = {

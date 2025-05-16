@@ -30,6 +30,8 @@ export default {
     return {
       draw: null,
       line: null,
+      startArrow: null, // 新增：起点箭头元素
+      endArrow: null,   // 新增：终点箭头元素
       svgWidth: 0,
       svgHeight: 0,
       animationElements: [],
@@ -92,6 +94,27 @@ export default {
     flowDensity() {
       const density = this.config.customize.flowDensity;
       return typeof density === 'number' && density > 0 ? density : 10;
+    },
+    // 箭头属性 - 起点
+    startArrowStyle() {
+      return this.config.customize.startArrowStyle || 'none';
+    },
+    startArrowSize() {
+      return this.config.customize.startArrowSize || 6;
+    },
+    startArrowColor() {
+      return this.config.customize.startArrowColor || this.lineColor;
+    },
+    
+    // 箭头属性 - 终点
+    endArrowStyle() {
+      return this.config.customize.endArrowStyle || 'none';
+    },
+    endArrowSize() {
+      return this.config.customize.endArrowSize || 6;
+    },
+    endArrowColor() {
+      return this.config.customize.endArrowColor || this.lineColor;
     }
   },
   watch: {
@@ -113,7 +136,14 @@ export default {
     flowThickness() { if (this.animationActive && this.animationType === 'flow') this._updateAnimation() },
     flowDensity() { if (this.animationActive && this.animationType === 'flow') this._updateAnimation() },
     'config.w': 'debouncedHandleResize',
-    'config.h': 'debouncedHandleResize'
+    'config.h': 'debouncedHandleResize',
+    // 新增箭头样式相关监听
+    startArrowStyle() { this.updateArrows() },
+    startArrowSize() { this.updateArrows() },
+    startArrowColor() { this.updateArrows() },
+    endArrowStyle() { this.updateArrows() },
+    endArrowSize() { this.updateArrows() },
+    endArrowColor() { this.updateArrows() }
   },
   mounted () {
     this.$nextTick(() => {
@@ -124,6 +154,15 @@ export default {
   },
   beforeDestroy() {
     this._clearAnimation();
+    // 清理箭头元素
+    if (this.startArrow) {
+      this.startArrow.remove();
+      this.startArrow = null;
+    }
+    if (this.endArrow) {
+      this.endArrow.remove();
+      this.endArrow = null;
+    }
     if (this.resizeObserver && this.$refs.svgContainer) {
       this.resizeObserver.unobserve(this.$refs.svgContainer);
       this.resizeObserver = null;
@@ -171,6 +210,9 @@ export default {
         console.log('VerticalLine: SVG initialized - draw:', this.draw, 'line:', this.line);
         this.updateLineStyle();
         
+        // 初始化箭头
+        this.updateArrows();
+        
         // 初始化后启动动画
         this._updateAnimation();
       } catch (err) {
@@ -185,13 +227,27 @@ export default {
       console.log(`VerticalLine: updateLinePath - svgWidth: ${this.svgWidth}, svgHeight: ${this.svgHeight}`);
       try {
         const xPos = this.svgWidth / 2;
-        this.line.plot(xPos, 0, xPos, this.svgHeight);
+        
+        // 如果没有箭头，直接绘制整条线
+        if (this.startArrowStyle === 'none' && this.endArrowStyle === 'none') {
+          this.line.plot(xPos, 0, xPos, this.svgHeight);
+        } else {
+          // 有箭头时，在updateArrows中会调整线条，这里不做处理
+          // 仅在首次绘制时设置初始位置
+          if (!this.startArrow && !this.endArrow) {
+            this.line.plot(xPos, 0, xPos, this.svgHeight);
+          }
+        }
+        
         // 添加平滑渲染提示，减少卡顿
         this.line.attr({
           'shape-rendering': 'auto',
           'vector-effect': 'non-scaling-stroke'
         });
         console.log('VerticalLine: Line after plot:', this.line.attr(['x1', 'y1', 'x2', 'y2']));
+        
+        // 更新箭头
+        this.updateArrows();
       } catch (err) {
         console.error('VerticalLine: Failed to update line path:', err);
         // 如果更新路径失败，尝试重新创建线条
@@ -204,6 +260,7 @@ export default {
               'vector-effect': 'non-scaling-stroke'
             });
           this.updateLineStyle();
+          this.updateArrows();
         } catch (e) {
           console.error('VerticalLine: Failed to recreate line:', e);
         }
@@ -472,6 +529,166 @@ export default {
       } catch (e) {
         console.error('VerticalLine: Error in _updateAnimation:', e);
         this._clearAnimation();
+      }
+    },
+    
+    // 新增：更新箭头方法
+    updateArrows() {
+      // 确保绘图实例和线条存在
+      if (!this.draw || !this.line) {
+        console.warn('VerticalLine: updateArrows - draw or line is null');
+        return;
+      }
+      
+      try {
+        // 获取线条坐标
+        const x = this.svgWidth / 2;
+        
+        // 清理现有箭头
+        if (this.startArrow) {
+          this.startArrow.remove();
+          this.startArrow = null;
+        }
+        
+        if (this.endArrow) {
+          this.endArrow.remove();
+          this.endArrow = null;
+        }
+        
+        // 计算箭头偏移量，确保箭头完全在容器内
+        const startArrowOffset = this.startArrowStyle === 'none' ? 0 : Math.max(this.startArrowSize * 1.5, this.lineWidth * 2);
+        const endArrowOffset = this.endArrowStyle === 'none' ? 0 : Math.max(this.endArrowSize * 1.5, this.lineWidth * 2);
+        
+        // 调整线条起点和终点，为箭头留出空间
+        if (this.line && (startArrowOffset > 0 || endArrowOffset > 0)) {
+          const xPos = this.svgWidth / 2;
+          this.line.plot(xPos, startArrowOffset, xPos, this.svgHeight - endArrowOffset);
+        }
+        
+        // 创建起点箭头，位置向下偏移确保在容器内
+        if (this.startArrowStyle !== 'none') {
+          this.startArrow = this.createArrow(
+            x, startArrowOffset,         // 箭头位置，向下偏移
+            this.startArrowStyle,        // 箭头样式
+            this.startArrowSize,         // 箭头大小
+            this.startArrowColor,        // 箭头颜色
+            'start'                      // 箭头方向
+          );
+        }
+        
+        // 创建终点箭头，位置向上偏移确保在容器内
+        if (this.endArrowStyle !== 'none') {
+          this.endArrow = this.createArrow(
+            x, this.svgHeight - endArrowOffset, // 箭头位置，向上偏移
+            this.endArrowStyle,                // 箭头样式
+            this.endArrowSize,                 // 箭头大小
+            this.endArrowColor,                // 箭头颜色
+            'end'                              // 箭头方向
+          );
+        }
+      } catch (err) {
+        console.error('VerticalLine: Failed to update arrows:', err);
+      }
+    },
+    
+    // 新增：创建箭头辅助方法
+    createArrow(x, y, style, size, color, direction) {
+      if (!this.draw) return null;
+      
+      // 箭头填充颜色，如果未指定则使用线条颜色
+      const fillColor = color || this.lineColor;
+      
+      // 定义向上或向下的箭头，不再依赖旋转
+      const isUp = direction === 'start';
+      let arrow = null;
+      
+      try {
+        switch (style) {
+          case 'arrow': {
+            // 标准箭头 - 直接绘制垂直方向的箭头，不再依赖旋转
+            const arrowWidth = size * 1.2;
+            const arrowHeight = size * 2;
+            
+            if (isUp) {
+              // 向上的箭头，尖端在上
+              arrow = this.draw.polygon([
+                [0, -arrowHeight], // 顶部尖端
+                [-arrowWidth/2, 0], // 左底角
+                [0, -arrowHeight*0.4], // 底部中点内凹
+                [arrowWidth/2, 0]  // 右底角
+              ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            } else {
+              // 向下的箭头，尖端在下
+              arrow = this.draw.polygon([
+                [0, arrowHeight], // 底部尖端
+                [-arrowWidth/2, 0], // 左上角
+                [0, arrowHeight*0.4], // 顶部中点内凹
+                [arrowWidth/2, 0]  // 右上角
+              ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            }
+            break;
+          }
+          
+          case 'triangle': {
+            // 三角形箭头 - 直接绘制垂直方向的三角形
+            const arrowWidth = size * 1.2;
+            const arrowHeight = size * 2;
+            
+            if (isUp) {
+              // 向上的三角形
+              arrow = this.draw.polygon([
+                [0, -arrowHeight], // 顶部尖端
+                [-arrowWidth/2, 0], // 左下角 
+                [arrowWidth/2, 0]   // 右下角
+              ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            } else {
+              // 向下的三角形
+              arrow = this.draw.polygon([
+                [0, arrowHeight], // 底部尖端
+                [-arrowWidth/2, 0], // 左上角 
+                [arrowWidth/2, 0]   // 右上角
+              ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            }
+            break;
+          }
+          
+          case 'circle': {
+            // 圆形
+            arrow = this.draw.circle(size * 2).fill(fillColor).center(x, y);
+            break;
+          }
+          
+          case 'square': {
+            // 垂直矩形
+            arrow = this.draw.rect(size, size * 2).fill(fillColor).center(x, y);
+            break;
+          }
+          
+          case 'diamond': {
+            // 垂直指向的菱形 - 上下尖角更长
+            arrow = this.draw.polygon([
+              [0, -size*1.5], // 上尖角
+              [size*0.8, 0],  // 右边
+              [0, size*1.5],  // 下尖角
+              [-size*0.8, 0]  // 左边
+            ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            break;
+          }
+          
+          default:
+            console.warn(`VerticalLine: Unknown arrow style: ${style}`);
+            return null;
+        }
+        
+        // 确保箭头在线条之上
+        if (arrow) {
+          arrow.front();
+        }
+        
+        return arrow;
+      } catch (err) {
+        console.error('VerticalLine: Failed to create arrow:', err);
+        return null;
       }
     }
   }

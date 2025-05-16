@@ -96,6 +96,83 @@
               </el-form-item>
             </template>
           </div>
+          
+          <!-- 新增箭头设置部分 -->
+          <SettingTitle>箭头样式</SettingTitle>
+          <div class="lc-field-body">
+            <!-- 起点箭头设置 -->
+            <el-form-item label="起点箭头">
+              <el-select
+                v-model="config.customize.startArrowStyle"
+                placeholder="选择起点箭头样式"
+                class="bs-el-select"
+              >
+                <el-option
+                  v-for="item in arrowStyleOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <template v-if="config.customize.startArrowStyle !== 'none'">
+              <el-form-item label="起点大小">
+                <el-input-number
+                  v-model="config.customize.startArrowSize"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="2"
+                  :max="20"
+                  :step="1"
+                />
+              </el-form-item>
+              <el-form-item label="起点颜色">
+                <ColorPicker
+                  v-model="config.customize.startArrowColor"
+                  placeholder="继承线条颜色"
+                  :predefine-colors="predefineThemeColors"
+                  allow-clear
+                />
+              </el-form-item>
+            </template>
+            
+            <!-- 终点箭头设置 -->
+            <el-form-item label="终点箭头">
+              <el-select
+                v-model="config.customize.endArrowStyle"
+                placeholder="选择终点箭头样式"
+                class="bs-el-select"
+              >
+                <el-option
+                  v-for="item in arrowStyleOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <template v-if="config.customize.endArrowStyle !== 'none'">
+              <el-form-item label="终点大小">
+                <el-input-number
+                  v-model="config.customize.endArrowSize"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="2"
+                  :max="20"
+                  :step="1"
+                />
+              </el-form-item>
+              <el-form-item label="终点颜色">
+                <ColorPicker
+                  v-model="config.customize.endArrowColor"
+                  placeholder="继承线条颜色"
+                  :predefine-colors="predefineThemeColors"
+                  allow-clear
+                />
+              </el-form-item>
+            </template>
+          </div>
+          
           <SettingTitle>动画</SettingTitle>
           <div class="lc-field-body">
             <el-form-item label="启用动画">
@@ -200,6 +277,8 @@ import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetti
 import {predefineColors} from "data-room-ui/js/utils/colorList";
 // 导入动画选项
 import { AnimationTypeOptions, AnimationDirectionOptions } from '../FabricLine/settingConfig.js'
+// 导入箭头样式选项
+import { ArrowStyleOptions } from './settingConfig.js'
 
 export default {
   name: 'VerticalLineSetting',
@@ -224,7 +303,9 @@ export default {
     return {
       // 提供动画选项下拉菜单
       animationTypeOptions: AnimationTypeOptions,
-      animationDirectionOptions: AnimationDirectionOptions
+      animationDirectionOptions: AnimationDirectionOptions,
+      // 箭头样式选项
+      arrowStyleOptions: ArrowStyleOptions
     }
   },
   watch: {},

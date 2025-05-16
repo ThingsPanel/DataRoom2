@@ -1,13 +1,16 @@
 <template>
-  <div
-    class="bs-design-wrap"
+  <div 
+    class="bs-text-wrapper"
     :class="`bs-text-${customTheme}`"
   >
     <div
       class="content-box"
-      :style="{'text-align': config.customize.align,'letter-spacing': config.customize.letterSpacing +'px','font-family': config.customize.fontFamily,'font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
+      :style="getContentStyle()"
     >
-      {{ config.customize.title }}
+      <template v-if="config.customize.visible !== false">
+        {{ config.customize.title }}
+      </template>
+      <template v-else>&nbsp;</template>
     </div>
   </div>
 </template>
@@ -38,6 +41,68 @@ export default {
     this.chartInit()
   },
   methods: {
+    // 获取内容样式，包括文字样式和背景色
+    getContentStyle() {
+      const style = {
+        'text-align': this.config.customize.align,
+        'letter-spacing': this.config.customize.letterSpacing +'px',
+        'font-family': this.config.customize.fontFamily,
+        'font-size': this.config.customize.fontSize +'px',
+        'font-weight': +this.config.customize.fontWeight,
+        'background-image': `-webkit-linear-gradient(${this.config.customize.color})`,
+        '-webkit-background-clip': 'text',
+        '-webkit-text-fill-color': 'transparent'
+      }
+      
+      // 处理背景变色逻辑
+      if (this.config.customize.isBackgroundColorChange) {
+        const value = String(this.config.customize.title).trim()
+        if (value === '1') {
+          style['background-color'] = '#E53E3E'
+          style['background-image'] = 'none'
+          style['-webkit-background-clip'] = 'border-box'
+          style['border-radius'] = '4px'
+          style['padding'] = '0 8px'
+          style['display'] = 'inline-block' // 使用inline-block保持行内特性但可设置内边距
+          
+          // 文字可见时才设置文字颜色
+          if (this.config.customize.visible !== false) {
+            style['-webkit-text-fill-color'] = 'white'
+            style['color'] = 'white'
+          } else {
+            // 文字隐藏但保留背景
+            style['min-width'] = '30px'
+            // 不设置高度，使用padding代替
+            style['padding-top'] = '2px'
+            style['padding-bottom'] = '2px'
+          }
+        } else if (value === '0') {
+          style['background-color'] = '#38A169'
+          style['background-image'] = 'none'
+          style['-webkit-background-clip'] = 'border-box'
+          style['border-radius'] = '4px'
+          style['padding'] = '0 8px'
+          style['display'] = 'inline-block' // 使用inline-block保持行内特性但可设置内边距
+          
+          // 文字可见时才设置文字颜色
+          if (this.config.customize.visible !== false) {
+            style['-webkit-text-fill-color'] = 'white'
+            style['color'] = 'white'
+          } else {
+            // 文字隐藏但保留背景
+            style['min-width'] = '30px'
+            // 不设置高度，使用padding代替
+            style['padding-top'] = '2px'
+            style['padding-bottom'] = '2px'
+          }
+        }
+      } else if (this.config.customize.visible === false) {
+        // 当文字隐藏且没有开启背景变色时，只保留一个占位符
+        style['display'] = 'inline' // 保持行内特性
+      }
+      
+      return style
+    },
     // 通过表达式计算得来的值
     getDataByExpression (config) {
       // 如果表达式是由其他组件的值构成的
@@ -67,20 +132,15 @@ export default {
 
 <style lang="scss" scoped>
 @import "../../assets/fonts/numberFont/stylesheet.css";
-  .bs-design-wrap{
+  .bs-text-wrapper {
+    /* 不设置固定宽度，让内容自适应 */
+    display: inline-block;
     width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    height: 100%;
   }
-  .content-box{
+  .content-box {
     width: 100%;
-    text-align: center;
-    /* 将背景设为渐变 */
-    /*background-image: -webkit-linear-gradient(left, #6294F7, #C85D14);*/
-    /* 规定背景绘制区域 */
-    -webkit-background-clip: text;
-    /* 将文字隐藏 */
-    -webkit-text-fill-color: transparent;
+    height: 100%;
+    /* 只保留基本样式，其他通过内联样式控制 */
   }
 </style>

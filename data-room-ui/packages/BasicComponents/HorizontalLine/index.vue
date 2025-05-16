@@ -31,6 +31,8 @@ export default {
     return {
       draw: null,
       line: null,
+      startArrow: null, // 新增：起点箭头元素
+      endArrow: null,   // 新增：终点箭头元素
       svgWidth: 0,
       svgHeight: 0,
       animationElements: [],
@@ -93,7 +95,28 @@ export default {
     flowDensity() {
       const density = this.config.customize.flowDensity;
       return typeof density === 'number' && density > 0 ? density : 10;
-    }
+    },
+    // Arrow properties - start
+    startArrowStyle() {
+      return this.config.customize.startArrowStyle || 'none';
+    },
+    startArrowSize() {
+      return this.config.customize.startArrowSize || 6;
+    },
+    startArrowColor() {
+      return this.config.customize.startArrowColor || this.lineColor;
+    },
+    
+    // Arrow properties - end
+    endArrowStyle() {
+      return this.config.customize.endArrowStyle || 'none';
+    },
+    endArrowSize() {
+      return this.config.customize.endArrowSize || 6;
+    },
+    endArrowColor() {
+      return this.config.customize.endArrowColor || this.lineColor;
+    },
   },
   watch: {
     opacity () { this.updateStyle() },
@@ -114,7 +137,14 @@ export default {
     flowThickness() { if (this.animationActive && this.animationType === 'flow') this._updateAnimation() },
     flowDensity() { if (this.animationActive && this.animationType === 'flow') this._updateAnimation() },
     'config.w': 'debouncedHandleResize',
-    'config.h': 'debouncedHandleResize'
+    'config.h': 'debouncedHandleResize',
+    // 新增箭头样式相关监听
+    startArrowStyle() { this.updateArrows() },
+    startArrowSize() { this.updateArrows() },
+    startArrowColor() { this.updateArrows() },
+    endArrowStyle() { this.updateArrows() },
+    endArrowSize() { this.updateArrows() },
+    endArrowColor() { this.updateArrows() },
   },
   mounted () {
     this.$nextTick(() => {
@@ -125,6 +155,15 @@ export default {
   },
   beforeDestroy() {
     this._clearAnimation();
+    // 清理箭头元素
+    if (this.startArrow) {
+      this.startArrow.remove();
+      this.startArrow = null;
+    }
+    if (this.endArrow) {
+      this.endArrow.remove();
+      this.endArrow = null;
+    }
     if (this.resizeObserver && this.$refs.svgContainer) {
       this.resizeObserver.unobserve(this.$refs.svgContainer);
       this.resizeObserver = null;
@@ -186,13 +225,27 @@ export default {
       console.log(`HorizontalLine: updateLinePath - svgWidth: ${this.svgWidth}, svgHeight: ${this.svgHeight}`);
       try {
         const yPos = this.svgHeight / 2;
-        this.line.plot(0, yPos, this.svgWidth, yPos);
+        
+        // 如果没有箭头，直接绘制整条线
+        if (this.startArrowStyle === 'none' && this.endArrowStyle === 'none') {
+          this.line.plot(0, yPos, this.svgWidth, yPos);
+        } else {
+          // 有箭头时，在updateArrows中会调整线条，这里不做处理
+          // 仅在首次绘制时设置初始位置
+          if (!this.startArrow && !this.endArrow) {
+            this.line.plot(0, yPos, this.svgWidth, yPos);
+          }
+        }
+        
         // 添加平滑渲染提示，减少卡顿
         this.line.attr({
           'shape-rendering': 'auto',
           'vector-effect': 'non-scaling-stroke'
         });
         console.log('HorizontalLine: Line after plot:', this.line.attr(['x1', 'y1', 'x2', 'y2']));
+        
+        // 更新箭头
+        this.updateArrows();
       } catch (err) {
         console.error('HorizontalLine: Failed to update line path:', err);
         // 如果更新路径失败，尝试重新创建线条
@@ -205,6 +258,7 @@ export default {
               'vector-effect': 'non-scaling-stroke'
             });
           this.updateLineStyle();
+          this.updateArrows();
         } catch (e) {
           console.error('HorizontalLine: Failed to recreate line:', e);
         }
@@ -475,7 +529,155 @@ export default {
         console.error('HorizontalLine: Error in _updateAnimation:', e);
         this._clearAnimation();
       }
-    }
+    },
+    // 新增：更新箭头方法
+    updateArrows() {
+      // 确保绘图实例和线条存在
+      if (!this.draw || !this.line) {
+        console.warn('HorizontalLine: updateArrows - draw or line is null');
+        return;
+      }
+      
+      try {
+        // 获取线条坐标
+        const y = this.svgHeight / 2;
+        
+        // 清理现有箭头
+        if (this.startArrow) {
+          this.startArrow.remove();
+          this.startArrow = null;
+        }
+        
+        if (this.endArrow) {
+          this.endArrow.remove();
+          this.endArrow = null;
+        }
+        
+        // 计算箭头偏移量，确保箭头完全在容器内
+        const startArrowOffset = this.startArrowStyle === 'none' ? 0 : Math.max(this.startArrowSize * 1.5, this.lineWidth * 2);
+        const endArrowOffset = this.endArrowStyle === 'none' ? 0 : Math.max(this.endArrowSize * 1.5, this.lineWidth * 2);
+        
+        // 调整线条起点和终点，为箭头留出空间
+        if (this.line && (startArrowOffset > 0 || endArrowOffset > 0)) {
+          const yPos = this.svgHeight / 2;
+          this.line.plot(startArrowOffset, yPos, this.svgWidth - endArrowOffset, yPos);
+        }
+        
+        // 创建起点箭头，位置向右偏移确保在容器内
+        if (this.startArrowStyle !== 'none') {
+          this.startArrow = this.createArrow(
+            startArrowOffset, y,     // 箭头位置，向右偏移
+            this.startArrowStyle,    // 箭头样式
+            this.startArrowSize,     // 箭头大小
+            this.startArrowColor,    // 箭头颜色
+            'start'                  // 箭头方向
+          );
+        }
+        
+        // 创建终点箭头，位置向左偏移确保在容器内
+        if (this.endArrowStyle !== 'none') {
+          this.endArrow = this.createArrow(
+            this.svgWidth - endArrowOffset, y, // 箭头位置，向左偏移
+            this.endArrowStyle,               // 箭头样式
+            this.endArrowSize,                // 箭头大小
+            this.endArrowColor,               // 箭头颜色
+            'end'                             // 箭头方向
+          );
+        }
+      } catch (err) {
+        console.error('HorizontalLine: Failed to update arrows:', err);
+      }
+    },
+    
+    // 新增：创建箭头辅助方法
+    createArrow(x, y, style, size, color, direction) {
+      if (!this.draw) return null;
+      
+      // 计算箭头方向角度（起点箭头指向左侧，终点箭头指向右侧）
+      const angle = direction === 'start' ? 180 : 0;
+      let arrow = null;
+      
+      // 箭头填充颜色，如果未指定则使用线条颜色
+      const fillColor = color || this.lineColor;
+      
+      try {
+        switch (style) {
+          case 'arrow': {
+            // 标准箭头
+            const arrowWidth = size;
+            const arrowHeight = size * 1.5;
+            
+            // 创建多边形路径
+            arrow = this.draw.polygon([
+              [0, 0],                     // 箭头尖端
+              [-arrowHeight, arrowWidth/2], // 右下角
+              [-arrowHeight*0.6, 0],      // 底部中点内凹
+              [-arrowHeight, -arrowWidth/2] // 右上角
+            ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            
+            // 应用旋转
+            arrow.rotate(angle);
+            break;
+          }
+          
+          case 'triangle': {
+            // 三角形箭头
+            const arrowWidth = size;
+            const arrowHeight = size * 1.5;
+            
+            // 创建三角形
+            arrow = this.draw.polygon([
+              [0, 0],                      // 箭头尖端
+              [-arrowHeight, arrowWidth/2], // 右下角
+              [-arrowHeight, -arrowWidth/2] // 右上角
+            ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            
+            // 应用旋转
+            arrow.rotate(angle);
+            break;
+          }
+          
+          case 'circle': {
+            // 圆形
+            arrow = this.draw.circle(size * 2).fill(fillColor).center(x, y);
+            break;
+          }
+          
+          case 'square': {
+            // 方形
+            arrow = this.draw.rect(size * 1.8, size * 1.8).fill(fillColor).center(x, y);
+            
+            // 方形不需要旋转
+            break;
+          }
+          
+          case 'diamond': {
+            // 菱形
+            arrow = this.draw.polygon([
+              [0, -size],         // 上
+              [size, 0],          // 右
+              [0, size],          // 下
+              [-size, 0]          // 左
+            ]).fill(fillColor).stroke({width: 0}).center(x, y);
+            break;
+          }
+          
+          default:
+            console.warn(`HorizontalLine: Unknown arrow style: ${style}`);
+            return null;
+        }
+        
+        // 确保箭头在线条之上
+        if (arrow) {
+          arrow.front();
+        }
+        
+        return arrow;
+      } catch (err) {
+        console.error('HorizontalLine: Failed to create arrow:', err);
+        return null;
+      }
+    },
   }
 }
 </script>

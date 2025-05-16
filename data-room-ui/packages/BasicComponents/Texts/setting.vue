@@ -120,6 +120,26 @@
             />
           </el-select>
         </el-form-item>
+        <el-form-item
+          label="文字显示"
+          label-width="100px"
+        >
+          <el-switch
+            v-model="config.customize.visible"
+            active-text="显示"
+            inactive-text="隐藏"
+          />
+        </el-form-item>
+        <el-form-item
+          label="背景变色"
+          label-width="100px"
+        >
+          <el-switch
+            v-model="config.customize.isBackgroundColorChange"
+            active-text="开启"
+            inactive-text="关闭"
+          />
+        </el-form-item>
         <TextGradient v-model="config.customize.color" />
       </div>
     </el-form>

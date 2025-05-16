@@ -11,7 +11,6 @@
           <SettingTitle>位置</SettingTitle>
           <div class="lc-field-body">
             <PosWhSetting :config="config" />
-            1
           </div>
         <SettingTitle>图标属性</SettingTitle>
         <div class="lc-field-body">
@@ -21,11 +20,26 @@
               :predefine="predefineThemeColors"
             />
           </el-form-item>
+             
+          <el-form-item label="虚线样式">
+            <el-select 
+              v-model="dashStyle" 
+              placeholder="选择虚线样式" 
+              size="small"
+              @change="updateDasharray"
+            >
+              <el-option label="实线" value=""></el-option>
+              <el-option label="虚线 (短)" value="5,5"></el-option>
+              <el-option label="虚线 (中)" value="10,5"></el-option>
+              <el-option label="虚线 (长)" value="15,5"></el-option>
+              <el-option label="点线" value="2,5"></el-option>
+              <el-option label="点划线" value="10,5,2,5"></el-option>
+            </el-select>
+          </el-form-item>
         </div>
-      </el-form>
-
-      <!-- 平铺的图标选择器 -->
-      <div class="icon-selector-panel">
+        
+   <!-- 平铺的图标选择器 -->
+   <div class="icon-selector-panel">
         <SettingTitle>图标选择</SettingTitle>
         <div class="icon-selector">
           <!-- 搜索框 -->
@@ -104,6 +118,80 @@
           </div>
         </div>
       </div>
+
+
+        <!-- 文字设置 -->
+        <SettingTitle>文字设置</SettingTitle>
+        <div class="lc-field-body">
+          <el-form-item label="显示文字">
+            <el-switch v-model="config.customize.showText"></el-switch>
+          </el-form-item>
+          
+          <template v-if="config.customize.showText">
+            <el-form-item label="文字内容">
+              <el-input 
+                v-model="config.customize.text" 
+                placeholder="请输入文字内容" 
+                size="small"
+              ></el-input>
+            </el-form-item>
+            
+            <el-form-item label="文字颜色">
+              <ColorPicker
+                v-model="config.customize.textStyle.color"
+                :predefine="predefineThemeColors"
+              />
+            </el-form-item>
+            
+            <el-form-item label="字体大小">
+              <el-input-number 
+                v-model="textFontSize" 
+                :min="10" 
+                :max="32" 
+                :step="1" 
+                size="small"
+                @change="updateFontSize"
+              ></el-input-number>
+            </el-form-item>
+            
+            <el-form-item label="字体粗细">
+              <el-select 
+                v-model="config.customize.textStyle.fontWeight" 
+                placeholder="选择字体粗细" 
+                size="small"
+              >
+                <el-option label="正常" value="normal"></el-option>
+                <el-option label="粗体" value="bold"></el-option>
+                <el-option label="细体" value="300"></el-option>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="文字位置">
+              <el-select 
+                v-model="config.customize.textStyle.position" 
+                placeholder="选择文字位置" 
+                size="small"
+              >
+                <el-option label="顶部" value="top"></el-option>
+                <el-option label="底部" value="bottom"></el-option>
+                <el-option label="左侧" value="left"></el-option>
+                <el-option label="右侧" value="right"></el-option>
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="文字间距">
+              <el-slider 
+                v-model="config.customize.textStyle.offset" 
+                :min="0" 
+                :max="20" 
+                :step="1"
+              ></el-slider>
+            </el-form-item>
+          </template>
+        </div>
+      </el-form>
+
+   
     </div>
     <div v-else>
       <p>配置加载中或 Vuex store 中的 activeItemConfig.customize 不存在。</p>
@@ -136,7 +224,11 @@ export default {
       selectedMainCategory: '',
       selectedSubCategory: '',
       allIcons: iconsManifest || [],
-      categoryStructure: {} // 存储分类结构
+      categoryStructure: {}, // 存储分类结构
+      
+      // 虚线和文字设置相关数据
+      dashStyle: '', // 用户选择的虚线样式
+      textFontSize: 12, // 文字大小（数字形式）
     }
   },
   created() {
@@ -147,6 +239,9 @@ export default {
     if (this.mainCategories.length > 0) {
       this.selectedMainCategory = this.mainCategories[0];
     }
+    
+    // 初始化设置
+    this.initSettings();
   },
   computed: {
     config: {
@@ -208,6 +303,29 @@ export default {
     }
   },
   methods: {
+    // 初始化设置
+    initSettings() {
+      // 初始化虚线样式选择器
+      this.dashStyle = this.config.customize.strokeDasharray || '';
+      
+      // 初始化文字大小（从'12px'格式提取数字）
+      if (this.config.customize.textStyle && this.config.customize.textStyle.fontSize) {
+        const fontSizeStr = this.config.customize.textStyle.fontSize;
+        this.textFontSize = parseInt(fontSizeStr, 10) || 12;
+      }
+      
+      // 确保customize中有必要的对象
+      if (!this.config.customize.textStyle) {
+        this.$set(this.config.customize, 'textStyle', {
+          color: '#333333',
+          fontSize: '12px',
+          fontWeight: 'normal',
+          position: 'bottom',
+          offset: 5
+        });
+      }
+    },
+    
     // 处理分类结构，将分类解析为主分类和子分类
     processCategoryStructure() {
       const structure = {};
@@ -242,6 +360,16 @@ export default {
     // 选择图标
     selectIcon(icon) {
       this.config.customize.iconClass = icon.name;
+    },
+    
+    // 更新虚线样式
+    updateDasharray() {
+      this.config.customize.strokeDasharray = this.dashStyle;
+    },
+    
+    // 更新字体大小
+    updateFontSize() {
+      this.config.customize.textStyle.fontSize = `${this.textFontSize}px`;
     }
   }
 }
@@ -278,7 +406,6 @@ export default {
 
 .icon-selector-panel {
   margin-top: 2px;
-
   padding-top:2px;
 }
 
@@ -320,7 +447,7 @@ export default {
   
   .icon-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(50px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
     gap: 12px;
     padding: 10px;
     

@@ -128,6 +128,17 @@ const originalConfig = {
         }
       })
       .end()
+      
+    // 忽略工具脚本文件
+    config.module
+      .rule('exclude-tools')
+      .test(/(_[^/]*\.js|tools\/.*\.js)$/)
+      .exclude
+      .add(/node_modules/)
+      .end()
+      .use('ignore-loader')
+      .loader('ignore-loader')
+      .end()
   }
 }
 

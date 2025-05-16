@@ -34,8 +34,20 @@ const customConfig = {
   // Customize object holds the specific, unique properties of the SvgIcon
   customize: {
     iconClass: 'check',     // Default icon ID (e.g., filename without extension, like 'check' for 'check.svg')
-    color: '#333333',       // Default icon color         // Default icon size (e.g., "32px", "2em")
-    // className: ''       // Optional: if you want to allow users to add custom CSS classes to the SvgIcon wrapper
+    color: '#333333',       // Default icon color
+    // 线条样式
+    strokeWidth: 1,         // 线条宽度
+    strokeDasharray: '',    // 虚线样式，如"5,5"表示5像素实线，5像素空白
+    // 文字设置
+    showText: false,        // 是否显示文字
+    text: '',               // 文字内容
+    textStyle: {
+      color: '#333333',     // 文字颜色
+      fontSize: '12px',     // 文字大小
+      fontWeight: 'normal', // 文字粗细
+      position: 'bottom',   // 文字位置: 'top', 'bottom', 'left', 'right'
+      offset: 5             // 文字与图标的间距
+    }
   }
 }
 
