@@ -5,53 +5,31 @@
   >
     <div
       :style="{
-        'background-image': `linear-gradient(${customize.gradientDirection}, ${
-          gradientColor0 ? gradientColor0 : gradientColor1
-        } , ${gradientColor1 ? gradientColor1 : gradientColor0})`,
         'border-radius':customize.borderRadius + 'px',
         border:`${customize.borderWidth}px solid ${customize.borderColor}`,
       }"
       class="content"
     >
-      <div
-        class="content-right-first"
-        :style="{
-          'font-size': customize.firstSize + 'px',
-          'height':customize.firstSize + 'px',
-          color:customize.firstColor,
-          'font-weight':customize.firstWeight,
-          'margin-bottom':customize.lineDistance +'px'
-        }"
-      >
-        {{ customize.secondLine }}
-      </div>
-      <div
-        :style="{
-          'height': customize.secondSize + 'px',
-        }"
-        class="content-right-second"
-      >
-        <span
+   
+        <div 
+          v-for="key in this.customize.secondLine.split(',') " 
+          :key="key" 
+          style="text-align: left"
           :style="{
-            'font-family': config.customize.fontFamily,
-            'font-size': customize.secondSize + 'px',
-            color:customize.secondColor,
-            'font-weight':customize.secondWeight,
+            'font-size': customize.firstSize + 'px',
+            color: customize.secondColor,
+            display:'flex',
+            flexDirection:'row',
+            justifyContent:'space-between',
           }"
-        >
-          {{ optionData }}
-        </span>
-        <span
-          :style="{
-            'margin-left':'10px',
-            'font-size': customize.unitSize + 'px',
-            'line-height':customize.unitSize + 'px',
-            color:customize.unitColor,
-          }"
-        >
-          {{ unit }}
-        </span>
-      </div>
+        ><div>
+          <span >{{ listkey[key] }}</span>
+        </div>
+        <div>
+          <span>{{ optionData[0][key]  }}</span>
+        </div>
+        </div>
+     
     </div>
   </div>
 </template>
@@ -74,7 +52,10 @@ export default {
   data () {
     return {
       customClass: {},
-      dynamicValue: null
+      dynamicValue: null,
+      listkey:{
+        LA:'Ia',LB:'Ib',LC:'Ic',Q:'Q',P:'P',COS:'cosφ‌'
+      }
     }
   },
   watch: {
@@ -101,22 +82,46 @@ export default {
       return this.config?.option
     },
     optionData () {
-      return this.dynamicValue ?? this.option?.data ?? 80
+      console.log(this.dynamicValue,77);
+      console.log(this.option?.data,770);
+      const data = this.dynamicValue ?? this.option?.data ?? 80
+      
+      // 判断是否为JSON字符串
+      if (typeof data === 'string') {
+        try {
+          // 尝试解析JSON
+          return JSON.parse(data);
+        } catch (e) {
+          // 如果解析失败，说明不是有效的JSON字符串，直接返回原数据
+          return data;
+        }
+      }
+      
+      // 如果不是字符串，直接返回
+      return data;
     },
     customize () {
       return this.config?.customize
+    },
+    filteredKeys() {
+      // 确保 optionData 是对象
+      if (typeof this.optionData !== 'object' || this.optionData === null) {
+        return [];
+      }
+      
+      // 如果 secondLine 为空，则显示所有键
+      if (!this.customize.secondLine) {
+        return Object.keys(this.optionData);
+      }
+      
+      // 分割 secondLine 字符串获取需要显示的键列表
+      const keyList = this.customize.secondLine.split(',').map(key => key.trim());
+      
+      // 筛选出对象中存在的键
+      return keyList.filter(key => 
+        Object.prototype.hasOwnProperty.call(this.optionData, key)
+      );
     }
-    // tableData () {
-    //   let dataList = ''
-    //   if (this.optionData instanceof Array && this.optionData.length > 0) {
-    //     dataList = this.option?.yField
-    //       ? this.optionData[0][this.option.yField]
-    //       : this.optionData[0]?.value
-    //   } else {
-    //     dataList = this.optionData ? this.optionData[this.option.yField] : ''
-    //   }
-    //   return dataList
-    // }
   },
   methods: {
     dataFormatting (config, data) {
@@ -190,20 +195,22 @@ export default {
 <style lang="scss" scoped>
 @import "../../assets/fonts/numberFont/stylesheet.css";
 .content{
+color:#fff;
   display: flex;
   flex-direction: column;
   height: 100%;
   width: 100%;
-  text-align: center;
-  justify-content: center;
+  text-align: left;
+  justify-content: flex-start;
+  padding: 10px;
   .content-right-first{
     width: 100%;
-    text-align: center;
+    text-align: left;
     padding-bottom: 5px;
   }
   .content-right-second{
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
   }
 }

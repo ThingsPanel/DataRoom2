@@ -53,6 +53,7 @@ const typeList = [
   // 6. 指标卡片类 - 数据展示类
   'indicatorCard', // 指标卡
   'indicatorCard2', // 指标卡2
+  'indicatorCard5', // 指标卡5
   'indexCard', // 指数卡
   'indexCard2', // 指数卡2
   'multiMetricCard', // 添加多指标卡片
