@@ -56,7 +56,7 @@ const createRequestKey = (config) => {
  */
 const createAxiosInstance = (config = {}) => {
   return axios.create({
-    timeout: config.timeout || 300000,
+    timeout: config.timeout || 600000,
     headers: { 'Content-Type': 'application/json', ...config.headers }
   })
 }
@@ -153,7 +153,7 @@ export const sendRequest = async (config) => {
         params: config.method.toLowerCase() === 'get' ? requestParams : undefined,
         data: config.method.toLowerCase() === 'post' ? requestParams : undefined,
         signal: controller.signal,
-        timeout: config.timeout || 300000
+        timeout: config.timeout || 600000
       })
 
       // 请求完成后从队列移除

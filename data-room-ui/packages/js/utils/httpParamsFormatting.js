@@ -7,7 +7,7 @@ export default function axiosFormatting (customConfig) {
 
   // 将请求头和请求参数的值转化为对象形式
   const httpConfig = {
-    timeout: 1000 * 30,
+    timeout: 1000 * 300,
     baseURL: '',
     headers: { 'Content-Type': 'application/json', ...newCustomConfig.headers }
   }
