@@ -9,6 +9,39 @@ import { globalConfig } from 'data-room-ui/js/config' // 引入全局配置
  * 如果异常只是弹框显示即可，可使用该实例
  */
 
+// 添加请求缓存，用于截流
+const pendingRequests = new Map()
+
+// 生成请求的唯一标识
+const generateRequestKey = (config) => {
+  const { url, method, params, data } = config
+  return `${method}:${url}:${JSON.stringify(params)}:${JSON.stringify(data)}`
+}
+
+// 检查是否有相同请求正在进行中
+const checkPendingRequest = (config) => {
+  const requestKey = generateRequestKey(config)
+  if (pendingRequests.has(requestKey)) {
+    // 如果请求已经在进行中，返回一个已存在的Promise
+    return {
+      isPending: true,
+      promise: pendingRequests.get(requestKey)
+    }
+  }
+  return { isPending: false }
+}
+
+// 添加请求到缓存
+const addPendingRequest = (config, promise) => {
+  const requestKey = generateRequestKey(config)
+  pendingRequests.set(requestKey, promise)
+  return requestKey
+}
+
+// 从缓存中移除请求
+const removePendingRequest = (requestKey) => {
+  pendingRequests.delete(requestKey)
+}
 
 const httpConfig = {
   timeout: 1000 * 30,
@@ -164,7 +197,23 @@ export function get (url, params = {}, customHandlerException = false) {
     params._t = new Date().getTime()
   }
   const axiosInstance = customHandlerException ? httpCustom : http
-  return new Promise((resolve, reject) => {
+  
+  // 创建请求配置
+  const config = {
+    url,
+    method: 'get',
+    params,
+    data: {}
+  }
+  
+  // 检查是否有相同请求正在进行
+  const { isPending, promise } = checkPendingRequest(config)
+  if (isPending && !config.ignoreThrottle) {
+    // 如果有相同请求正在进行，直接返回已存在的promise
+    return promise
+  }
+  
+  const requestPromise = new Promise((resolve, reject) => {
     axiosInstance.get(url, {
       params: params,
       paramsSerializer: params => {
@@ -176,10 +225,19 @@ export function get (url, params = {}, customHandlerException = false) {
       } else {
         resolve(response.data)
       }
+      // 请求完成后，从缓存中移除
+      removePendingRequest(generateRequestKey(config))
     }).catch(err => {
       reject(err)
+      // 请求失败后，也要从缓存中移除
+      removePendingRequest(generateRequestKey(config))
     })
   })
+  
+  // 将请求添加到缓存中
+  addPendingRequest(config, requestPromise)
+  
+  return requestPromise
 }
 
 /**
@@ -193,18 +251,43 @@ export function post (url, data = {}, customHandlerException = false) {
     url = window.BS_CONFIG?.httpConfigs?.baseURL + url
   }
   const axiosInstance = customHandlerException ? httpCustom : http
-  data = JSON.stringify(data)
-  return new Promise((resolve, reject) => {
-    axiosInstance.post(url, data).then(response => {
+  const jsonData = JSON.stringify(data)
+  
+  // 创建请求配置
+  const config = {
+    url,
+    method: 'post',
+    params: {},
+    data
+  }
+  
+  // 检查是否有相同请求正在进行
+  const { isPending, promise } = checkPendingRequest(config)
+  if (isPending && !config.ignoreThrottle) {
+    // 如果有相同请求正在进行，直接返回已存在的promise
+    return promise
+  }
+  
+  const requestPromise = new Promise((resolve, reject) => {
+    axiosInstance.post(url, jsonData).then(response => {
       if (customHandlerException) {
         resolve(response)
       } else {
         resolve(response.data)
       }
+      // 请求完成后，从缓存中移除
+      removePendingRequest(generateRequestKey(config))
     }).catch(err => {
       reject(err)
+      // 请求失败后，也要从缓存中移除
+      removePendingRequest(generateRequestKey(config))
     })
   })
+  
+  // 将请求添加到缓存中
+  addPendingRequest(config, requestPromise)
+  
+  return requestPromise
 }
 /**
  * download 请求
@@ -227,8 +310,23 @@ export function download (url, headers = {}, params = {}, body = {}) {
     headers['x-api-key'] = ticket
   
   }
+  
+  // 创建请求配置
+  const config = {
+    url,
+    method: 'post',
+    params,
+    data: body
+  }
+  
+  // 检查是否有相同请求正在进行
+  const { isPending, promise } = checkPendingRequest(config)
+  if (isPending) {
+    // 对于下载请求，也应用截流
+    return promise
+  }
 
-  return new Promise((resolve, reject) => {
+  const requestPromise = new Promise((resolve, reject) => {
     axios({
       method: 'post',
       url: url,
@@ -238,10 +336,10 @@ export function download (url, headers = {}, params = {}, body = {}) {
       withCredentials: false,
       responseType: 'arraybuffer'
     }).then(res => {
-  
       // IE10,11采用自带下载文件流方法
       if ((!!window.ActiveXObject || 'ActiveXObject' in window) && window.navigator && window.navigator.msSaveOrOpenBlob) {
         window.navigator.msSaveOrOpenBlob(new Blob([res.data]), res.headers.filename)
+        removePendingRequest(generateRequestKey(config))
         return
       }
       const fileUrl = window.URL.createObjectURL(new Blob([res.data]))
@@ -259,6 +357,10 @@ export function download (url, headers = {}, params = {}, body = {}) {
       // 释放资源
       document.body.removeChild(fileLink)
       window.URL.revokeObjectURL(fileUrl)
+      
+      // 请求完成后，从缓存中移除
+      removePendingRequest(generateRequestKey(config))
+      resolve()
     }).catch(e => {
       const status = e?.response?.status
       if (status === 404) {
@@ -266,12 +368,20 @@ export function download (url, headers = {}, params = {}, body = {}) {
           message: '文件不存在或已被删除',
           type: 'error'
         })
-        return
+      } else {
+        Message({
+          message: '服务异常',
+          type: 'error'
+        })
       }
-      Message({
-        message: '服务异常',
-        type: 'error'
-      })
+      // 请求失败后，也要从缓存中移除
+      removePendingRequest(generateRequestKey(config))
+      reject(e)
     })
   })
+  
+  // 将请求添加到缓存中
+  addPendingRequest(config, requestPromise)
+  
+  return requestPromise
 }
