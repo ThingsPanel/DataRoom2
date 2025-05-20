@@ -398,8 +398,8 @@ export default function getComponentConfig (type) {
       }
     case 'indicatorCard5': // 指标卡二
       return {
-        name: '指标卡5',
-        title: '指标卡5',
+        name: '对象数据卡',
+        title: '对象数据卡',
         icon: Icon.getNameList()[31],
         // img: require('data-room-ui/assets/images/cardImg/card2.png'),
         className: 'com.gccloud.dataroom.core.module.chart.components.ScreenIndicatorCardChart',

@@ -16,17 +16,17 @@
           :key="key" 
           style="text-align: left"
           :style="{
-            'font-size': customize.firstSize + 'px',
-            color: customize.secondColor,
+            'font-size': customize.fontSize + 'px',
+            color: customize.fontColor,
             display:'flex',
             flexDirection:'row',
             justifyContent:'space-between',
           }"
         ><div>
-          <span >{{ listkey[key] }}</span>
+          <span>{{ getKeyName(key) }}</span>
         </div>
         <div>
-          <span>{{ optionData[0][key]  }}</span>
+          <span>{{ optionData[0][key] }}</span>
         </div>
         </div>
      
@@ -124,6 +124,14 @@ export default {
     }
   },
   methods: {
+    getKeyName(key) {
+      try {
+        const listKeyObj = JSON.parse(this.customize.unit);
+        return listKeyObj[key] || key;
+      } catch (e) {
+        return key;
+      }
+    },
     dataFormatting (config, data) {
       let dataList = ''
       if (data.success) {

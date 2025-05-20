@@ -59,24 +59,10 @@ const customConfig = {
     skewY: 0
   },
   customize: {
-    borderRadius: 0,
-    fontFamily: 'ds-digitalbold',
-    borderWidth: 0,
-    lineDistance: 25,
-    borderColor: '',
-    gradientDirection: 'to right',
-    gradientColor0: '#4391f4',
-    gradientColor1: '#38bbe5',
-    firstSize: 16,
-    firstColor: '#ffffff',
-    firstWeight: 500,
-    secondSize: 36,
-    secondColor: '#ffffff',
-    secondWeight: 500,
+    fontColor: '#ffffff', // 整体字体颜色
+    fontSize: 16, // 整体字体大小
     secondLine: 'LA,LB,LC,Q,P,COS', // 键名序列，用逗号隔开
-    unit: '',
-    unitSize: 32,
-    unitColor: '#fff'
+    unit: '{"LA":"流量","LB":"电流","LC":"输入电压","Q":"输出电压","P":"功率","COS":"效率"}' // 键名对应的中文说明(JSON字符串)
   }
 }
 export const dataConfig = {
