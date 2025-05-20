@@ -10,26 +10,51 @@
       }"
       class="content"
     >
-   
+      <!-- 当secondLine未设置时，展示所有键值对 -->
+      <template v-if="!customize.secondLine">
         <div 
-          v-for="key in this.customize.secondLine.split(',') " 
+          v-for="key in filteredKeys" 
           :key="key" 
           style="text-align: left"
           :style="{
-            'font-size': customize.fontSize + 'px',
-            color: customize.fontColor,
+            'font-size': customize.unitSize + 'px',
+            color: customize.unitColor,
             display:'flex',
             flexDirection:'row',
             justifyContent:'space-between',
           }"
-        ><div>
-          <span>{{ getKeyName(key) }}</span>
+        >
+          <div>
+            <span>{{ key }}</span>
+          </div>
+          <div>
+            <span>{{ optionData[key] }}</span>
+          </div>
         </div>
-        <div>
-          <span>{{ optionData[0][key] }}</span>
+      </template>
+      
+      <!-- 当secondLine已设置时，按指定顺序展示 -->
+      <template v-else>
+        <div 
+          v-for="key in keysToShow" 
+          :key="key" 
+          style="text-align: left"
+          :style="{
+            'font-size': customize.unitSize + 'px',
+            color: customize.unitColor,
+            display:'flex',
+            flexDirection:'row',
+            justifyContent:'space-between',
+          }"
+        >
+          <div>
+            <span>{{ getKeyName(key) }}</span>
+          </div>
+          <div>
+            <span>{{ optionData[key] }}</span>
+          </div>
         </div>
-        </div>
-     
+      </template>
     </div>
   </div>
 </template>
@@ -81,16 +106,35 @@ export default {
     option () {
       return this.config?.option
     },
+    keysToShow() {
+      if (!this.customize.secondLine) {
+        return this.filteredKeys;
+      }
+      
+      return this.customize.secondLine.split(',')
+        .map(key => key.trim())
+        .filter(key => key); // 过滤掉空字符串
+    },
     optionData () {
       console.log(this.dynamicValue,77);
       console.log(this.option?.data,770);
       const data = this.dynamicValue ?? this.option?.data ?? 80
       
+      // 如果是数组，返回第0号对象
+      if (Array.isArray(data) && data.length > 0) {
+        return data[0];
+      }
+      
       // 判断是否为JSON字符串
       if (typeof data === 'string') {
         try {
           // 尝试解析JSON
-          return JSON.parse(data);
+          const parsedData = JSON.parse(data);
+          // 如果解析后是数组，返回第0号对象
+          if (Array.isArray(parsedData) && parsedData.length > 0) {
+            return parsedData[0];
+          }
+          return parsedData;
         } catch (e) {
           // 如果解析失败，说明不是有效的JSON字符串，直接返回原数据
           return data;
@@ -109,24 +153,20 @@ export default {
         return [];
       }
       
-      // 如果 secondLine 为空，则显示所有键
-      if (!this.customize.secondLine) {
-        return Object.keys(this.optionData);
-      }
-      
-      // 分割 secondLine 字符串获取需要显示的键列表
-      const keyList = this.customize.secondLine.split(',').map(key => key.trim());
-      
-      // 筛选出对象中存在的键
-      return keyList.filter(key => 
-        Object.prototype.hasOwnProperty.call(this.optionData, key)
-      );
+      // 返回对象的所有键
+      return Object.keys(this.optionData);
     }
   },
   methods: {
     getKeyName(key) {
+      // 如果unit未设置，直接返回原始键名
+      if (!this.customize.unit) {
+        return key;
+      }
+      
       try {
         const listKeyObj = JSON.parse(this.customize.unit);
+        // 如果在unit中找不到对应的键名，返回原始键名
         return listKeyObj[key] || key;
       } catch (e) {
         return key;

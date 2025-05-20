@@ -37,13 +37,13 @@
         <div class="lc-field-body">
           <el-form-item label-width="100px" label="整体字体颜色">
             <ColorPicker
-              v-model="config.customize.fontColor"
+              v-model="config.customize.unitColor"
               :predefine="predefineThemeColors"
             />
           </el-form-item>
           <el-form-item label-width="100px" label="整体字体大小">
             <el-input-number
-              v-model="config.customize.fontSize"
+              v-model="config.customize.unitSize"
               :precision="0"
               class="bs-el-input-number"
               label="请输入字体大小"
