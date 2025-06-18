@@ -13,6 +13,9 @@ import cloneDeep from 'lodash/cloneDeep'
 import debounce from 'lodash/debounce'
 import { sendRequest, startPolling, stopPolling } from '../../js/utils/httpRequest'
 
+// 注意：IoT轮询功能已被禁用
+// import { sendRequest, startPolling, stopPolling } from '../../js/utils/httpRequest'
+
 export default {
   data () {
     return {
@@ -126,9 +129,10 @@ export default {
     if (this.debouncedChangeData && this.debouncedChangeData.cancel) {
       this.debouncedChangeData.cancel();
     }
-    if (this.config && this.config.code) {
-      stopPolling(this.config.code)
-    }
+    // IoT轮询功能已被禁用
+    // if (this.config && this.config.code) {
+    //   stopPolling(this.config.code)
+    // }
   },
   methods: {
     ...mapMutations({
@@ -211,7 +215,7 @@ export default {
                   headers: {},
                   params: { ...userConfig.queryParams },
                   componentId: config.code,
-                  pollingInterval: 6000 // 设置轮询间隔为6秒
+                  // pollingInterval: 6000 // 轮询功能已被禁用
                 }
              
 
@@ -236,56 +240,57 @@ export default {
                   requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
                 }
 
+                // IoT轮询功能已被禁用
                 // 在预览模式下使用轮询
-                if (this.isPreview) {
-                  // 先停止之前的轮询
-                  stopPolling(config.code)
-                  
-                  // 启动新的轮询
-                  startPolling(requestConfig, 
-                    (result) => {
-                      if (!result || !result.data) {
-                        return
-                      }
+                // if (this.isPreview) {
+                //   // 先停止之前的轮询
+                //   stopPolling(config.code)
+                //   
+                //   // 启动新的轮询
+                //   startPolling(requestConfig, 
+                //     (result) => {
+                //       if (!result || !result.data) {
+                //         return
+                //       }
 
-                      // 使用与普通请求相同的数据处理流程
-                      let responseData = result.data
-                      if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
-                        responseData = responseData.points
-                      }
-                      
-                      // 使用与普通请求相同的数据格式化方法
-                      const formattedData = this.apiDataFormatting({ success: true, columnData: res.columnData }, responseData)
+                //       // 使用与普通请求相同的数据处理流程
+                //       let responseData = result.data
+                //       if (userConfig.responseScript && userConfig.responseScript.includes('points')) {
+                //         responseData = responseData.points
+                //       }
+                //       
+                //       // 使用与普通请求相同的数据格式化方法
+                //       const formattedData = this.apiDataFormatting({ success: true, columnData: res.columnData }, responseData)
 
-                      // 更新到vuex
-                      this.updateDataset({ 
-                        code: config.code, 
-                        title: config.title, 
-                        data: formattedData.data 
-                      })
+                //       // 更新到vuex
+                //       this.updateDataset({ 
+                //         code: config.code, 
+                //         title: config.title, 
+                //         data: formattedData.data 
+                //       })
 
-                      // 使用 nextTick 确保在 Vuex 更新后再处理数据
-                      this.$nextTick(() => {
+                //       // 使用 nextTick 确保在 Vuex 更新后再处理数据
+                //       this.$nextTick(() => {
 
-                        // 使用最新的 Vuex 数据更新组件配置
-                        const newConfig = cloneDeep(config)
-                        const updatedConfig = this.dataFormatting(newConfig, formattedData)
-                        this.changeChartConfig(updatedConfig)
-                        
-                        // 强制更新组件
-                        if (this.chart) {
-                          this.chart.update(updatedConfig.option)
-                        }
-                      })
-                    },
-                    (error) => {
-                      // 如果是认证错误，尝试更新token
-                      if (error.response && error.response.status === 401) {
-                        requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
-                      }
-                    }
-                  )
-                }
+                //         // 使用最新的 Vuex 数据更新组件配置
+                //         const newConfig = cloneDeep(config)
+                //         const updatedConfig = this.dataFormatting(newConfig, formattedData)
+                //         this.changeChartConfig(updatedConfig)
+                //         
+                //         // 强制更新组件
+                //         if (this.chart) {
+                //           this.chart.update(updatedConfig.option)
+                //       }
+                //     })
+                //   },
+                //     (error) => {
+                //       // 如果是认证错误，尝试更新token
+                //       if (error.response && error.response.status === 401) {
+                //         requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                //       }
+                //     }
+                //   )
+                // }
 
                 // 发送请求获取初始数据
                 _res = await sendRequest(requestConfig)
@@ -403,7 +408,7 @@ export default {
                   headers: {},
                   params: { ...userConfig.queryParams },
                   componentId: config.code,
-                  pollingInterval: 10000 // 设置轮询间隔为6秒
+                  // pollingInterval: 10000 // 轮询功能已被禁用
                 }
 
                 // 如果是最新数据模式，删除历史数据相关参数
@@ -427,38 +432,39 @@ export default {
                   requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
                 }
 
+                // IoT轮询功能已被禁用
                 // 在预览模式下使用轮询
-                if (0) {
-                  // 先停止之前的轮询
-                  stopPolling(config.code)
-                  
-                  // 启动新的轮询
-                  startPolling(requestConfig, 
-                    (result) => {
-                      if (!result || !result.data) {
-                        return
-                      }
-                      // 处理返回数据
-                      const responseData = userConfig.responseScript?.includes('points') ? 
-                        result.data.points : result.data
-                      // 更新到vuex
-                      this.updateDataset({ 
-                        code: config.code, 
-                        title: config.title, 
-                        data: responseData 
-                      })
-                      // 更新组件配置
-                      config = this.dataFormatting(config, responseData)
-                      this.changeChartConfig(config)
-                    },
-                    (error) => {
-                      // 如果是认证错误，尝试更新token
-                      if (error.response && error.response.status === 401) {
-                        requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
-                      }
-                    }
-                  )
-                }
+                // if (0) {
+                //   // 先停止之前的轮询
+                //   stopPolling(config.code)
+                //   
+                //   // 启动新的轮询
+                //   startPolling(requestConfig, 
+                //     (result) => {
+                //       if (!result || !result.data) {
+                //         return
+                //       }
+                //       // 处理返回数据
+                //       const responseData = userConfig.responseScript?.includes('points') ? 
+                //         result.data.points : result.data
+                //       // 更新到vuex
+                //       this.updateDataset({ 
+                //         code: config.code, 
+                //         title: config.title, 
+                //         data: responseData 
+                //       })
+                //       // 更新组件配置
+                //       config = this.dataFormatting(config, responseData)
+                //       this.changeChartConfig(config)
+                //     },
+                //     (error) => {
+                //       // 如果是认证错误，尝试更新token
+                //       if (error.response && error.response.status === 401) {
+                //         requestConfig.headers['x-api-key'] = sessionStorage.getItem('ticket')
+                //       }
+                //     }
+                //   )
+                // }
 
                 // 发送请求获取初始数据
                 _res = await sendRequest(requestConfig)
