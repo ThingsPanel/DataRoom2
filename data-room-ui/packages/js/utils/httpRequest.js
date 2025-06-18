@@ -1,5 +1,4 @@
 import axios from 'axios'
-import store from '../store'
 
 /**
  * HTTP请求配置接口
@@ -8,36 +7,13 @@ import store from '../store'
  * @property {Object} params - 请求参数
  * @property {Object} headers - 请求头
  * @property {string} method - 请求方法(GET/POST)
- * @property {boolean} [polling] - 是否开启轮询
- * @property {number} [pollingInterval] - 轮询间隔(ms),默认1000ms
- * @property {number} [timeout] - 请求超时时间(ms),默认30000ms
+ * @property {number} [timeout] - 请求超时时间(ms),默认600000ms
  * @property {number} [retryCount] - 请求失败重试次数,默认0
  * @property {number} [retryDelay] - 请求失败重试延迟(ms),默认1000ms
- * @property {string} [componentId] - 组件ID,用于标识轮询请求所属的组件
- * @property {string} [pollingGroup] - 轮询组,用于合并相同URL的轮询请求
- * @property {boolean} [usePollingPool] - 是否使用轮询池限制并发数
  */
 
 // 请求队列管理
 const pendingRequests = new Map()
-
-// 轮询池配置
-const pollingPool = {
-  maxConcurrent: 10, // 最大并发轮询数量
-  queue: [], // 等待队列
-  active: new Set(), // 当前活跃的轮询
-  process() {
-    // 处理队列中的轮询请求
-    while (this.active.size < this.maxConcurrent && this.queue.length > 0) {
-      const next = this.queue.shift()
-      this.active.add(next.componentId)
-      next.start()
-    }
-  }
-}
-
-// 轮询组管理 - 用于合并相同URL的轮询请求
-const pollingGroups = new Map()
 
 /**
  * 创建请求标识
@@ -45,9 +21,7 @@ const pollingGroups = new Map()
  * @returns {string} 请求标识
  */
 const createRequestKey = (config) => {
-  const baseKey = `${config.method}_${config.url}_${JSON.stringify(config.params || {})}`
-  // 如果有组件ID，将其添加到请求标识中
-  return config.componentId ? `${config.componentId}_${baseKey}` : baseKey
+  return `${config.method}_${config.url}_${JSON.stringify(config.params || {})}`
 }
 
 /**
@@ -125,312 +99,47 @@ export const sendRequest = async (config) => {
   const controller = new AbortController()
   // 添加到请求队列
   addPendingRequest(requestKey, controller)
+  
   // 请求函数
   const requestFn = async () => {
-    try {
-      const instance = createAxiosInstance(config)
-      
-      // 如果是 IoT 数据集，使用固定参数
-      let requestParams = config.params
-      if (config.datasetType === 'iot') {
-        requestParams = {
-          device_id: 'db2b6a1a-00e4-5c0d-8154-44edeb441bb4',
-          device_name: '虚拟温湿度传感器',
-          key: 'humidity',
-          data_type: 'telemetry',
-          data_mode: 'latest',
-          time_range: 'last_1_hour',
-          aggregate_window: '1m',
-          aggregate_function: 'avg',
-          start_ts: null,
-          end_ts: null
-        }
+    const instance = createAxiosInstance(config)
+    
+    // 如果是 IoT 数据集，使用固定参数
+    let requestParams = config.params
+    if (config.datasetType === 'iot') {
+      requestParams = {
+        device_id: 'db2b6a1a-00e4-5c0d-8154-44edeb441bb4',
+        device_name: '虚拟温湿度传感器',
+        key: 'humidity',
+        data_type: 'telemetry',
+        data_mode: 'latest',
+        time_range: 'last_1_hour',
+        aggregate_window: '1m',
+        aggregate_function: 'avg',
+        start_ts: null,
+        end_ts: null
       }
-      
-      const response = await instance({
-        method: config.method,
-        url: config.url,
-        params: config.method.toLowerCase() === 'get' ? requestParams : undefined,
-        data: config.method.toLowerCase() === 'post' ? requestParams : undefined,
-        signal: controller.signal,
-        timeout: config.timeout || 600000
-      })
-
-      // 请求完成后从队列移除
-      removePendingRequest(requestKey)
-
-      return response.data
-    } catch (error) {
-      // 请求出错后从队列移除
-      removePendingRequest(requestKey)
-
-      // 如果是取消的请求，特殊处理
-      if (axios.isCancel(error)) {
-        const cancelError = new Error('请求已取消')
-        cancelError.isCancel = true
-        throw cancelError
-      }
-      throw error
     }
+    
+    const response = await instance({
+      method: config.method,
+      url: config.url,
+      params: config.method.toLowerCase() === 'get' ? requestParams : undefined,
+      data: config.method.toLowerCase() === 'post' ? requestParams : undefined,
+      signal: controller.signal,
+      timeout: config.timeout || 600000
+    })
+
+    // 请求完成后从队列移除
+    removePendingRequest(requestKey)
+
+    return response.data
   }
+  
   // 支持请求重试
   const retryCount = config.retryCount || 0
   const retryDelay = config.retryDelay || 1000
   return retry(requestFn, retryCount, retryDelay)
-}
-
-/**
- * 开启轮询请求 - 使用组件ID关联
- * @param {HttpConfig} config - 请求配置
- * @param {Function} callback - 成功回调函数
- * @param {Function} errorCallback - 错误回调函数
- * @returns {string} 组件ID
- */
-export const startPolling = (config, callback, errorCallback) => {
-  // 必须提供组件ID
-  if (!config.componentId) {
-    return null
-  }
-  
-  // 首先检查是否已经有相同组件ID的轮询，如果有先停止
-  stopPolling(config.componentId)
-  
-  // 验证轮询间隔 - 确保最小间隔
-  const interval = Math.max(config.pollingInterval || 1000, 1000)
-  
-  // 判断是否使用轮询组合并请求
-  if (config.pollingGroup) {
-    return startGroupPolling(config, callback, errorCallback)
-  }
-  
-  // 创建轮询函数
-  const pollFunction = async () => {
-    try {
-      const result = await sendRequest(config)
-      if (callback) {
-        callback(result)
-      }
-    } catch (error) {
-      if (error.isCancel !== true && errorCallback) {
-        errorCallback(error)
-      }
-    }
-  }
-  
-  // 如果使用轮询池限制并发
-  if (config.usePollingPool) {
-    const startPollingFn = () => {
-      // 立即执行一次
-      pollFunction()
-      
-      // 设置定期轮询
-      const timerId = setInterval(pollFunction, interval)
-      
-      // 存储定时器
-      storePollingTimer(config.componentId, timerId)
-      
-      return timerId
-    }
-    
-    // 添加到轮询池
-    pollingPool.queue.push({
-      componentId: config.componentId,
-      start: startPollingFn
-    })
-    
-    // 处理轮询池队列
-    pollingPool.process()
-    
-    return config.componentId
-  }
-  
-  // 常规轮询模式
-  // 立即执行一次
-  pollFunction()
-  
-  // 设置定期轮询
-  const timerId = setInterval(pollFunction, interval)
-  
-  // 存储定时器
-  storePollingTimer(config.componentId, timerId)
-  
-  return config.componentId
-}
-
-/**
- * 存储轮询定时器
- * @param {string} componentId - 组件ID
- * @param {number} timerId - 定时器ID
- */
-const storePollingTimer = (componentId, timerId) => {
-  // 使用Vuex管理轮询定时器
-  if (store && store.commit) {
-    store.commit('ADD_POLLING_TIMER', { code: componentId, timerId })
-  } else {
-    // 如果Vuex不可用，使用内存存储
-    if (!window._pollingTimers) window._pollingTimers = {}
-    window._pollingTimers[componentId] = timerId
-  }
-}
-
-/**
- * 开启组轮询 - 合并相同URL的轮询请求
- * @param {HttpConfig} config - 请求配置
- * @param {Function} callback - 成功回调函数
- * @param {Function} errorCallback - 错误回调函数
- * @returns {string} 组件ID
- */
-const startGroupPolling = (config, callback, errorCallback) => {
-  const groupKey = config.pollingGroup
-  
-  // 检查组是否已存在
-  if (!pollingGroups.has(groupKey)) {
-    // 创建新的轮询组
-    const groupConfig = {
-      ...config,
-      subscribers: new Map()
-    }
-    
-    // 创建组轮询函数
-    const groupPollFunction = async () => {
-      try {
-        const result = await sendRequest(config)
-        // 通知所有订阅者
-        groupConfig.subscribers.forEach(sub => {
-          if (sub.callback) {
-            sub.callback(result)
-          }
-        })
-      } catch (error) {
-        if (error.isCancel !== true) {
-          // 通知所有订阅者出错
-          groupConfig.subscribers.forEach(sub => {
-            if (sub.errorCallback) {
-              sub.errorCallback(error)
-            }
-          })
-        }
-      }
-    }
-    
-    // 确定轮询间隔 - 取最小值但不低于基线
-    const interval = Math.max(config.pollingInterval || 1000, 1000)
-    
-    // 立即执行一次
-    groupPollFunction()
-    
-    // 设置组轮询
-    const timerId = setInterval(groupPollFunction, interval)
-    
-    // 存储组信息
-    groupConfig.timerId = timerId
-    pollingGroups.set(groupKey, groupConfig)
-  }
-  
-  // 获取组配置
-  const group = pollingGroups.get(groupKey)
-  
-  // 添加订阅者
-  group.subscribers.set(config.componentId, {
-    callback,
-    errorCallback,
-    config
-  })
-  
-  // 为了兼容现有代码，模拟单组件轮询的行为
-  // 存储虚拟定时器ID，用于后续停止轮询
-  const virtualTimerId = Date.now()
-  storePollingTimer(config.componentId, virtualTimerId)
-  
-  return config.componentId
-}
-
-/**
- * 停止轮询 - 使用组件ID
- * @param {string} componentId - 组件ID
- */
-export const stopPolling = (componentId) => {
-  if (!componentId) {
-    return
-  }
-  
-  // 检查是否在轮询组中
-  for (const [groupKey, group] of pollingGroups.entries()) {
-    if (group.subscribers && group.subscribers.has(componentId)) {
-      // 从组中移除订阅者
-      group.subscribers.delete(componentId)
-      
-      // 如果组内没有订阅者了，停止整个组的轮询
-      if (group.subscribers.size === 0) {
-        clearInterval(group.timerId)
-        pollingGroups.delete(groupKey)
-      }
-      
-      // 从轮询池中移除
-      if (pollingPool.active.has(componentId)) {
-        pollingPool.active.delete(componentId)
-        // 处理下一个轮询
-        pollingPool.process()
-      }
-      
-      // 清理存储的定时器ID
-      clearStoredTimer(componentId)
-      
-      // 取消该组件的所有进行中的请求
-      cancelComponentRequests(componentId)
-      
-      return
-    }
-  }
-  
-  // 标准轮询清理
-  clearStoredTimer(componentId)
-  
-  // 从轮询池中移除
-  if (pollingPool.active.has(componentId)) {
-    pollingPool.active.delete(componentId)
-    // 处理下一个轮询
-    pollingPool.process()
-  }
-  
-  // 取消该组件的所有进行中的请求
-  cancelComponentRequests(componentId)
-}
-
-/**
- * 清理存储的定时器
- * @param {string} componentId - 组件ID
- */
-const clearStoredTimer = (componentId) => {
-  // 使用Vuex管理的轮询定时器进行清理
-  if (store && store.commit && store.state && store.state.pollingTimers) {
-    const vuexTimer = store.state.pollingTimers[componentId]
-    if (vuexTimer) {
-      clearInterval(vuexTimer)
-      store.commit('CLEAR_POLLING_TIMER', componentId)
-    } 
-  } 
-  
-  // 检查内存中是否有存储的定时器
-  if (window._pollingTimers && window._pollingTimers[componentId]) {
-    clearInterval(window._pollingTimers[componentId])
-    delete window._pollingTimers[componentId]
-  }
-}
-
-/**
- * 取消组件的所有请求 (非轮询)
- * @param {string} componentId - 组件ID
- */
-export const cancelComponentRequests = (componentId) => {
-  if (!componentId) return
-  
-  for (const [key, controller] of pendingRequests.entries()) {
-    if (key.startsWith(`${componentId}_`)) {
-      controller.abort()
-      pendingRequests.delete(key)
-    }
-  }
 }
 
 /**
@@ -443,46 +152,9 @@ export const cancelAllRequests = () => {
   }
 }
 
-/**
- * 停止所有轮询
- */
-export const stopAllPolling = () => {
-  // 清理所有组轮询
-  for (const [groupKey, group] of pollingGroups.entries()) {
-    clearInterval(group.timerId)
-  }
-  pollingGroups.clear()
-  
-  // 清理普通轮询
-  if (store && store.state && store.state.pollingTimers) {
-    const timers = store.state.pollingTimers
-    for (const code in timers) {
-      stopPolling(code)
-    }
-  }
-  
-  // 清理轮询池
-  pollingPool.queue = []
-  pollingPool.active.clear()
-}
-
-/**
- * 设置轮询池配置
- * @param {Object} config - 配置项
- * @param {number} config.maxConcurrent - 最大并发轮询数
- */
-export const configPollingPool = (config) => {
-  if (config.maxConcurrent) {
-    pollingPool.maxConcurrent = config.maxConcurrent
-    // 触发处理队列
-    pollingPool.process()
-  }
-}
-
-// 在页面卸载时取消所有请求和轮询
+// 在页面卸载时取消所有请求
 if (typeof window !== 'undefined') {
   window.addEventListener('beforeunload', () => {
     cancelAllRequests()
-    stopAllPolling()
   })
-} 
+}
