@@ -9,8 +9,8 @@ import { globalConfig } from 'data-room-ui/js/config' // 引入全局配置
  * 如果异常只是弹框显示即可，可使用该实例
  */
 
-// 添加请求缓存，用于截流
-const pendingRequests = new Map()
+// 添加请求缓存，用于截流和取消
+const pendingRequests = new Map() // Stores { requestKey: { promise, controller } }
 
 // 生成请求的唯一标识
 const generateRequestKey = (config) => {
@@ -23,18 +23,20 @@ const checkPendingRequest = (config) => {
   const requestKey = generateRequestKey(config)
   if (pendingRequests.has(requestKey)) {
     // 如果请求已经在进行中，返回一个已存在的Promise
+    const pending = pendingRequests.get(requestKey)
     return {
       isPending: true,
-      promise: pendingRequests.get(requestKey)
+      promise: pending.promise,
+      controller: pending.controller // Return existing controller
     }
   }
   return { isPending: false }
 }
 
 // 添加请求到缓存
-const addPendingRequest = (config, promise) => {
+const addPendingRequest = (config, promise, controller) => {
   const requestKey = generateRequestKey(config)
-  pendingRequests.set(requestKey, promise)
+  pendingRequests.set(requestKey, { promise, controller })
   return requestKey
 }
 
@@ -110,6 +112,14 @@ httpCustom.interceptors.request.use(config => {
  * 响应拦截
  */
 http.interceptors.response.use(response => {
+  // 检查请求是否已被取消，如果是，则不进行后续处理
+  if (response.config && response.config.signal && response.config.signal.aborted) {
+    // 可以选择静默处理或抛出一个特定的取消错误
+    // console.log('Request was cancelled, response ignored.');
+    // return Promise.reject(new axios.Cancel('Request cancelled by client.'));
+    // 或者根据业务需求，如果取消的请求不应视为错误，则返回一个标记
+    return { __CANCELLED__: true, requestConfig: response.config }; 
+  }
 
   // 验证请求头是否包含x-api-key
 
@@ -146,20 +156,31 @@ http.interceptors.response.use(response => {
     return res
   }
 }, error => {
-  if (error.message && error.message === 'Network Error') {
-    Message({
-      message: error.message,
-      type: 'error'
-    })
-    return Promise.reject(error)
-  // eslint-disable-next-line no-empty
-  } else {
+  // 处理请求取消
+  if (axios.isCancel(error)) {
+    // console.log('Request canceled', error.message);
+    return Promise.reject(error); // 或者根据业务需求返回特定格式
   }
-  Message({
-    message: '服务异常',
-    type: 'error'
-  })
-  return Promise.reject(error)
+
+  if (error.code === 'ECONNABORTED' && error.message.includes('timeout')) {
+    Message({
+      message: '请求超时，请稍后重试',
+      type: 'error'
+    });
+    return Promise.reject(new EipException('请求超时', 'TIMEOUT'));
+  } else if (error.message && error.message === 'Network Error') {
+    Message({
+      message: '网络错误，请检查您的网络连接',
+      type: 'error'
+    });
+    return Promise.reject(new EipException('网络错误', 'NETWORK_ERROR'));
+  } else {
+    Message({
+      message: error.response?.data?.msg || '服务异常',
+      type: 'error'
+    });
+  }
+  return Promise.reject(error);
 })
 
 /**
@@ -188,7 +209,7 @@ httpCustom.interceptors.response.use(response => {
  * @param params
  * @returns {Promise<any>}
  */
-export function get (url, params = {}, customHandlerException = false) {
+export function get (url, params = {}, customHandlerException = false, axiosRequestConfig = {}) {
   if (!url.startsWith('http')) {
     url = window.BS_CONFIG?.httpConfigs?.baseURL + url
   }
@@ -207,18 +228,25 @@ export function get (url, params = {}, customHandlerException = false) {
   }
   
   // 检查是否有相同请求正在进行
-  const { isPending, promise } = checkPendingRequest(config)
+  const { isPending, promise, controller: existingController } = checkPendingRequest(config)
   if (isPending && !config.ignoreThrottle) {
     // 如果有相同请求正在进行，直接返回已存在的promise
+    // 如果需要，可以提供一种方式来取消这个正在进行的请求，但这会改变原有逻辑
+    // 例如: if (axiosRequestConfig.signal) { existingController.abort(); /* then proceed with new request or error */ }
     return promise
   }
   
+  const controller = axiosRequestConfig.signal ? null : new AbortController();
+  const signal = axiosRequestConfig.signal || controller?.signal;
+
   const requestPromise = new Promise((resolve, reject) => {
     axiosInstance.get(url, {
       params: params,
       paramsSerializer: params => {
         return qs.stringify(params, { indices: false })
-      }
+      },
+      signal: signal, // 添加 signal
+      ...axiosRequestConfig // 合并用户传入的其余axios配置
     }).then(response => {
       if (customHandlerException) {
         resolve(response)
@@ -230,12 +258,21 @@ export function get (url, params = {}, customHandlerException = false) {
     }).catch(err => {
       reject(err)
       // 请求失败后，也要从缓存中移除
+    }).finally(() => {
+      // 无论成功或失败，都从缓存中移除
       removePendingRequest(generateRequestKey(config))
     })
   })
   
-  // 将请求添加到缓存中
-  addPendingRequest(config, requestPromise)
+  // 将请求和controller添加到缓存中
+  // 只缓存由这个函数内部创建的controller
+  if (controller) {
+    addPendingRequest(config, requestPromise, controller)
+  } else if (!axiosRequestConfig.signal) {
+    // 如果外部没有传入signal，且内部也没有创建（理论上不应发生），创建一个以保持一致性
+    const internalController = new AbortController();
+    addPendingRequest(config, requestPromise, internalController);
+  }
   
   return requestPromise
 }
@@ -246,7 +283,7 @@ export function get (url, params = {}, customHandlerException = false) {
  * @param params
  * @returns {Promise<any>}
  */
-export function post (url, data = {}, customHandlerException = false) {
+export function post (url, data = {}, customHandlerException = false, axiosRequestConfig = {}) {
   if (!url.startsWith('http')) {
     url = window.BS_CONFIG?.httpConfigs?.baseURL + url
   }
@@ -262,14 +299,20 @@ export function post (url, data = {}, customHandlerException = false) {
   }
   
   // 检查是否有相同请求正在进行
-  const { isPending, promise } = checkPendingRequest(config)
+  const { isPending, promise, controller: existingController } = checkPendingRequest(config)
   if (isPending && !config.ignoreThrottle) {
     // 如果有相同请求正在进行，直接返回已存在的promise
     return promise
   }
   
+  const controller = axiosRequestConfig.signal ? null : new AbortController();
+  const signal = axiosRequestConfig.signal || controller?.signal;
+
   const requestPromise = new Promise((resolve, reject) => {
-    axiosInstance.post(url, jsonData).then(response => {
+    axiosInstance.post(url, jsonData, {
+      signal: signal, // 添加 signal
+      ...axiosRequestConfig // 合并用户传入的其余axios配置
+    }).then(response => {
       if (customHandlerException) {
         resolve(response)
       } else {
@@ -279,13 +322,19 @@ export function post (url, data = {}, customHandlerException = false) {
       removePendingRequest(generateRequestKey(config))
     }).catch(err => {
       reject(err)
-      // 请求失败后，也要从缓存中移除
+    }).finally(() => {
+      // 无论成功或失败，都从缓存中移除
       removePendingRequest(generateRequestKey(config))
     })
   })
   
-  // 将请求添加到缓存中
-  addPendingRequest(config, requestPromise)
+  // 将请求和controller添加到缓存中
+  if (controller) {
+    addPendingRequest(config, requestPromise, controller)
+  } else if (!axiosRequestConfig.signal) {
+    const internalController = new AbortController();
+    addPendingRequest(config, requestPromise, internalController);
+  }
   
   return requestPromise
 }

@@ -56,7 +56,7 @@ export default function axiosFormatting (customConfig) {
 
   // 将请求头和请求参数的值转化为对象形式
   const httpConfig = {
-    timeout: 1000 * 300,
+    timeout: 1000 * 300, // Default instance timeout, can be overridden per request
     baseURL: '',
     headers: { 'Content-Type': 'application/json', ...newCustomConfig.headers }
   }
@@ -124,7 +124,9 @@ export default function axiosFormatting (customConfig) {
           })
           .join('&')
       },
-      data: newCustomConfig.method === 'post' ? body : undefined
+      data: newCustomConfig.method === 'post' ? body : undefined,
+      timeout: newCustomConfig.timeout || httpConfig.timeout, // Allow timeout override from customConfig
+      signal: newCustomConfig.signal // Allow passing an AbortSignal from customConfig
     }).then(response => {
       // 请求成功后移除跟踪
       requestTracker.removeRequest(requestId)
