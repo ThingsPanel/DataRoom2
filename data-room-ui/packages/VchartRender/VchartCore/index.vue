@@ -4,7 +4,7 @@
 
 <script lang="js">
 import { log } from "@antv/g2plot/lib/utils";
-import { VChart } from "@visactor/vchart";
+import { VChart,registerLiquidChart } from "@visactor/vchart";
 import { debounce } from 'lodash';
 import _ from 'lodash';
 
@@ -52,12 +52,12 @@ export default {
       return {
         width: '100%',
         height:'100%', // 设置一个默认高度，以便图表能正确显示
-    
+
       };
     },
-  
+
   },
-  watch: { 
+  watch: {
     config: {
       handler(newVal, oldVal) {
         this.initChart(this.chartData); // initChart will use the new this.config
@@ -66,7 +66,7 @@ export default {
     },
     chartData: {
       handler(newVal, oldVal) {
-        
+
         this.initChart(newVal); // initChart will use the new this.config
       },
       deep: true,
@@ -74,8 +74,9 @@ export default {
     }
   },
   mounted() {
+    registerLiquidChart();
     this.debouncedResize = debounce(this.resizeChart, 300); // 防抖处理 resize
-    this.initChart(); 
+    this.initChart();
     // 仍然可以保留 window resize 监听，作为一种备用或针对整体窗口变化的响应
     window.addEventListener('resize', this.debouncedResize);
   },
@@ -92,7 +93,7 @@ export default {
   methods: {
     // 生成并打印Spec配置
 
-    
+
     // 计算VChart所需的spec配置
     computeSpec(resdata) {
       if(resdata?.length>0){
@@ -103,13 +104,13 @@ export default {
 
     // 处理数据配置
     processDataConfig(spec) {
-      
+
     },
-    
+
     // 初始化图表
     initChart(chartData) {
-    
-    
+
+
       this.$nextTick(() => {
         const chartDom = document.getElementById(this.chartId);
         if (!chartDom) {
@@ -120,26 +121,26 @@ export default {
           const rect = chartDom.getBoundingClientRect();
           if (rect.width === 0 || rect.height === 0) {
           }
-          
+
           const spec = this.computeSpec(chartData);
           if (!spec || Object.keys(spec).length === 0) {
             this.$emit('chart-error', { message: '无法获取有效的spec配置 (computeSpec返回空)' });
             return;
           }
-          
+
           this.chart = new VChart(spec, { dom: chartDom, animation:this.config?.animation ?? true });
           this.registerChartEvents();
           this.chart.renderSync();
           this.$emit('chart-ready', this.chart);
 
         } catch (e) {
-         
-       
+
+
         }
       });
     },
 
-    
+
     // 注册图表事件
     registerChartEvents() {
       if (!this.chart) return;
@@ -153,7 +154,7 @@ export default {
       });
       // 可以按需添加更多事件监听，例如 'selectelement', 'legendselectchanged' 等
     },
-    
+
     // 调整图表大小
     resizeChart() {
       if (!this.chart || !this.chartInitialized) {
@@ -166,7 +167,7 @@ export default {
       const width = chartDomElement.offsetWidth;
       const height = chartDomElement.offsetHeight;
       if (width === 0 || height === 0) {
-        return; 
+        return;
       }
       this.$nextTick(() => {
         try {
@@ -175,7 +176,7 @@ export default {
         }
       });
     },
-    
+
     // 释放图表资源
     disposeChart() {
       if (this.chart) {
@@ -187,7 +188,7 @@ export default {
         this.chartInitialized = false;
       }
     },
-    
+
     // 模拟触发linkage-trigger事件
     triggerLinkageEvent() {
       const mockData = {
@@ -198,7 +199,7 @@ export default {
       };
       this.$emit('linkage-trigger', mockData);
     },
-    
+
     // 获取图表实例（可供外部调用）
     getChartInstance() {
       return this.chart;
