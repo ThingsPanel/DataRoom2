@@ -44,8 +44,8 @@ export default function getComponentConfig (type) {
       }
     case 'timestamp': // 时间戳
       return {
-        name: '时间戳',
-        title: '时间戳',
+        name: '时间戳（专用）',
+        title: '时间戳（专用）',
         icon: Icon.getNameList()[28],
         className:
           'com.gccloud.dataroom.core.module.chart.components.ScreenNumbersChart',
@@ -246,7 +246,7 @@ export default function getComponentConfig (type) {
         x: 0,
         y: 0,
         type
-      }  
+      }
     case 'canvasLine': // Canvas线条
       return {
         name: 'Canvas线条',
