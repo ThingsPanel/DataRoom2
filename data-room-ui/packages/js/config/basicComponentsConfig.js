@@ -16,6 +16,7 @@ const typeList = [
   'texts', // 文本组件
   'texts10', // 文本组件10
   'numbers', // 数字组件
+  'timestamp', // 时间戳组件
   'marquee', // 跑马灯/文字滚动
   'currentTime', // 当前时间
   'timeCountDown', // 倒计时

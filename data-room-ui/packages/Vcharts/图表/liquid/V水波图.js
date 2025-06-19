@@ -22,7 +22,19 @@ const data = {
 // 右侧配置项
 const setting = [
   // --- 数据字段选择 ---
-
+  {
+    label: '数值字段',
+    type: 'select',
+    field: 'spec_data_field',
+    optionField: 'spec.dataField',
+    vchartType: 'string',
+    value: 'value',
+    options: [
+      { label: 'value', value: 'value' }
+    ],
+    tabName: 'data',
+    groupName: 'dataField'
+  },
 
   // --- 图表标题 ---
   {
@@ -311,8 +323,7 @@ const option = {
           style: {
             fontSize: 20,
             fill: '#ffffff',
-            fontWeight: 'bold',
-            smartInvert: true
+            fontWeight: 'bold'
           }
         }
       ]
