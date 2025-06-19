@@ -5,7 +5,7 @@
   >
     <div
       class="content-box"
-      :style="{'text-align': 'center','letter-spacing': config.customize.letterSpacing +'px','font-family': 'ds-digitalbold','font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
+      :style="{'text-align': config.customize.align,'font-family': 'ds-digitalbold','font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
     >
       {{ config.customize.title }}
     </div>
@@ -77,8 +77,8 @@ export default {
     changeStyle (config) {
       let title = config.customize.title
       
-      // 根据align字段（复用作为数字转换开关）决定转换逻辑
-      if (config.customize.align === 'true') {
+      // 根据letterSpacing字段（复用作为数字转换开关）决定转换逻辑
+      if (config.customize.letterSpacing === true) {
         // 开启数字转换：1转为5，0显示0
         title = this.transformNumber(title)
       } else {
@@ -115,9 +115,9 @@ export default {
       if (config.dataSource.businessKey && config.dataSource.source === 'dataset') {
         let title = data && data.data && data.data.length ? data.data[0][config.dataSource.metricField] : '暂无数据'
         
-        // 根据align字段（复用作为数字转换开关）决定转换逻辑
+        // 根据letterSpacing字段（复用作为数字转换开关）决定转换逻辑
         if (title && title !== '暂无数据') {
-          if (config.customize.align === 'true') {
+          if (config.customize.letterSpacing === true) {
             // 开启数字转换：1转为5，0显示0
             title = this.transformNumber(title)
           } else {

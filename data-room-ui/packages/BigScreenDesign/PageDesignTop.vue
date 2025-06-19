@@ -16,9 +16,10 @@
       >
         导出JSON
       </CusBtn>
-      <span v-if="lastAutoSaveTime" class="auto-save-indicator">
+      <!-- 自动保存功能已禁用 -->
+      <!-- <span v-if="lastAutoSaveTime" class="auto-save-indicator">
         {{ lastAutoSaveTime }} 已自动保存
-      </span>
+      </span> -->
       <CusBtn
         style="margin-right:10px"
         @click.native="importJson"
@@ -244,13 +245,13 @@ export default {
   mounted () {
     this.initialCoverPicture = this.pageInfo.coverPicture || ''
     this.$refs.zoomInput.$el.addEventListener('mousewheel', this.handleMouseWheel)
-    // 启动自动保存
-    this.startAutoSave()
+    // 自动保存功能已禁用
+    // this.startAutoSave()
   },
   beforeDestroy () {
     this.$refs.zoomInput.$el.removeEventListener('mousewheel', this.handleMouseWheel)
-    // 停止自动保存
-    this.stopAutoSave()
+    // 自动保存功能已禁用
+    // this.stopAutoSave()
   },
   methods: {
     ...mapActions({

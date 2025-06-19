@@ -77,14 +77,19 @@
           />
         </el-form-item>
         <el-form-item
-          label="数字间距"
+          label="数字转换"
           label-width="100px"
         >
-          <el-input-number
+          <el-switch
             v-model="config.customize.letterSpacing"
-            class="bs-el-input-number"
-            placeholder="请输入数字间距"
+            :active-value="true"
+            :inactive-value="false"
+            class="bs-el-switch"
           />
+          <div class="format-tips">
+            <p>开启：1转为5，0显示0</p>
+            <p>关闭：使用时间戳转换逻辑</p>
+          </div>
         </el-form-item>
         <!-- 复用字体类型字段作为时间格式 -->
         <el-form-item
@@ -104,21 +109,23 @@
             <p>HH:mm → 14:30</p>
           </div>
         </el-form-item>
-        <!-- 复用数字对齐方式字段作为数字转换开关 -->
+        <!-- 复用数字对齐方式字段作为文字对齐 -->
         <el-form-item
-          label="数字转换"
+          label="文字对齐"
           label-width="100px"
         >
-          <el-switch
+          <el-select
             v-model="config.customize.align"
-            active-value="true"
-            inactive-value="false"
-            class="bs-el-switch"
-          />
-          <div class="format-tips">
-            <p>开启：1转为5，0显示0</p>
-            <p>关闭：使用时间戳转换逻辑</p>
-          </div>
+            placeholder="请选择对齐方式"
+            class="bs-el-select"
+          >
+            <el-option
+              v-for="item in alignList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
         <!-- 是否开启语音播报 -->
         <el-form-item
