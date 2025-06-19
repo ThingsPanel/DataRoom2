@@ -5,7 +5,7 @@
   >
     <div
       class="content-box"
-      :style="{'text-align': config.customize.align,'font-family': 'ds-digitalbold','font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
+      :style="{'text-align': 'center','letter-spacing': config.customize.letterSpacing +'px','font-family': config.customize.fontFamily,'font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
     >
       {{ config.customize.title }}
     </div>
@@ -18,7 +18,7 @@ import commonMixins from 'data-room-ui/js/mixins/commonMixins'
 import paramsMixins from 'data-room-ui/js/mixins/paramsMixins'
 import linkageMixins from 'data-room-ui/js/mixins/linkageMixins'
 export default {
-  name: 'Timestamp',
+  name: 'Texts',
   components: {},
   mixins: [paramsMixins, commonMixins, linkageMixins],
   props: {
@@ -40,59 +40,27 @@ export default {
     this.chartInit()
   },
   methods: {
-    // 格式化时间戳为指定格式
-    formatTimestamp (timestamp, format) {
-      if (!timestamp) return ''
-      
-      // 如果是字符串数字，转换为数字
-      const ts = typeof timestamp === 'string' ? parseInt(timestamp) : timestamp
-      
-      // 如果时间戳长度为10位，转换为13位（毫秒）
-      const date = new Date(ts.toString().length === 10 ? ts * 1000 : ts)
-      
-      if (isNaN(date.getTime())) return timestamp.toString()
-      
-      const year = date.getFullYear()
-      const month = String(date.getMonth() + 1).padStart(2, '0')
-      const day = String(date.getDate()).padStart(2, '0')
-      const hours = String(date.getHours()).padStart(2, '0')
-      const minutes = String(date.getMinutes()).padStart(2, '0')
-      const seconds = String(date.getSeconds()).padStart(2, '0')
-      
-      return format
-        .replace(/YYYY/g, year)
-        .replace(/MM/g, month)
-        .replace(/DD/g, day)
-        .replace(/HH/g, hours)
-        .replace(/mm/g, minutes)
-        .replace(/ss/g, seconds)
-    },
-    // 数字转换逻辑：1转为5，0显示0
-    transformNumber (value) {
-      const str = value.toString()
-      if (str === '1') return '5'
-      if (str === '0') return '0'
-      return str
-    },
     changeStyle (config) {
-      let title = config.customize.title
-      
-      // 根据letterSpacing字段（复用作为数字转换开关）决定转换逻辑
-      if (config.customize.letterSpacing === true) {
-        // 开启数字转换：1转为5，0显示0
-        title = this.transformNumber(title)
+      // 根据thousands字段决定是否进行数字转换或时间戳转换
+      if (config.customize.thousands) {
+        // 数字转换逻辑：1转为5，0显示0
+        const title = config.customize.title
+        if (title === '1') {
+          config.customize.title = '5'
+        } else if (title === '0') {
+          config.customize.title = '0'
+        }
       } else {
-        // 关闭数字转换：使用时间戳转换逻辑
-        if (config.customize.fontFamily && title) {
-          // 检查是否为时间戳（纯数字且长度为10或13位）
-          const titleStr = title.toString()
-          if (/^\d{10,13}$/.test(titleStr)) {
-            title = this.formatTimestamp(title, config.customize.fontFamily)
-          }
+        // 时间戳转换逻辑
+        const title = config.customize.title
+        if (/^\d{10}$/.test(title) || /^\d{13}$/.test(title)) {
+          const timestamp = /^\d{10}$/.test(title) ? parseInt(title) * 1000 : parseInt(title)
+          const date = new Date(timestamp)
+          const format = config.customize.align || 'YYYY-MM-DD HH:mm:ss'
+          config.customize.title = this.formatDate(date, format)
         }
       }
       
-      config.customize.title = config.customize.thousands ? title?.toString()?.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : title
       this.changeChartConfig(config)
       config = { ...this.config, ...config }
       // 样式改变时更新主题配置
@@ -102,6 +70,42 @@ export default {
         this.changeActiveItemConfig(config)
       }
       return config
+    },
+    transformNumber () {
+       if (this.config.customize.thousands) {
+         const title = this.config.customize.title
+         if (title === '1') {
+           this.config.customize.title = '5'
+         } else if (title === '0') {
+           this.config.customize.title = '0'
+         }
+       }
+     },
+    formatTimestamp () {
+      const title = this.config.customize.title
+      // 检查是否为10位或13位的纯数字（时间戳）
+      if (/^\d{10}$/.test(title) || /^\d{13}$/.test(title)) {
+        const timestamp = /^\d{10}$/.test(title) ? parseInt(title) * 1000 : parseInt(title)
+        const date = new Date(timestamp)
+        const format = this.config.customize.align || 'YYYY-MM-DD HH:mm:ss'
+        this.config.customize.title = this.formatDate(date, format)
+      }
+    },
+    formatDate (date, format) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      const hours = String(date.getHours()).padStart(2, '0')
+      const minutes = String(date.getMinutes()).padStart(2, '0')
+      const seconds = String(date.getSeconds()).padStart(2, '0')
+      
+      return format
+        .replace('YYYY', year)
+        .replace('MM', month)
+        .replace('DD', day)
+        .replace('HH', hours)
+        .replace('mm', minutes)
+        .replace('ss', seconds)
     },
     // 通过表达式计算得来的值
     getDataByExpression (config) {
@@ -113,27 +117,30 @@ export default {
     dataFormatting (config, data) {
       // 文本数据配置原则：选择数据集则以后端返回的数据为主，否则以设置面板中标题设置为准
       if (config.dataSource.businessKey && config.dataSource.source === 'dataset') {
-        let title = data && data.data && data.data.length ? data.data[0][config.dataSource.metricField] : '暂无数据'
-        
-        // 根据letterSpacing字段（复用作为数字转换开关）决定转换逻辑
-        if (title && title !== '暂无数据') {
-          if (config.customize.letterSpacing === true) {
-            // 开启数字转换：1转为5，0显示0
-            title = this.transformNumber(title)
-          } else {
-            // 关闭数字转换：使用时间戳转换逻辑
-            if (config.customize.fontFamily) {
-              const titleStr = title.toString()
-              if (/^\d{10,13}$/.test(titleStr)) {
-                title = this.formatTimestamp(title, config.customize.fontFamily)
-              }
-            }
-          }
-        }
-        
-        config.customize.title = title
+        config.customize.title = data && data.data && data.data.length ? data.data[0][config.dataSource.metricField] : '暂无数据'
         config.option.data = data && data.data && data.data.length ? data.data : []
       }
+      
+      if (this.config.customize.thousands) {
+         // 数字转换逻辑：1转为5，0显示0
+         const title = this.config.customize.title
+         if (title === '1') {
+           this.config.customize.title = '5'
+         } else if (title === '0') {
+           this.config.customize.title = '0'
+         }
+       } else {
+         // 时间戳转换逻辑
+         const title = this.config.customize.title
+         // 检查是否为10位或13位的纯数字（时间戳）
+         if (/^\d{10}$/.test(title) || /^\d{13}$/.test(title)) {
+           const timestamp = /^\d{10}$/.test(title) ? parseInt(title) * 1000 : parseInt(title)
+           const date = new Date(timestamp)
+           const format = this.config.customize.align || 'YYYY-MM-DD HH:mm:ss'
+           this.config.customize.title = this.formatDate(date, format)
+         }
+       }
+      
       return config
     }
   }

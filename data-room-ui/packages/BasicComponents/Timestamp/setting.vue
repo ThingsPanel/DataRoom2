@@ -77,27 +77,39 @@
           />
         </el-form-item>
         <el-form-item
-          label="数字转换"
+          label="数字间距"
           label-width="100px"
         >
-          <el-switch
+          <el-input-number
             v-model="config.customize.letterSpacing"
-            :active-value="true"
-            :inactive-value="false"
-            class="bs-el-switch"
+            class="bs-el-input-number"
+            placeholder="请输入数字间距"
           />
-          <div class="format-tips">
-            <p>开启：1转为5，0显示0</p>
-            <p>关闭：使用时间戳转换逻辑</p>
-          </div>
         </el-form-item>
-        <!-- 复用字体类型字段作为时间格式 -->
+        <el-form-item
+          label="字体类型"
+          label-width="100px"
+        >
+          <el-select
+            v-model="config.customize.fontFamily"
+            popper-class="bs-el-select"
+            class="bs-el-select"
+          >
+            <el-option
+              v-for="item in fontFamilyList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+        <!-- 复用align字段作为时间格式 -->
         <el-form-item
           label="时间格式"
           label-width="100px"
         >
           <el-input
-            v-model="config.customize.fontFamily"
+            v-model="config.customize.align"
             placeholder="请输入时间格式"
             clearable
           />
@@ -109,27 +121,9 @@
             <p>HH:mm → 14:30</p>
           </div>
         </el-form-item>
-        <!-- 复用数字对齐方式字段作为文字对齐 -->
+        <!-- 复用thousands字段作为数字转换开关 -->
         <el-form-item
-          label="文字对齐"
-          label-width="100px"
-        >
-          <el-select
-            v-model="config.customize.align"
-            placeholder="请选择对齐方式"
-            class="bs-el-select"
-          >
-            <el-option
-              v-for="item in alignList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
-        </el-form-item>
-        <!-- 是否开启语音播报 -->
-        <el-form-item
-          label="千分位分隔"
+          label="数字转换"
           label-width="100px"
         >
           <el-switch
@@ -138,8 +132,11 @@
             :inactive-value="false"
             class="bs-el-switch"
           />
+          <div class="format-tips">
+            <p>开启：1转为5，0显示0</p>
+            <p>关闭：使用时间戳转换逻辑</p>
+          </div>
         </el-form-item>
-        <!-- 原有的数字转换和时间格式配置已复用到上面的字段中 -->
         <TextGradient
           v-model="config.customize.color"
           label="数字"
@@ -216,17 +213,5 @@ export default {
   }
   .lc-field-body {
     padding: 12px 16px;
-  }
-  .format-tips {
-    margin-top: 8px;
-    padding: 8px;
-    background-color: #f5f7fa;
-    border-radius: 4px;
-    font-size: 12px;
-    color: #606266;
-    p {
-      margin: 2px 0;
-      line-height: 1.4;
-    }
   }
 </style>
