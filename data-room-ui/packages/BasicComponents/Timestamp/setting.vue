@@ -86,39 +86,39 @@
             placeholder="请输入数字间距"
           />
         </el-form-item>
+        <!-- 复用字体类型字段作为时间格式 -->
         <el-form-item
-          label="字体类型"
+          label="时间格式"
           label-width="100px"
         >
-          <el-select
+          <el-input
             v-model="config.customize.fontFamily"
-            popper-class="bs-el-select"
-            class="bs-el-select"
-          >
-            <el-option
-              v-for="item in fontFamilyList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+            placeholder="请输入时间格式"
+            clearable
+          />
+          <div class="format-tips">
+            <p>格式示例：</p>
+            <p>YYYY-MM-DD HH:mm:ss → 2024-01-15 14:30:25</p>
+            <p>YYYY年MM月DD日 → 2024年01月15日</p>
+            <p>MM/DD/YYYY → 01/15/2024</p>
+            <p>HH:mm → 14:30</p>
+          </div>
         </el-form-item>
+        <!-- 复用数字对齐方式字段作为数字转换开关 -->
         <el-form-item
-          label="数字对齐方式"
+          label="数字转换"
           label-width="100px"
         >
-          <el-select
+          <el-switch
             v-model="config.customize.align"
-            popper-class="bs-el-select"
-            class="bs-el-select"
-          >
-            <el-option
-              v-for="item in alignList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            />
-          </el-select>
+            active-value="true"
+            inactive-value="false"
+            class="bs-el-switch"
+          />
+          <div class="format-tips">
+            <p>开启：1转为5，0显示0</p>
+            <p>关闭：使用时间戳转换逻辑</p>
+          </div>
         </el-form-item>
         <!-- 是否开启语音播报 -->
         <el-form-item
@@ -132,24 +132,7 @@
             class="bs-el-switch"
           />
         </el-form-item>
-        <!-- 时间格式化配置 -->
-        <el-form-item
-          label="时间格式"
-          label-width="100px"
-        >
-          <el-input
-            v-model="config.customize.dateFormat"
-            placeholder="请输入时间格式"
-            clearable
-          />
-          <div class="format-tips">
-            <p>格式示例：</p>
-            <p>YYYY-MM-DD HH:mm:ss → 2024-01-15 14:30:25</p>
-            <p>YYYY年MM月DD日 → 2024年01月15日</p>
-            <p>MM/DD/YYYY → 01/15/2024</p>
-            <p>HH:mm → 14:30</p>
-          </div>
-        </el-form-item>
+        <!-- 原有的数字转换和时间格式配置已复用到上面的字段中 -->
         <TextGradient
           v-model="config.customize.color"
           label="数字"

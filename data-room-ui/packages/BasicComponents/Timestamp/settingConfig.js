@@ -57,12 +57,13 @@ const customConfig = {
     title: '1234',
     fontSize: 40,
     fontWeight: 700,
-    fontFamily: 'ds-digitalbold', // 字体类型
+    fontFamily: 'YYYY-MM-DD HH:mm:ss', // 复用字体类型字段作为时间格式化模板
     color: 'left,#ffffff,#ffffff',
     thousands: false, // 千分位分隔
-    align: 'center', // 文字对齐方式
+    align: 'false', // 复用数字对齐方式字段作为数字转换开关：true开启1转为5，false关闭使用时间戳转换
     letterSpacing: 1, // 文字间距
-    dateFormat: 'YYYY-MM-DD HH:mm:ss' // 时间格式化模板
+    // dateFormat: 'YYYY-MM-DD HH:mm:ss', // 时间格式化模板 - 已复用fontFamily字段
+    // numberTransform: false // 数字转换开关 - 已复用align字段
   }
 
 }

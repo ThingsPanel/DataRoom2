@@ -5,7 +5,7 @@
   >
     <div
       class="content-box"
-      :style="{'text-align': config.customize.align,'letter-spacing': config.customize.letterSpacing +'px','font-family': config.customize.fontFamily,'font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
+      :style="{'text-align': 'center','letter-spacing': config.customize.letterSpacing +'px','font-family': 'ds-digitalbold','font-size': config.customize.fontSize +'px','font-weight': +config.customize.fontWeight,'background-image': `-webkit-linear-gradient(${config.customize.color})`}"
     >
       {{ config.customize.title }}
     </div>
@@ -67,14 +67,28 @@ export default {
         .replace(/mm/g, minutes)
         .replace(/ss/g, seconds)
     },
+    // 数字转换逻辑：1转为5，0显示0
+    transformNumber (value) {
+      const str = value.toString()
+      if (str === '1') return '5'
+      if (str === '0') return '0'
+      return str
+    },
     changeStyle (config) {
-      // 如果title是时间戳，进行格式化
       let title = config.customize.title
-      if (config.customize.dateFormat && title) {
-        // 检查是否为时间戳（纯数字且长度为10或13位）
-        const titleStr = title.toString()
-        if (/^\d{10,13}$/.test(titleStr)) {
-          title = this.formatTimestamp(title, config.customize.dateFormat)
+      
+      // 根据align字段（复用作为数字转换开关）决定转换逻辑
+      if (config.customize.align === 'true') {
+        // 开启数字转换：1转为5，0显示0
+        title = this.transformNumber(title)
+      } else {
+        // 关闭数字转换：使用时间戳转换逻辑
+        if (config.customize.fontFamily && title) {
+          // 检查是否为时间戳（纯数字且长度为10或13位）
+          const titleStr = title.toString()
+          if (/^\d{10,13}$/.test(titleStr)) {
+            title = this.formatTimestamp(title, config.customize.fontFamily)
+          }
         }
       }
       
@@ -101,11 +115,19 @@ export default {
       if (config.dataSource.businessKey && config.dataSource.source === 'dataset') {
         let title = data && data.data && data.data.length ? data.data[0][config.dataSource.metricField] : '暂无数据'
         
-        // 如果获取到的数据是时间戳，进行格式化
-        if (config.customize.dateFormat && title && title !== '暂无数据') {
-          const titleStr = title.toString()
-          if (/^\d{10,13}$/.test(titleStr)) {
-            title = this.formatTimestamp(title, config.customize.dateFormat)
+        // 根据align字段（复用作为数字转换开关）决定转换逻辑
+        if (title && title !== '暂无数据') {
+          if (config.customize.align === 'true') {
+            // 开启数字转换：1转为5，0显示0
+            title = this.transformNumber(title)
+          } else {
+            // 关闭数字转换：使用时间戳转换逻辑
+            if (config.customize.fontFamily) {
+              const titleStr = title.toString()
+              if (/^\d{10,13}$/.test(titleStr)) {
+                title = this.formatTimestamp(title, config.customize.fontFamily)
+              }
+            }
           }
         }
         
