@@ -58,8 +58,8 @@ const customConfig = {
     carousel: 'single',
     hoverPause: true,
     columnConfig: [],
-    headerFontSize: 16,
-    dataFontSize: 14,
+    headerFontSize: 22,
+    dataFontSize: 22,
     headerColor: '#FFFFFF',
     dataColor: '#333333'
   }
