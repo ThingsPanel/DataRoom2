@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // IoT设备API基础URL
-const IOT_API_BASE_URL = 'http://47.115.210.16:9999/api/v1'
+const IOT_API_BASE_URL = window.CONFIG.iotBaseURL || 'http://47.115.210.16:9999/api/v1'
 
 // 创建自定义axios实例
 const iotAxios = axios.create({
@@ -70,4 +70,4 @@ export function getDeviceTelemetry (deviceId, params) {
 export function getDeviceOnlineStatus (deviceId) {
   // 使用查询参数而不是路径参数，避免路由冲突
   return iotAxios.get('/device/status', { params: { device_id: deviceId } })
-} 
+}
