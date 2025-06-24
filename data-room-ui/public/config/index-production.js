@@ -1,7 +1,7 @@
 window.ENV = 'production'
 var productionConfig = {
-  baseURL: '/',
-  fileUrlPrefix: '/static'
+  baseURL: '/bigScreenServer',
+  fileUrlPrefix: '/bigScreenServer' + '/static'
 }
 // 必须的
 window.CONFIG = {}
