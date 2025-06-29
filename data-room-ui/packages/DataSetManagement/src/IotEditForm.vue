@@ -886,7 +886,7 @@ export default {
                     this.dataForm.config.url = config.userDefinedJson.url;
                   } else {
                     // Fallback or default if URL is missing in saved config
-                    this.dataForm.config.url = 'http://47.115.210.16:9999/api/v1/device/metrics/chart'; 
+                    this.dataForm.config.url = window.CONFIG.iotBaseURL+'/device/metrics/chart'; 
                   }
                 } else {
                    // Fallback/Old logic (might be removable if userDefinedJson is always present)
