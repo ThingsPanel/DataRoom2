@@ -47,7 +47,7 @@ jobs:
       with:
         host: ${{ secrets.DEMO_HOST }}
         username: ${{ secrets.DEMO_USER }}
-        password: ${{ secrets.PASS }}
+        password: ${{ secrets.DEMO_PASS }}
         script: |
           cd /opt/dataroom/frontend
           tar -xzf deploy.tar.gz && rm deploy.tar.gz
