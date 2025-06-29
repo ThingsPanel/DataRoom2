@@ -24,6 +24,15 @@ jobs:
         ls -lrt
         cd bigScreen && tar -czf ../../deploy.tar.gz ./*
         
+    - name: Clean target directory
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEMO_HOST }}
+        username: ${{ secrets.DEMO_USER }}
+        password: ${{ secrets.DEMO_PASS }}
+        script: |
+          rm -rf /opt/dataroom/frontend/*
+          
     - name: Upload to server
       uses: appleboy/scp-action@master
       with:
@@ -33,12 +42,12 @@ jobs:
         source: "deploy.tar.gz"
         target: "/opt/dataroom/frontend"
         
-    - name: Extract on server
+    - name: Extract and cleanup
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEMO_HOST }}
         username: ${{ secrets.DEMO_USER }}
-        password: ${{ secrets.DEMO_PASS }}
+        password: ${{ secrets.PASS }}
         script: |
           cd /opt/dataroom/frontend
           tar -xzf deploy.tar.gz && rm deploy.tar.gz
