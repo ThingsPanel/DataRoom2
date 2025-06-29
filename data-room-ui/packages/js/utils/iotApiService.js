@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // IoT设备API基础URL
-const IOT_API_BASE_URL = window.CONFIG.iotBaseURL || 'http://47.115.210.16:9999/api/v1'
+const IOT_API_BASE_URL = window.CONFIG.iotBaseURL
 
 // 创建自定义axios实例
 const iotAxios = axios.create({

@@ -77,13 +77,13 @@
     "lodash": "4.17.21",
     "lodash-es": "4.17.21",
     "moment": "^2.29.1",
-    "node-sass": "4.14.1",
     "nprogress": "0.2.0",
     "path-to-regexp": "2.4.0",
     "qs": "^6.9.6",
     "qweather-icons": "^1.6.0",
     "remote-vue-loader": "1.0.0",
-    "sass-loader": "7.1.0",
+    "sass": "^1.32.13",
+    "sass-loader": "^12.6.0",
     "sortablejs": "^1.15.0",
     "speak-tts": "^2.0.8",
     "three": "^0.137.5",
@@ -169,5 +169,8 @@
     "fs": false,
     "path": false,
     "os": false
+  },
+  "optionalDependencies": {
+    "canvas": "^2.11.2"
   }
 }
