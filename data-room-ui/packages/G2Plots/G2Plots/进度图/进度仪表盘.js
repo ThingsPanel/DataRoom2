@@ -4,11 +4,11 @@ const version = '2023111401'
 // 分类
 const category = 'Gauge'
 // 标题
-const title = '仪表盘'
+const title = '进度仪表盘'
 // 类别， new Gauge()
 const chartType = 'Gauge'
 // 用于标识，唯一，和文件夹名称一致
-const name = 'YiBiaoPan'
+const name = 'JinDuYiBiaoPan'
 
 // 右侧配置项
 const setting = [
@@ -28,30 +28,6 @@ const setting = [
   /** 样式配置 **/
   // 图表 graph
   {
-    label: '表盘类型',
-    // 设置组件类型
-    type: 'select',
-    // 字段
-    field: 'type',
-    // 对应options中的字段
-    optionField: 'type',
-    // 是否多选
-    multiple: false,
-    value: '',
-    tabName: 'custom',
-    options: [
-      {
-        label: '默认',
-        value: ''
-      },
-      {
-        label: '米轨',
-        value: 'meter'
-      }
-    ],
-    groupName: 'graph'
-  },
-  {
     label: '表盘颜色',
     // 设置组件类型
     type: 'gradual',
@@ -59,7 +35,7 @@ const setting = [
     field: 'color1',
     // 对应options中的字段
     optionField: 'color1',
-    value: 'l(0) 0:#BEE8FF 1:#1DAEFF',
+    value: 'l(0) 0:#6b74e4 1:#4391f4',
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -134,7 +110,7 @@ const setting = [
     field: 'statistic_content_content',
     // 对应options中的字段
     optionField: 'statistic.content.content',
-    value: '',
+    value: '加载进度',
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -170,8 +146,8 @@ const setting = [
     field: 'statistic_content_offsetY',
     // 对应options中的字段
     optionField: 'statistic.content.offsetY',
-    value: -45,
-    min: -100,
+    value: -60,
+    min:-100,
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -184,11 +160,10 @@ const setting = [
     // 对应options中的字段
     optionField: 'statistic.title.offsetY',
     value: -10,
-    min: -100,
+    min:-100,
     tabName: 'custom',
     groupName: 'graph'
   },
-  // 图例 legend,
   // 内边距 appendPadding
   {
     label: '',
@@ -206,10 +181,9 @@ const data = [
   }
 ]
 // 配置处理脚本
-const optionHandler = 'option.range.color = [option.color1, option.color2]\n' +
+const optionHandler ='option.range.color = [option.color1, option.color2]\n' +
   '  let fix = option.statisticFixed\n' +
   '  option.statistic.title.formatter = ({ percent }) => `${(percent * 100).toFixed(fix)}%`'
-
 // 数据处理脚本
 const dataHandler = '// 取返回数据列表的第一项指标值\noption.percent = data[0][setting.filter(settingItem=>settingItem.field === \'percent\')[0].value]'
 
@@ -221,40 +195,18 @@ const option = {
   appendPadding: [0, 0, 0, 0],
   data,
   percent: 0.75,
-  color1: 'l(0) 0:#BEE8FF 1:#1DAEFF',
+  color1: 'l(0) 0:#6b74e4 1:#4391f4',
   color2: '#FFFFFF',
   range: {
-    color: ['l(0) 0:#6b74e4 1:#4391f4', '#d0d0d0']
+    color: ['l(0) 0:#6b74e4 1:#4391f4','#d0d0d0']
   },
-  indicator: {
-    pointer: {
-      style: {
-        stroke: '#D0D0D0'
-      }
-    },
-    pin: {
-      style: {
-        stroke: '#D0D0D0'
-      }
-    }
-  },
-  axis: {
-    label: {
-      formatter (v) {
-        return Number(v) * 100
-      }
-    },
-    subTickLine: {
-      count: 3
-    }
-  },
-  // shapeStyle: {
-  //   fill: 'rgba(208,208,208,0)'
-  // },
   statisticFixed: 0,
+  startAngle: Math.PI,
+  endAngle: 2 * Math.PI,
+  indicator: null,
   statistic: {
     title: {
-      offsetY: -10,
+      offsetY: -60,
       style: {
         fontSize: 40,
         lineHeight: 2,
@@ -264,8 +216,8 @@ const option = {
       formatter: ({ percent }) => `${(percent * 100).toFixed(0)}%`
     },
     content: {
-      offsetY: -45,
-      content: '',
+      offsetY: -10,
+      content: '占比',
       style: {
         fontSize: 20,
         lineHeight: 2,

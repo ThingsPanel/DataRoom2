@@ -1,19 +1,19 @@
 /*
- * @description: 基础瀑布图
- * @Date: 2024-0625
- * @Author: liu.shiyi
+ * @description: 配置，参考https://g2plot.antv.antgroup.com/examples
+ * @Date: 2023-03-27 14:38:23
+ * @Author: xing.heng
  */
 
 // 配置版本号
 const version = '2023111501'
 // 分类
-const category = 'Waterfall'
+const category = 'Column'
 // 标题
-const title = '基础瀑布图'
+const title = '基础柱状图'
 // 类别， new Line()
-const chartType = 'Waterfall'
+const chartType = 'Column'
 // 用于标识，唯一，和文件夹名称一致
-const name = 'JICHUPUBUTU'
+const name = 'JiChuZhuZhuangTu'
 
 // 右侧配置项
 const setting = [
@@ -39,39 +39,12 @@ const setting = [
   },
   /** 样式配置 **/
   // 图表 graph
-  // {
-  //   label: '柱子颜色',
-  //   type: 'gradual', // 设置组件类型
-  //   field: 'color', // 字段
-  //   optionField: 'color', // 对应options中的字段
-  //   value: 'l(90) 0:#6B74E4 1:#4391F4',
-  //   tabName: 'custom',
-  //   groupName: 'graph'
-  // },
   {
-    label: '上涨色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'risingFill', // 字段
-    optionField: 'risingFill', // 对应options中的字段
-    value: '#f4664a',
-    tabName: 'custom',
-    groupName: 'graph'
-  },
-  {
-    label: '下降色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'fallingFill', // 字段
-    optionField: 'fallingFill', // 对应options中的字段
-    value: '#30bf78',
-    tabName: 'custom',
-    groupName: 'graph'
-  },
-  {
-    label: '总计色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'total_style_fill', // 字段
-    optionField: 'total.style.fill', // 对应options中的字段
-    value: '#96a6a6',
+    label: '柱子颜色',
+    type: 'gradual', // 设置组件类型
+    field: 'columnStyle_fill', // 字段
+    optionField: 'columnStyle.fill', // 对应options中的字段
+    value: 'l(90) 0:#6B74E4 1:#4391F4',
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -156,6 +129,15 @@ const setting = [
     tabName: 'custom',
     groupName: 'graph'
   },
+  {
+    label: '柱背景颜色',
+    type: 'colorPicker',
+    field: 'columnBackground_style_fill',
+    optionField: 'columnBackground.style.fill',
+    value: 'rgba(255,255,255,0)',
+    tabName: 'custom',
+    groupName: 'graph'
+  },
   // 网格线 grid
   {
     label: '虚线',
@@ -195,15 +177,6 @@ const setting = [
     value: '',
     tabName: 'custom',
     groupName: 'xAxis'
-  },
-  {
-    label: '总计标签',
-    type: 'input',
-    field: 'total_label',
-    optionField: 'total.label',
-    value: '',
-    tabName: 'custom',
-    groupName: 'yAxis'
   },
   {
     label: '标题位置',
@@ -357,7 +330,6 @@ const setting = [
     tabName: 'custom',
     groupName: 'yAxis'
   },
-
   {
     label: '标题过长时旋转',
     type: 'switch',
@@ -476,16 +448,28 @@ const setting = [
 
 // 模拟数据
 const data = [
-  { type: '日用品', money: 120 },
-  { type: '伙食费', money: 900 },
-  { type: '交通费', money: 200 },
-  { type: '水电费', money: 300 },
-  { type: '房租', money: 1200 },
-  { type: '商场消费', money: 1000 },
-  { type: '红包收入', money: -2000 }
+  { date: '2018年', value: 300 },
+  { date: '2019年', value: 200 },
+  { date: '2020年', value: 100 },
+  { date: '2021年', value: 200 },
+  { date: '2022年', value: 300 },
+  { date: '2023年', value: 400 }
 ]
 // 配置处理脚本
-const optionHandler = ''
+const optionHandler =
+  `
+option.yAxis.grid.line.style.lineDash = [4,setting.find(settingItem=>settingItem.field === 'yAxis_grid_line_style_lineDash').value]
+let autoHide = setting.find(settingItem=>settingItem.field === 'xAxis_label_autoHide').value
+if(autoHide){
+  let minGap = option.xAxis.label.autoHideMinGap
+  option.xAxis.label.autoHide = {
+    type: 'equidistance',
+    cfg: { minGap: minGap }
+  }
+} else {
+  option.xAxis.label.autoHide = false
+}
+  `
 
 // 数据处理脚本
 const dataHandler = ''
@@ -497,18 +481,12 @@ const option = {
   // 图表内边距
   appendPadding: [0, 0, 0, 0],
   data,
-  xField: 'type',
-  yField: 'money',
-  // color: 'l(90) 0:#6B74E4 1:#4391F4',
-  risingFill: '#f4664a',
-  fallingFill: '#30bf78',
-  total: {
-    label: '总支出',
-    style: {
-      fill: '#96a6a6'
-    }
+  xField: 'date',
+  yField: 'value',
+  color: '',
+  columnStyle: { // 设置柱子渐变色
+    fill: 'l(90) 0:#6B74E4 1:#4391F4'
   },
-
   label: {
     offsetY: 13,
     // 可手动配置 label 数据标签位置
@@ -518,8 +496,7 @@ const option = {
       fill: '#8C8C8C',
       opacity: 0,
       fontSize: 12
-    },
-    layout: [{ type: 'interval-adjust-position' }]
+    }
   },
   xAxis: {
     title: {
@@ -595,6 +572,12 @@ const option = {
         stroke: '#C9CDD4',
         lineWidth: 0
       }
+    }
+  },
+  // 背景图设置
+  columnBackground: {
+    style: {
+      fill: 'rgba(255,255,255,0)',
     }
   },
   meta: {

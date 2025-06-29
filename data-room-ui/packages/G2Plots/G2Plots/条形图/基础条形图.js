@@ -1,27 +1,30 @@
 /*
- * @description: 基础瀑布图
- * @Date: 2024-0625
- * @Author: liu.shiyi
+ * @description: 配置，参考https://g2plot.antv.antgroup.com/examples
+ * @Date: 2023-03-27 14:38:23
+ * @Author: xing.heng
  */
 
 // 配置版本号
-const version = '2023111501'
+const version = '2023111401'
 // 分类
-const category = 'Waterfall'
+const category = 'Bar'
 // 标题
-const title = '基础瀑布图'
+const title = '基础条形图'
 // 类别， new Line()
-const chartType = 'Waterfall'
+const chartType = 'Bar'
 // 用于标识，唯一，和文件夹名称一致
-const name = 'JICHUPUBUTU'
+const name = 'JiChuTiaoXingTu'
 
 // 右侧配置项
 const setting = [
   {
     label: '维度',
-    type: 'select', // 设置组件类型
-    field: 'xField', // 字段
-    optionField: 'xField', // 对应options中的字段
+    // 设置组件类型
+    type: 'select',
+    // 字段
+    field: 'yField',
+    // 对应options中的字段
+    optionField: 'yField',
     // 是否多选
     multiple: false,
     value: '',
@@ -29,49 +32,58 @@ const setting = [
   },
   {
     label: '指标',
-    type: 'select', // 设置组件类型
-    field: 'yField', // 字段
-    optionField: 'yField', // 对应options中的字段
+    // 设置组件类型， select / input / colorPicker
+    type: 'select',
+    // 字段
+    field: 'xField',
+    optionField: 'xField', // 对应options中的字段
     // 是否多选
     multiple: false,
+    // 绑定的值
     value: '',
+    // tab页。 data: 数据， custom: 自定义
     tabName: 'data'
   },
   /** 样式配置 **/
   // 图表 graph
   // {
-  //   label: '柱子颜色',
-  //   type: 'gradual', // 设置组件类型
-  //   field: 'color', // 字段
-  //   optionField: 'color', // 对应options中的字段
-  //   value: 'l(90) 0:#6B74E4 1:#4391F4',
+  //   label: '条形样式',
+  //   type: 'select', // 设置组件类型
+  //   field: 'shape', // 字段
+  //   optionField: 'shape', // 对应options中的字段
+  //   // 是否多选
+  //   multiple: false,
+  //   value: 'default',
   //   tabName: 'custom',
+  //   options: [
+  //     {
+  //       label: '实心条形',
+  //       value: 'default'
+  //     },
+  //     // {
+  //     //   label: '线性',
+  //     //   value: 'line'
+  //     // },
+  //     {
+  //       label: '空心条形',
+  //       value: 'hollow-rect'
+  //     },
+  //     {
+  //       label: '钉形',
+  //       value: 'tick'
+  //     }
+  //   ],
   //   groupName: 'graph'
   // },
   {
-    label: '上涨色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'risingFill', // 字段
-    optionField: 'risingFill', // 对应options中的字段
-    value: '#f4664a',
-    tabName: 'custom',
-    groupName: 'graph'
-  },
-  {
-    label: '下降色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'fallingFill', // 字段
-    optionField: 'fallingFill', // 对应options中的字段
-    value: '#30bf78',
-    tabName: 'custom',
-    groupName: 'graph'
-  },
-  {
-    label: '总计色',
-    type: 'colorPicker', // 设置组件类型
-    field: 'total_style_fill', // 字段
-    optionField: 'total.style.fill', // 对应options中的字段
-    value: '#96a6a6',
+    label: '圆角设置',
+    // 设置组件类型
+    type: 'inputNumber',
+    // 字段
+    field: 'radiusNum',
+    // 对应options中的字段
+    optionField: 'radiusNum',
+    value: 10,
     tabName: 'custom',
     groupName: 'graph'
   },
@@ -84,31 +96,6 @@ const setting = [
     active: 1,
     inactive: 0,
     tabName: 'custom',
-    groupName: 'graph'
-  },
-  {
-    label: '数据标签位置',
-    type: 'select', // 设置组件类型
-    field: 'label_position', // 字段
-    optionField: 'label.position', // 对应options中的字段
-    // 是否多选
-    multiple: false,
-    value: 'middle',
-    tabName: 'custom',
-    options: [
-      {
-        label: '顶部',
-        value: 'top'
-      },
-      {
-        label: '居中',
-        value: 'middle'
-      },
-      {
-        label: '底部',
-        value: 'bottom'
-      }
-    ],
     groupName: 'graph'
   },
   {
@@ -133,25 +120,81 @@ const setting = [
     groupName: 'graph'
   },
   {
-    label: '柱最小宽度',
+    label: '数据标签位置',
+    type: 'select', // 设置组件类型
+    field: 'label_position', // 字段
+    optionField: 'label.position', // 对应options中的字段
+    // 是否多选
+    multiple: false,
+    value: 'middle',
+    tabName: 'custom',
+    options: [
+      {
+        label: '顶部',
+        value: 'top'
+      },
+      {
+        label: '居中',
+        value: 'middle'
+      },
+      {
+        label: '底部',
+        value: 'bottom'
+      },
+      {
+        label: '左侧',
+        value: 'left'
+      },
+      {
+        label: '右侧',
+        value: 'right'
+      }
+    ],
+    groupName: 'graph'
+  },
+  {
+    label: '条形颜色',
+    // 设置组件类型
+    type: 'colorSelect',
+    // 字段
+    field: 'color',
+    // 对应options中的字段
+    optionField: 'color',
+    value: ['#6b74e4', '#4391f4', '#38bbe5', '#69d6fd', '#36c6a0'],
+    tabName: 'custom',
+    groupName: 'graph'
+  },
+  {
+    label: '条形背景颜色',
+    type: 'colorPicker',
+    field: 'barBackground_style_fill',
+    optionField: 'barBackground.style.fill',
+    // 是否多选
+    multiple: false,
+    value: 'rgba(0,0,0,0)',
+    tabName: 'custom',
+    groupName: 'graph'
+  },
+  {
+    label: '条形最小宽度',
     // 设置组件类型
     type: 'inputNumber',
     // 字段
-    field: 'minColumnWidth',
+    field: 'minBarWidth',
     // 对应options中的字段
-    optionField: 'minColumnWidth',
+    optionField: 'minBarWidth',
     value: 0,
     tabName: 'custom',
     groupName: 'graph'
   },
   {
-    label: '柱最大宽度',
+    label: '条形最大宽度',
     // 设置组件类型
     type: 'inputNumber',
     // 字段
-    field: 'maxColumnWidth',
+    field: 'maxBarWidth',
     // 对应options中的字段
-    optionField: 'maxColumnWidth',
+    optionField: 'maxBarWidth',
     value: 100,
     tabName: 'custom',
     groupName: 'graph'
@@ -171,20 +214,86 @@ const setting = [
   {
     label: '宽度',
     type: 'inputNumber',
-    field: 'yAxis_grid_line_style_lineWidth',
-    optionField: 'yAxis.grid.line.style.lineWidth',
-    value: 1,
+    field: 'xAxis_grid_line_style_lineWidth',
+    optionField: 'xAxis.grid.line.style.lineWidth',
+    value: 0,
     tabName: 'custom',
     groupName: 'grid'
   },
   {
     label: '颜色',
     type: 'colorPicker',
-    field: 'yAxis_grid_line_style_stroke',
-    optionField: 'yAxis.grid.line.style.stroke',
+    field: 'xAxis_grid_line_style_stroke',
+    optionField: 'xAxis.grid.line.style.stroke',
     value: '#E5E6EB10',
     tabName: 'custom',
     groupName: 'grid'
+  },
+  // 图例 legend
+  {
+    label: '显示',
+    type: 'switch', // 设置组件类型
+    field: 'legendEnable', // 字段
+    optionField: 'legendEnable', // 对应options中的字段
+    value: false,
+    active: true,
+    inactive: false,
+    tabName: 'custom',
+    groupName: 'legend'
+  },
+  {
+    label: '位置',
+    type: 'select', // 设置组件类型
+    field: 'legendPosition', // 字段
+    optionField: 'legendPosition', // 对应options中的字段
+    // 是否多选
+    multiple: false,
+    value: 'top',
+    tabName: 'custom',
+    options: [
+      { label: '顶部', value: 'top' },
+      { label: '左上角', value: 'top-left' },
+      { label: '右上角', value: 'top-right' },
+      { label: '左侧', value: 'left' },
+      // { label: '左上方', value: 'left-top' },
+      // { label: '左下方', value: 'left-bottom' },
+      { label: '右侧', value: 'right' },
+      // { label: '右上方', value: 'right-top' },
+      // { label: '右下方', value: 'right-bottom' },
+      { label: '底部', value: 'bottom' },
+      { label: '左下角', value: 'bottom-left' },
+      { label: '右下角', value: 'bottom-right' }
+    ],
+    groupName: 'legend'
+  },
+  {
+    label: '字体大小',
+    type: 'inputNumber',
+    field: 'legendItemName_style_fontSize',
+    optionField: 'legendItemName.style.fontSize',
+    value: 12,
+    tabName: 'custom',
+    groupName: 'legend'
+  },
+  {
+    label: '字体权重',
+    type: 'inputNumber',
+    step: 100,
+    max: 900,
+    field: 'legendItemName_style_fontWeight',
+    optionField: 'legendItemName.style.fontWeight',
+    value: 400,
+    tabName: 'custom',
+    groupName: 'legend'
+  },
+  {
+    label: '字体颜色',
+    type: 'colorPicker',
+    field: 'legendItemName_style_fill',
+    optionField: 'legendItemName.style.fill',
+    value: '#e9e9e9',
+    tabName: 'custom',
+    groupName: 'legend'
   },
   // X轴 xAxis
   {
@@ -195,15 +304,6 @@ const setting = [
     value: '',
     tabName: 'custom',
     groupName: 'xAxis'
-  },
-  {
-    label: '总计标签',
-    type: 'input',
-    field: 'total_label',
-    optionField: 'total.label',
-    value: '',
-    tabName: 'custom',
-    groupName: 'yAxis'
   },
   {
     label: '标题位置',
@@ -272,7 +372,7 @@ const setting = [
     type: 'inputNumber',
     field: 'xAxis_line_style_lineWidth',
     optionField: 'xAxis.line.style.lineWidth',
-    value: 1,
+    value: 0,
     tabName: 'custom',
     groupName: 'xAxis'
   },
@@ -287,66 +387,6 @@ const setting = [
     tabName: 'custom',
     groupName: 'xAxis'
   },
-  {
-    label: '刻度线宽度',
-    type: 'inputNumber',
-    field: 'xAxis_tickLine_style_lineWidth',
-    optionField: 'xAxis.tickLine.style.lineWidth',
-    value: 1,
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
-  {
-    label: '刻度线颜色',
-    type: 'colorPicker',
-    field: 'xAxis_tickLine_style_stroke',
-    optionField: 'xAxis.tickLine.style.stroke',
-    // 是否多选
-    multiple: false,
-    value: '#C9CDD4',
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
-  {
-    label: '标签过多时隐藏',
-    type: 'switch',
-    field: 'xAxis_label_autoHide',
-    optionField: 'xAxis.label.autoHideEnable',
-    value: true,
-    active: true,
-    inactive: false,
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
-  {
-    label: '标签隐藏判定间隔',
-    type: 'inputNumber',
-    field: 'xAxis_label_autoHide_minGap',
-    optionField: 'xAxis.label.autoHideMinGap',
-    value: 0,
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
-  {
-    label: '标签过多时旋转',
-    type: 'switch',
-    field: 'xAxis_label_autoRotate',
-    optionField: 'xAxis.label.autoRotate',
-    value: true,
-    active: true,
-    inactive: false,
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
-  {
-    label: '标签过长时省略',
-    type: 'switch',
-    field: 'xAxis_label_autoEllipsis',
-    optionField: 'xAxis.label.autoEllipsis',
-    value: true,
-    tabName: 'custom',
-    groupName: 'xAxis'
-  },
   // Y轴 yAxis
   {
     label: '标题',
@@ -357,7 +397,6 @@ const setting = [
     tabName: 'custom',
     groupName: 'yAxis'
   },
-
   {
     label: '标题过长时旋转',
     type: 'switch',
@@ -379,7 +418,7 @@ const setting = [
     options: [
       {
         label: '上',
-        value: 'end'
+        value: 'start'
       },
       {
         label: '中',
@@ -387,7 +426,7 @@ const setting = [
       },
       {
         label: '下',
-        value: 'start'
+        value: 'end'
       }],
     groupName: 'yAxis'
   },
@@ -462,6 +501,53 @@ const setting = [
     tabName: 'custom',
     groupName: 'yAxis'
   },
+  {
+    label: 'y刻度线宽度',
+    type: 'inputNumber',
+    field: 'yAxis_tickLine_style_lineWidth',
+    optionField: 'yAxis.tickLine.style.lineWidth',
+    value: 1,
+    tabName: 'custom',
+    groupName: 'yAxis'
+  },
+  {
+    label: 'y刻度线颜色',
+    type: 'colorPicker',
+    field: 'yAxis_tickLine_style_stroke',
+    optionField: 'yAxis.tickLine.style.stroke',
+    // 是否多选
+    multiple: false,
+    value: '#C9CDD4',
+    tabName: 'custom',
+    groupName: 'yAxis'
+  },
+  // {
+  //   label: '标签过多时旋转',
+  //   type: 'switch',
+  //   field: 'yAxis_label_autoRotate',
+  //   optionField: 'yAxis.label.autoRotate',
+  //   value: false,
+  //   tabName: 'custom',
+  //   groupName: 'yAxis'
+  // },
+  {
+    label: '标签过多时隐藏',
+    type: 'switch',
+    field: 'yAxis_label_autoHide',
+    optionField: 'yAxis.label.autoHide',
+    value: true,
+    tabName: 'custom',
+    groupName: 'yAxis'
+  },
+  {
+    label: '标签过长时省略',
+    type: 'switch',
+    field: 'yAxis_label_autoEllipsis',
+    optionField: 'yAxis.label.autoEllipsis',
+    value: true,
+    tabName: 'custom',
+    groupName: 'yAxis'
+  },
   // 内边距 appendPadding
   {
     label: '',
@@ -476,19 +562,30 @@ const setting = [
 
 // 模拟数据
 const data = [
-  { type: '日用品', money: 120 },
-  { type: '伙食费', money: 900 },
-  { type: '交通费', money: 200 },
-  { type: '水电费', money: 300 },
-  { type: '房租', money: 1200 },
-  { type: '商场消费', money: 1000 },
-  { type: '红包收入', money: -2000 }
+  { date: '2019年', value: 38 },
+  { date: '2020年', value: 52 },
+  { date: '2021年', value: 61 },
+  { date: '2022年', value: 145 },
+  { date: '2023年', value: 48 }
 ]
+
 // 配置处理脚本
-const optionHandler = ''
+const optionHandler = `
+option.yAxis.grid.line.style.lineDash = [4,setting.find(settingItem=>settingItem.field === 'yAxis_grid_line_style_lineDash').value]
+option.legend = option.legendEnable ? {position: setting.find(settingItem=>settingItem.field === 'legendPosition').value} : false;
+if (option.legendEnable) {
+  option.legend.itemName = option.legendItemName
+};
+const radiusNum = setting.find(settingItem=>settingItem.field === 'radiusNum').value;
+option.barStyle.radius = [radiusNum,radiusNum,0,0]
+const yFieldValue = setting.find(settingItem=>settingItem.field === 'yField').value
+if (yFieldValue) {
+  option.seriesField = yFieldValue
+}
+`
 
 // 数据处理脚本
-const dataHandler = ''
+const dataHandler = ``
 
 // 图表配置 new Line('domName', option)
 const option = {
@@ -496,32 +593,53 @@ const option = {
   dataKey: 'data',
   // 图表内边距
   appendPadding: [0, 0, 0, 0],
+  renderer: 'canvas',
   data,
-  xField: 'type',
-  yField: 'money',
-  // color: 'l(90) 0:#6B74E4 1:#4391F4',
-  risingFill: '#f4664a',
-  fallingFill: '#30bf78',
-  total: {
-    label: '总支出',
+  xField: 'value',
+  yField: 'date',
+  minBarWidth: 0,
+  maxBarWidth: 100,
+  // shape: 'default', // 条形图形状
+  seriesField: 'date',
+  color: ['#6b74e4', '#4391f4', '#38bbe5', '#69d6fd', '#36c6a0'],
+  legendEnable: true,
+  legendLayout: 'vertical',
+  legendPosition: 'top',
+  legend: false,
+  itemName: {
     style: {
-      fill: '#96a6a6'
+      fill: '#e9e9e9',
+      fontSize: 12,
+      fontWeight: 400
     }
   },
-
-  label: {
-    offsetY: 13,
-    // 可手动配置 label 数据标签位置
-    position: 'middle', // 'top', 'bottom', 'middle',
-    // 配置样式
-    style: {
-      fill: '#8C8C8C',
-      opacity: 0,
-      fontSize: 12
-    },
-    layout: [{ type: 'interval-adjust-position' }]
+  barStyle: {
+    radius: [10, 10, 0, 0]// 设置条形图的圆角
   },
+  barBackground: {
+    style: {
+      fill: 'rgba(0,0,0,0)',
+    },
+  },
+  label: {
+    position: 'middle',
+    layout:{},
+    style: {
+      fill: '#59F25F',
+      opacity: 0,
+      fontSize: 10
+    }
+  },
+  radiusNum: 0, // 设置条形图的圆角的中间值
   xAxis: {
+    grid: {
+      line: {
+        style: {
+          stroke: '#d0d0d0',
+          lineWidth: 0
+        }
+      }
+    },
     title: {
       text: '',
       position: 'end',
@@ -531,11 +649,6 @@ const option = {
       }
     },
     label: {
-      autoRotate: false,
-      autoHide: true,
-      autoEllipsis: true,
-      autoHideEnable: true,
-      autoHideMinGap: 2,
       style: {
         fill: '#e9e9e9',
         fontSize: 12
@@ -544,13 +657,13 @@ const option = {
     line: {
       style: {
         stroke: '#C9CDD4',
-        lineWidth: 1
+        lineWidth: 0
       }
     },
     tickLine: {
       style: {
         stroke: '#C9CDD4',
-        lineWidth: 1
+        lineWidth: 0
       }
     }
   },
@@ -569,21 +682,15 @@ const option = {
       line: {
         style: {
           stroke: '#E5E6EB10',
-          lineWidth: 1,
-          lineDash: [4, 5],
+          lineWidth: 0,
           strokeOpacity: 0.7
         }
       }
     },
     label: {
-      formatter: (v) => {
-        if (v < 1e3) return v
-        // 数值格式化为千分位
-        if (v >= 1e3 && v < 1e6) return `${v}`.replace(/\d{1,3}(?=(\d{3})+$)/g, (s) => `${s},`)
-        if (v >= 1e6 && v < 1e9) return `${(v / 1e6).toFixed(1)} M`
-        if (v >= 1e9 && v < 1e12) return `${(v / 1e9).toFixed(1)} B`
-        return `${(v / 10e8).toFixed(1)} B`
-      },
+      autoRotate: false,
+      autoHide: true,
+      autoEllipsis: true,
       style: {
         fill: '#e9e9e9',
         fontSize: 12,
@@ -595,17 +702,16 @@ const option = {
         stroke: '#C9CDD4',
         lineWidth: 0
       }
-    }
-  },
-  meta: {
-    type: {
-      alias: '类别'
     },
-    sales: {
-      alias: '销售额'
+    tickLine: {
+      style: {
+        stroke: '#C9CDD4',
+        lineWidth: 1
+      }
     }
   }
 }
+
 export default {
   category,
   version,
@@ -614,6 +720,6 @@ export default {
   name,
   option,
   setting,
-  dataHandler,
-  optionHandler
+  optionHandler,
+  dataHandler
 }

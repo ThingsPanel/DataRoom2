@@ -114,25 +114,14 @@ export default {
      * 构造chart
      */
     newChart (config) {
-
-      if (this.chart) {
-        try {
-            this.chart.destroy();
-        } catch (destroyError) {
-        }
-        this.chart = null; // Reset chart instance variable
-      }
-
-      try {
-          this.chart = new g2Plot[config.chartType](this.chatId, {
-            renderer: 'canvas',
-            supportCSSTransform: true,
-            ...config.option
-          });
-          this.chart.render();
-          this.registerEvent();
-      } catch (renderError) {
-      }
+      this.chart = new g2Plot[config.chartType](this.chatId, {
+        renderer: 'svg',
+        // 仪表盘缩放状态下，点击准确
+        supportCSSTransform: true,
+        ...config.option
+      })
+      this.chart.render()
+      this.registerEvent()
     },
     /**
      * 注册事件
@@ -178,134 +167,42 @@ export default {
       return config
     },
     dataFormatting (config, data) {
-       // --- Add Log: Identify component ---
-       // --- End Log ---
-
       // 数据返回成功则赋值
       if (data.success) {
-        let rawData = data.data || []; // 使用 rawData 存储原始数据
+        data = data.data || []
         config = this.transformSettingToOption(config, 'data')
+        // 获取到后端返回的数据，有则赋值
         const option = config.option
         const setting = config.setting
-        const yField = option?.yField; // 获取 y 轴字段名
-        const xField = option?.xField; // 获取 x 轴字段名
-
-        // --- Add Log: Inspect data before eval ---
-        // --- End Log ---
-
-        if (config.dataHandler || config.name === 'YiBiaoPan') { // 如果有 handler 或者 是仪表盘，就尝试执行
-          // --- Wrap execution in try...catch --- 
+        if (config.dataHandler) {
           try {
-            let handlerScript = config.dataHandler;
-            // --- Runtime Fix: Force correct handler for YiBiaoPan --- 
-            if (config.name === 'YiBiaoPan') {
-              handlerScript = `
-                let value = 0; 
-                try {
-                  const fieldNameItem = setting.find(item => item.field === 'percent');
-                  const fieldName = fieldNameItem?.value;
-                  if (typeof fieldName === 'string' && fieldName.length > 0) {
-                    if (Array.isArray(data) && data.length > 0 && data[0] !== null && data[0] !== undefined) {
-                      let rawValue = data[0][fieldName];
-                      if (typeof rawValue === 'object' && rawValue !== null && rawValue.hasOwnProperty('value')) {
-                         rawValue = rawValue.value;
-                      } else if (typeof rawValue === 'object' && rawValue !== null) {
-                         rawValue = 0;
-                      }
-                      if (rawValue !== undefined) {
-                         const parsedValue = parseFloat(rawValue);
-                         if (!isNaN(parsedValue)) {
-                           value = parsedValue;
-                           if (value > 1) { value = value / 100; if (value > 1) value = 1; }
-                           if (value < 0) value = 0;
-                         } else { value = 0; }
-                      } else { value = 0; }
-                    } else { value = 0; }
-                  } else { value = 0; }
-                } catch (scriptError) {
-                    value = 0;
-                }
-                option.percent = value;
-              `;
-            }
-            // --- End Runtime Fix ---
-
-            if (handlerScript) { // 确保有脚本再执行
-              const dataHandlerFn = new Function('data', 'setting', 'option', handlerScript);
-              dataHandlerFn(rawData, setting, option);
-               // --- Add Final Check for option.percent (Gauge) --- 
-               if (config.name === 'YiBiaoPan') {
-                  if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
-                    option.percent = 0;
-                  }
-               }
-               // --- End Final Check ---
-            }
+            // 此处函数处理data
+            eval(config.dataHandler)
           } catch (e) {
-             // --- Add Final Check for option.percent (Gauge) even on error --- 
-             if (config.name === 'YiBiaoPan') {
-                if (typeof option.percent !== 'number' || isNaN(option.percent) || option.percent < 0 || option.percent > 1) {
-                  option.percent = 0;
-                }
-             }
-             // --- End Final Check ---
+            console.error(e)
           }
-          // --- End wrap --- 
         }
-
-        let processedData = []; // 存储处理后的数据
-        if (Array.isArray(rawData)) { 
-           processedData = rawData.map((item, index) => { // 添加 index 用于日志
-              const newItem = { ...item }; 
-
-              // --- 校验和处理 yField --- 
-              if (yField && newItem.hasOwnProperty(yField)) {
-                  const originalValue = newItem[yField];
-                  let numericValue = typeof originalValue === 'number' ? originalValue : parseFloat(originalValue);
-                  if (isNaN(numericValue)) {
-                      newItem[yField] = 0;
-                  } else {
-                      newItem[yField] = numericValue;
-                      // --- Add Log: Verify conversion inside map ---
-                     
-                      // --- End Log ---
-                  }
-              }
-              // --- 结束：校验和处理 yField ---
-
-              // --- 处理 xField/yField 为数字转字符串的逻辑 (逻辑不变) ---
-              if (config.chartType !== 'Bar' && xField && typeof newItem[xField] === 'number') {
-                 newItem[xField] = (newItem[xField]).toString();
-              }
-              if (config.chartType === 'Bar' && yField && typeof item[yField] === 'number') {
-                 newItem[yField] = (newItem[yField]).toString();
-              }
-              // --- 结束：处理 xField/yField --- 
-
-              return newItem;
-           });
-             // --- Add Log: Verify processedData before assignment ---
-             // --- End Log ---
-        } else {
-           // --- Add Log: Handle case where rawData is not an array --- 
-           processedData = []; // 如果不是数组，则使用空数组，防止 map 报错
-        }
-         // --- End Modify --- 
-
         if (config.chartType == 'Treemap') {
-          // TODO: Treemap 的 value 字段也需要类似的 NaN 检查
-          const listData = processedData.map(item => {
-            // Treemap xField 转换逻辑
-            if (xField && typeof item[xField] === 'number') { // 使用 xField 变量
-              item[xField] = (item[xField]).toString()
+          const xAxis = config.setting.find(item => item.field === 'xField')?.value
+          const listData = data.children.map(item => {
+            if (xAxis && typeof item[xAxis] === 'number') {
+              item[xAxis] = (item[xAxis]).toString()
             }
             return item
           })
           config.option.data = { name: 'root', children: [...listData] }
         } else {
-          // --- Modify: Ensure assignment happens --- 
-          config.option.data = processedData; 
-          // --- End Modify ---
+          // 如果维度为数字类型则转化为字符串，否则在不增加其他配置的情况下会导致图标最后一项不显示（g2plot官网已说明）
+          const xAxis = config.setting.find(item => item.field === 'xField')?.value
+          const yAxis = config.setting.find(item => item.field === 'yField')?.value
+          config.option.data = data?.map(item => {
+            if (config.chartType !== 'Bar' && xAxis && typeof item[xAxis] === 'number') {
+              item[xAxis] = (item[xAxis]).toString()
+            } else if (config.chartType === 'Bar' && yAxis && typeof item[yAxis] === 'number') {
+              item[yAxis] = (item[yAxis]).toString()
+            }
+            return item
+          })
         }
       } else {
         // 数据返回失败则赋前端的模拟数据
@@ -329,6 +226,7 @@ export default {
           // 此处函数处理config
           eval(this.config.optionHandler)
         } catch (e) {
+          console.error(e)
         }
       }
       // 只有样式改变时更新主题配置，切换主题时不需要保存
