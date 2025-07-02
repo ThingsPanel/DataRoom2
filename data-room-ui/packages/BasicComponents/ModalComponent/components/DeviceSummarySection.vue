@@ -8,7 +8,7 @@
       </svg>
       <div class="empty-text">无设备数据</div>
     </div>
-    
+
     <!-- 错误状态 -->
     <div v-else-if="deviceSummary.isError" class="error-state">
       <svg class="error-icon" viewBox="0 0 24 24" fill="none">
@@ -16,7 +16,7 @@
       </svg>
       <div class="error-text">{{ deviceSummary.errorMessage || '加载失败' }}</div>
     </div>
-    
+
     <!-- 正常状态 - 左右布局 -->
     <div v-else class="summary-layout">
       <!-- 左侧数据区域 -->
@@ -34,7 +34,7 @@
             </span>
           </div>
         </div>
-        
+
         <!-- 开机率 -->
         <div class="data-item">
           <svg class="data-icon" viewBox="0 0 24 24" fill="none">
@@ -47,7 +47,7 @@
             </span>
           </div>
         </div>
-        
+
         <!-- 今日产量 -->
         <div class="data-item">
           <svg class="data-icon" viewBox="0 0 24 24" fill="none">
@@ -61,13 +61,13 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 右侧图片区域 -->
       <div class="image-section">
         <div class="device-image-container">
-          <img 
-            v-if="deviceInfo.image_url" 
-            :src="deviceInfo.image_url" 
+          <img
+            v-if="deviceInfo.image_url"
+            :src="deviceInfo.image_url"
             :alt="deviceInfo.name || '设备图片'"
             class="device-image"
             @error="handleImageError"
@@ -111,12 +111,12 @@ export default {
       if (value === null || value === undefined) {
         return '-'
       }
-      
+
       const num = Number(value)
       if (isNaN(num)) {
         return '-'
       }
-      
+
       if (num <= 1) {
         // 如果是小数形式（0-1），转换为百分比
         return `${(num * 100).toFixed(1)}%`
@@ -125,27 +125,27 @@ export default {
         return `${num.toFixed(1)}%`
       }
     },
-    
+
     // 格式化数字
     formatNumber(value) {
       if (value === null || value === undefined) {
         return '-'
       }
-      
+
       const num = Number(value)
       if (isNaN(num)) {
         return '-'
       }
-      
+
       return num.toLocaleString()
     },
-    
+
     // 获取百分比宽度（用于进度条）
     getPercentageWidth(value) {
       if (value === null || value === undefined || isNaN(value)) {
         return '0%'
       }
-      
+
       const percentage = Number(value)
       if (percentage <= 1) {
         return `${(percentage * 100)}%`
@@ -153,24 +153,24 @@ export default {
         return `${Math.min(percentage, 100)}%`
       }
     },
-    
+
     // 格式化运行时间
     formatRuntime(hours) {
       if (!hours || isNaN(hours)) {
         return '-'
       }
-      
+
       const totalHours = Number(hours)
       const days = Math.floor(totalHours / 24)
       const remainingHours = Math.floor(totalHours % 24)
-      
+
       if (days > 0) {
         return `${days}天${remainingHours}小时`
       } else {
         return `${remainingHours}小时`
       }
     },
-    
+
     // 获取状态样式类
     getStatusClass(status) {
       const statusMap = {
@@ -184,10 +184,10 @@ export default {
         '维护中': 'status-maintenance',
         '维护': 'status-maintenance'
       }
-      
+
       return statusMap[status] || 'status-unknown'
     },
-    
+
     // 处理图片加载错误
     handleImageError(event) {
       // 隐藏失败的图片，显示占位符
@@ -280,12 +280,14 @@ export default {
   text-align: center;
 }
 
-/* 右侧图片区域 - 增大宽度 */
+/* 右侧图片区域 - 增大宽度，撑满高度 */
 .image-section {
   width: 280px;
   flex-shrink: 0;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  flex: 1; /* 撑满剩余高度 */
 }
 
 /* 设备图片容器 - 撑满高度 */
@@ -296,18 +298,21 @@ export default {
   overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  min-height: 200px;
+  height: 100%;
   display: flex;
   align-items: stretch;
+  position: relative;
 }
 
 /* 设备图片 */
 .device-image {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.2s ease;
-  flex: 1;
 }
 
 .device-image:hover {
@@ -414,44 +419,44 @@ export default {
     flex-direction: column;
     gap: 24px;
   }
-  
+
   .device-summary-section {
     padding: 24px;
     min-height: 160px;
   }
-  
+
   .data-section {
     gap: 24px;
   }
-  
+
   .data-item {
     padding: 6px 0;
   }
-  
+
   .data-icon {
     width: 14px;
     height: 14px;
   }
-  
+
   .data-value {
     font-size: 14px;
   }
-  
+
   .data-label {
     font-size: 11px;
     min-width: 45px;
   }
-  
+
   .image-section {
     width: 100%;
     max-width: 280px;
     margin: 0 auto;
   }
-  
+
   .device-image-container {
     height: 200px;
   }
-  
+
   .empty-state,
   .error-state {
     padding: 50px 20px;

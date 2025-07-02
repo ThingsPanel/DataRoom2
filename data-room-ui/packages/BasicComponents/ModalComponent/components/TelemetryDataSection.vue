@@ -14,14 +14,14 @@
         <div class="empty-text">无法加载遥测数据</div>
         <div class="empty-hint">请检查设备ID是否正确</div>
       </div>
-      
+
       <!-- 错误状态 -->
       <div v-else-if="telemetryData.isError" class="error-state">
         <div class="error-icon">⚠️</div>
         <div class="error-text">加载遥测数据失败</div>
         <div class="error-message">{{ telemetryData.errorMessage }}</div>
       </div>
-      
+
       <!-- 正常状态 - 使用DvScrollBoard -->
       <div v-else-if="hasData" class="telemetry-scroll-wrapper">
         <dv-scroll-board
@@ -31,14 +31,14 @@
           class="telemetry-scroll-board"
         />
       </div>
-      
+
       <!-- 无数据状态 -->
       <div v-else class="no-data">
         <div class="no-data-icon">📡</div>
         <div class="no-data-text">暂无遥测数据</div>
         <div class="no-data-desc">设备可能处于离线状态</div>
       </div>
-      
+
       <!-- 数据统计 -->
       <div v-if="hasData" class="data-summary">
         <div class="summary-item">
@@ -99,47 +99,54 @@ export default {
   computed: {
     // 是否有数据
     hasData() {
-      return this.telemetryData && this.telemetryData.length > 0
+      return this.telemetryData && 
+             !this.telemetryData.isEmpty && 
+             Array.isArray(this.telemetryData) && 
+             this.telemetryData.length > 0
     },
-    
+
     // 数据是否活跃（最近更新）
     isDataActive() {
       if (!this.hasData) return false
-      
+
       const now = Date.now() / 1000
       const latestTimestamp = Math.max(...this.telemetryData.map(item => item.timestamp || 0))
       return (now - latestTimestamp) < 300 // 5分钟内的数据认为是活跃的
     },
-    
+
     // DvScrollBoard配置
     scrollBoardConfig() {
       if (!this.hasData) return { data: [], header: [] }
-      
+
       // 表头配置
-      const header = ['参数名称', '当前值', '更新时间']
-      
+      const header = ['参数', '值', '更新时间']
+
       // 数据转换为二维数组格式
       const data = this.telemetryData.map(item => [
         item.key || '未知参数',
         `${item.value || '--'} ${item.unit || ''}`.trim(),
         this.formatTimestamp(item.timestamp)
       ])
-      
+
       // 限制显示行数，但不超过10行
       const limitedData = data.slice(0, Math.min(data.length, this.maxDisplayRows))
       
+      // 计算显示行数，确保轮播能够正常工作
+      const displayRows = Math.min(limitedData.length, this.maxDisplayRows)
+      const actualRowNum = limitedData.length > this.maxDisplayRows ? this.maxDisplayRows : Math.max(1, limitedData.length - 1)
+
       return {
         header,
         data: limitedData,
         index: false, // 不显示序号
         columnWidth: [120, 120, 100], // 列宽配置
         align: ['left', 'center', 'center'], // 对齐方式
-        rowNum: Math.min(limitedData.length, this.maxDisplayRows), // 显示行数
+        rowNum: actualRowNum, // 显示行数，确保能够轮播
         waitTime: 2000, // 轮播间隔2秒
         carousel: 'single' // 单行轮播
       }
     },
-    
+
     // 样式配置
     boardStyle() {
       return {
@@ -149,16 +156,16 @@ export default {
         '--dv-data-font-size': '12px'
       }
     },
-     
+
      // 异常参数数量
     errorCount() {
       return this.telemetryData.filter(item => this.isErrorValue(item)).length
     },
-    
+
     // 最后更新时间
     lastUpdateTime() {
       if (!this.hasData) return '-'
-      
+
       const latestTimestamp = Math.max(...this.telemetryData.map(item => item.timestamp || 0))
       return this.formatTimestamp(latestTimestamp)
     }
@@ -167,12 +174,12 @@ export default {
     // 格式化时间戳
     formatTimestamp(timestamp) {
       if (!timestamp) return '-'
-      
+
       try {
         const date = new Date(timestamp * 1000)
         const now = new Date()
         const diff = now - date
-        
+
         if (diff < 60000) { // 1分钟内
           return '刚刚'
         } else if (diff < 3600000) { // 1小时内
@@ -194,71 +201,71 @@ export default {
         return '-'
       }
     },
-    
+
     // 判断是否为新数据
     isNewData(item) {
       const now = Date.now()
       return (now - this.newDataTimestamp) < 2000 && // 2秒内
-             this.previousData.some(prev => 
+             this.previousData.some(prev =>
                prev.key === item.key && prev.value !== item.value
              )
     },
-    
+
     // 判断是否为警告值
     isWarningValue(item) {
       // 安全检查：确保 item 和 item.key 存在
       if (!item || !item.key || typeof item.key !== 'string') {
         return false
       }
-      
+
       // 这里可以根据实际业务逻辑判断
       const value = parseFloat(item.value)
       if (isNaN(value)) return false
-      
+
       // 示例：温度超过40度为警告
       if (item.key.includes('温度') && value > 40) {
         return true
       }
-      
+
       // 示例：压力超过3MPa为警告
       if (item.key.includes('压力') && value > 3) {
         return true
       }
-      
+
       return false
     },
-    
+
     // 判断是否为错误值
     isErrorValue(item) {
       // 安全检查：确保 item 和 item.key 存在
       if (!item || !item.key || typeof item.key !== 'string') {
         return false
       }
-      
+
       // 这里可以根据实际业务逻辑判断
       const value = parseFloat(item.value)
       if (isNaN(value)) return false
-      
+
       // 示例：温度超过50度为错误
       if (item.key.includes('温度') && value > 50) {
         return true
       }
-      
+
       // 示例：压力超过4MPa为错误
       if (item.key.includes('压力') && value > 4) {
         return true
       }
-      
+
       return false
     },
-    
+
     // 获取参数图标类
     getParamIconClass(paramName) {
       // 安全检查：确保 paramName 存在且为字符串
       if (!paramName || typeof paramName !== 'string') {
         return 'icon-default'
       }
-      
+
       const iconMap = {
         '温度': 'icon-temperature',
         '压力': 'icon-pressure',
@@ -269,34 +276,34 @@ export default {
         '流量': 'icon-flow',
         '液位': 'icon-level'
       }
-      
+
       for (const [key, className] of Object.entries(iconMap)) {
         if (paramName.includes(key)) {
           return className
         }
       }
-      
+
       return 'icon-default'
     },
-    
+
     // 获取趋势
     getTrend(item) {
       const prevItem = this.previousData.find(prev => prev.key === item.key)
       if (!prevItem) return null
-      
+
       const currentValue = parseFloat(item.value)
       const prevValue = parseFloat(prevItem.value)
-      
+
       if (isNaN(currentValue) || isNaN(prevValue)) return null
-      
+
       const diff = currentValue - prevValue
       const threshold = Math.abs(prevValue) * 0.05 // 5%的变化阈值
-      
+
       if (Math.abs(diff) < threshold) return null
-      
+
       return diff > 0 ? 'trend-up' : 'trend-down'
     },
-    
+
     // 获取趋势符号
     getTrendSymbol(item) {
       const trend = this.getTrend(item)
@@ -304,7 +311,7 @@ export default {
       if (trend === 'trend-down') return '↘'
       return ''
     },
-    
+
     // 更新数据
     updateData(newData) {
       this.previousData = [...this.telemetryData]
@@ -409,7 +416,7 @@ export default {
 
 /* DvScrollBoard样式 */
 .telemetry-scroll-wrapper {
-  flex: 1;
+  height: 300px; /* 固定高度，约30px每行 */
   overflow: hidden;
   border-radius: 8px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
@@ -636,26 +643,26 @@ export default {
   .section-header {
     padding: 12px 16px;
   }
-  
+
   .header-cell,
   .table-cell {
     padding: 8px 12px;
     font-size: 11px;
   }
-  
+
   .param-icon {
     width: 12px;
     height: 12px;
   }
-  
+
   .data-summary {
     padding: 8px 16px;
   }
-  
+
   .summary-label {
     font-size: 9px;
   }
-  
+
   .summary-value {
     font-size: 11px;
   }
@@ -666,21 +673,21 @@ export default {
     flex-direction: column;
     gap: 4px;
   }
-  
+
   .table-cell {
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     padding: 6px 12px;
   }
-  
+
   .table-cell:last-child {
     border-bottom: none;
   }
-  
+
   .header-cell {
     display: none;
   }
-  
+
   .table-cell::before {
     content: attr(data-label);
     font-weight: 600;

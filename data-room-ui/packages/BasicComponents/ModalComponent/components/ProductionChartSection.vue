@@ -1,37 +1,30 @@
 <template>
   <div class="production-chart-section">
-    <div class="section-header">
-      <h4>产量曲线图</h4>
-      <div class="chart-controls">
-        <select v-model="selectedPeriod" @change="handlePeriodChange" class="period-select">
-          <option value="7">近7天</option>
-          <option value="30">近30天</option>
-          <option value="90">近90天</option>
-        </select>
-      </div>
+    <!-- 图表标题覆盖层 -->
+    <div class="chart-overlay">
+      <div class="chart-title">产量曲线图</div>
     </div>
-    <div class="chart-content">
-      <!-- 空状态 -->
-      <div v-if="productionData.isEmpty" class="empty-state">
-        <div class="empty-icon">📈</div>
-        <div class="empty-text">无法加载产量数据</div>
-        <div class="empty-hint">请检查设备ID是否正确</div>
-      </div>
-      
-      <!-- 错误状态 -->
-      <div v-else-if="productionData.isError" class="error-state">
-        <div class="error-icon">⚠️</div>
-        <div class="error-text">加载产量数据失败</div>
-        <div class="error-message">{{ productionData.errorMessage }}</div>
-      </div>
-      
-      <!-- 正常状态 -->
-      <div v-else>
-        <canvas ref="chartContainer" class="chart-container"></canvas>
-        <div v-if="!hasData" class="no-data">
-          <div class="no-data-icon">📊</div>
-          <div class="no-data-text">暂无产量数据</div>
-        </div>
+    
+    <!-- 空状态 -->
+    <div v-if="productionData.isEmpty" class="empty-state">
+      <div class="empty-icon">📈</div>
+      <div class="empty-text">无法加载产量数据</div>
+      <div class="empty-hint">请检查设备ID是否正确</div>
+    </div>
+    
+    <!-- 错误状态 -->
+    <div v-else-if="productionData.isError" class="error-state">
+      <div class="error-icon">⚠️</div>
+      <div class="error-text">加载产量数据失败</div>
+      <div class="error-message">{{ productionData.errorMessage }}</div>
+    </div>
+    
+    <!-- 正常状态 -->
+    <div v-else class="chart-wrapper">
+      <canvas ref="chartContainer" class="chart-container"></canvas>
+      <div v-if="!hasData" class="no-data">
+        <div class="no-data-icon">📊</div>
+        <div class="no-data-text">暂无产量数据</div>
       </div>
     </div>
   </div>
@@ -48,13 +41,29 @@ export default {
     // 产量数据 - 可以是数组（正常数据）或对象（错误/空状态）
     productionData: {
       type: [Array, Object],
-      default: () => []
+      default: () => [
+        // 示例数据 - 匹配API格式 (timestamp, production)
+        { timestamp: 1704067200, production: 120 }, // 2024-01-01
+        { timestamp: 1704153600, production: 135 }, // 2024-01-02
+        { timestamp: 1704240000, production: 98 },  // 2024-01-03
+        { timestamp: 1704326400, production: 156 }, // 2024-01-04
+        { timestamp: 1704412800, production: 142 }, // 2024-01-05
+        { timestamp: 1704499200, production: 178 }, // 2024-01-06
+        { timestamp: 1704585600, production: 165 }, // 2024-01-07
+        { timestamp: 1704672000, production: 189 }, // 2024-01-08
+        { timestamp: 1704758400, production: 203 }, // 2024-01-09
+        { timestamp: 1704844800, production: 176 }, // 2024-01-10
+        { timestamp: 1704931200, production: 145 }, // 2024-01-11
+        { timestamp: 1705017600, production: 167 }, // 2024-01-12
+        { timestamp: 1705104000, production: 192 }, // 2024-01-13
+        { timestamp: 1705190400, production: 158 }, // 2024-01-14
+        { timestamp: 1705276800, production: 134 }  // 2024-01-15
+      ]
     }
   },
   data() {
     return {
       chart: null, // 图表实例
-      selectedPeriod: '7', // 选中的时间周期
       chartOptions: {
         // 图表配置选项
         responsive: true,
@@ -144,7 +153,7 @@ export default {
       }
       
       const labels = this.productionData.map(item => {
-        return this.formatDate(item.date)
+        return this.formatDate(item.timestamp)
       })
       
       const data = this.productionData.map(item => item.production || 0)
@@ -215,7 +224,7 @@ export default {
       }
     },
     
-    // 使用Canvas绘制简单图表（fallback）
+    // 使用Canvas绘制精美图表（fallback）
     renderCanvasChart(chartData) {
       const canvas = this.$refs.chartContainer
       
@@ -257,78 +266,183 @@ export default {
       const minValue = Math.min(...data)
       const range = maxValue - minValue || 1
       
-      // 绘制区域
-      const padding = 40
-      const chartWidth = width - padding * 2
-      const chartHeight = height - padding * 2
+      // 绘制区域设置 - 增加边距以容纳坐标轴
+      const padding = { top: 30, right: 30, bottom: 50, left: 60 }
+      const chartWidth = width - padding.left - padding.right
+      const chartHeight = height - padding.top - padding.bottom
       
-      // 绘制网格线
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'
-      ctx.lineWidth = 1
+      // 计算刻度值
+      const ySteps = 5
+      const xSteps = Math.min(data.length - 1, 6)
       
-      // 垂直网格线
-      for (let i = 0; i <= 6; i++) {
-        const x = padding + (chartWidth / 6) * i
-        ctx.beginPath()
-        ctx.moveTo(x, padding)
-        ctx.lineTo(x, height - padding)
-        ctx.stroke()
-      }
+      // 绘制精细网格线
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)'
+      ctx.lineWidth = 0.5
       
       // 水平网格线
-      for (let i = 0; i <= 4; i++) {
-        const y = padding + (chartHeight / 4) * i
+      for (let i = 0; i <= ySteps; i++) {
+        const y = padding.top + (chartHeight / ySteps) * i
         ctx.beginPath()
-        ctx.moveTo(padding, y)
-        ctx.lineTo(width - padding, y)
+        ctx.moveTo(padding.left, y)
+        ctx.lineTo(padding.left + chartWidth, y)
         ctx.stroke()
       }
       
-      // 绘制数据线
-      ctx.strokeStyle = '#00d4ff'
-      ctx.lineWidth = 3
-      ctx.beginPath()
+      // 垂直网格线
+      for (let i = 0; i <= xSteps; i++) {
+        const x = padding.left + (chartWidth / xSteps) * i
+        ctx.beginPath()
+        ctx.moveTo(x, padding.top)
+        ctx.lineTo(x, padding.top + chartHeight)
+        ctx.stroke()
+      }
       
-      data.forEach((value, index) => {
-        const x = padding + (chartWidth / (data.length - 1)) * index
-        const y = height - padding - ((value - minValue) / range) * chartHeight
+      // 绘制坐标轴
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)'
+      ctx.lineWidth = 1
+      
+      // X轴
+      ctx.beginPath()
+      ctx.moveTo(padding.left, padding.top + chartHeight)
+      ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight)
+      ctx.stroke()
+      
+      // Y轴
+      ctx.beginPath()
+      ctx.moveTo(padding.left, padding.top)
+      ctx.lineTo(padding.left, padding.top + chartHeight)
+      ctx.stroke()
+      
+      // 绘制Y轴刻度和标签
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+      ctx.font = '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
+      ctx.textAlign = 'right'
+      ctx.textBaseline = 'middle'
+      
+      for (let i = 0; i <= ySteps; i++) {
+        const value = minValue + (range / ySteps) * (ySteps - i)
+        const y = padding.top + (chartHeight / ySteps) * i
         
-        if (index === 0) {
-          ctx.moveTo(x, y)
-        } else {
-          ctx.lineTo(x, y)
+        // 刻度线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(padding.left - 5, y)
+        ctx.lineTo(padding.left, y)
+        ctx.stroke()
+        
+        // 标签
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+        ctx.fillText(Math.round(value).toString(), padding.left - 8, y)
+      }
+      
+      // 绘制X轴刻度和标签
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'top'
+      
+      labels.forEach((label, index) => {
+        const x = padding.left + (chartWidth / (data.length - 1)) * index
+        const y = padding.top + chartHeight
+        
+        // 刻度线
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(x, y)
+        ctx.lineTo(x, y + 5)
+        ctx.stroke()
+        
+        // 标签（只显示部分以避免重叠）
+        if (index % Math.ceil(data.length / 6) === 0 || index === data.length - 1) {
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+          ctx.fillText(label, x, y + 8)
         }
       })
+      
+      // 创建渐变填充
+      const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + chartHeight)
+      gradient.addColorStop(0, 'rgba(0, 212, 255, 0.3)')
+      gradient.addColorStop(0.5, 'rgba(0, 212, 255, 0.15)')
+      gradient.addColorStop(1, 'rgba(0, 212, 255, 0.02)')
+      
+      // 绘制面积填充
+      ctx.fillStyle = gradient
+      ctx.beginPath()
+      
+      // 起始点
+      const firstX = padding.left
+      const firstY = padding.top + chartHeight - ((data[0] - minValue) / range) * chartHeight
+      ctx.moveTo(firstX, padding.top + chartHeight)
+      ctx.lineTo(firstX, firstY)
+      
+      // 数据点连线
+      data.forEach((value, index) => {
+        const x = padding.left + (chartWidth / (data.length - 1)) * index
+        const y = padding.top + chartHeight - ((value - minValue) / range) * chartHeight
+        ctx.lineTo(x, y)
+      })
+      
+      // 闭合路径
+      const lastX = padding.left + chartWidth
+      ctx.lineTo(lastX, padding.top + chartHeight)
+      ctx.closePath()
+      ctx.fill()
+      
+      // 绘制平滑曲线
+      ctx.strokeStyle = '#00d4ff'
+      ctx.lineWidth = 2
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      ctx.beginPath()
+      
+      // 使用贝塞尔曲线绘制平滑线条
+      const points = data.map((value, index) => ({
+        x: padding.left + (chartWidth / (data.length - 1)) * index,
+        y: padding.top + chartHeight - ((value - minValue) / range) * chartHeight
+      }))
+      
+      if (points.length > 0) {
+        ctx.moveTo(points[0].x, points[0].y)
+        
+        for (let i = 1; i < points.length; i++) {
+          if (i === 1) {
+            ctx.lineTo(points[i].x, points[i].y)
+          } else {
+            const prevPoint = points[i - 1]
+            const currentPoint = points[i]
+            const nextPoint = points[i + 1] || currentPoint
+            
+            const cp1x = prevPoint.x + (currentPoint.x - prevPoint.x) * 0.3
+            const cp1y = prevPoint.y
+            const cp2x = currentPoint.x - (nextPoint.x - prevPoint.x) * 0.3
+            const cp2y = currentPoint.y
+            
+            ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, currentPoint.x, currentPoint.y)
+          }
+        }
+      }
       
       ctx.stroke()
       
       // 绘制数据点
-      ctx.fillStyle = '#00d4ff'
-      data.forEach((value, index) => {
-        const x = padding + (chartWidth / (data.length - 1)) * index
-        const y = height - padding - ((value - minValue) / range) * chartHeight
-        
+      points.forEach((point, index) => {
+        // 外圈
+        ctx.fillStyle = '#ffffff'
         ctx.beginPath()
-        ctx.arc(x, y, 4, 0, Math.PI * 2)
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2)
         ctx.fill()
-      })
-      
-      // 绘制标签
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.7)'
-      ctx.font = '11px Arial'
-      ctx.textAlign = 'center'
-      
-      labels.forEach((label, index) => {
-        if (index % Math.ceil(labels.length / 6) === 0) {
-          const x = padding + (chartWidth / (data.length - 1)) * index
-          ctx.fillText(label, x, height - padding + 20)
-        }
+        
+        // 内圈
+        ctx.fillStyle = '#00d4ff'
+        ctx.beginPath()
+        ctx.arc(point.x, point.y, 2.5, 0, Math.PI * 2)
+        ctx.fill()
       })
     },
     
     // 处理图表数据
     processChartData(data) {
-      const labels = data.map(item => this.formatDate(item.date))
+      const labels = data.map(item => this.formatDate(item.timestamp))
       const values = data.map(item => item.production || 0)
       
       return {
@@ -351,19 +465,14 @@ export default {
       }
     },
     
-    // 格式化日期
-    formatDate(dateStr) {
+    // 格式化日期 - 处理timestamp
+    formatDate(timestamp) {
       try {
-        const date = new Date(dateStr)
+        const date = new Date(timestamp * 1000) // timestamp是秒，需要转换为毫秒
         return `${date.getMonth() + 1}/${date.getDate()}`
       } catch (error) {
-        return dateStr
+        return timestamp
       }
-    },
-    
-    // 处理时间周期变化
-    handlePeriodChange() {
-      this.$emit('period-change', this.selectedPeriod)
     },
     
     // 更新图表数据
@@ -417,90 +526,64 @@ export default {
 </script>
 
 <style scoped>
+/* 主容器 - 简化背景，撑满空间 */
 .production-chart-section {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  background: transparent;
   border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
   overflow: hidden;
-  height: 300px;
+  height: 100%;
+  width: 100%;
+  position: relative;
   display: flex;
   flex-direction: column;
 }
 
-.section-header {
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* 图表标题和控制器覆盖层 */
+.chart-overlay {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  right: 12px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-shrink: 0;
+  z-index: 10;
+  pointer-events: none;
 }
 
-.section-header h4 {
-  margin: 0;
-  font-size: 16px;
+.chart-overlay > * {
+  pointer-events: auto;
+}
+
+/* 图表标题 */
+.chart-title {
+  font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.section-header h4::before {
-  content: '';
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  border-radius: 2px;
-}
-
-.chart-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.period-select {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.3);
   padding: 6px 12px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
 }
 
-.period-select:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+
+
+/* 图表包装器 - 撑满整个容器 */
+.chart-wrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
 }
 
-.period-select:focus {
-  outline: none;
-  border-color: #00d4ff;
-  box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
-}
-
-.period-select option {
-  background: #1a1a2e;
-  color: #ffffff;
-}
-
-.chart-content {
-  flex: 1;
-  padding: 20px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
+/* 图表容器 - 完全撑满 */
 .chart-container {
   width: 100%;
   height: 100%;
-  min-height: 300px;
   background: transparent;
   display: block;
 }
@@ -530,12 +613,15 @@ export default {
 
 /* 空状态样式 */
 .empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  min-height: 200px;
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
 }
@@ -560,12 +646,15 @@ export default {
 
 /* 错误状态样式 */
 .error-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  min-height: 200px;
   text-align: center;
   color: rgba(239, 68, 68, 0.8);
 }

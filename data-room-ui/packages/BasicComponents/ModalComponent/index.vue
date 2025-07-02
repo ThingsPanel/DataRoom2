@@ -991,7 +991,7 @@ export default {
     height: 100%;
     display: flex;
     flex-direction: column;
-    background-color: #1A1A1A;
+    background-color: transparent;
     border-radius: 6px;
     overflow: hidden;
     
@@ -1028,7 +1028,7 @@ export default {
       overflow: hidden;
       position: relative;
       perspective: 1000px; // 为3D动画提供透视
-      background-color: #1A1A1A;
+      background-color: transparent;
       
       .table-content {
         width: 100%;
@@ -1071,9 +1071,9 @@ export default {
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 12px;
+      padding: 0;
       gap: 10px;
-      background-color: #1A1A1A;
+      background-color: transparent;
       
       .indicator {
         width: 10px;
@@ -1262,7 +1262,7 @@ export default {
 // 浅色主题支持（可选）
 .carousel-table-wrapper.light-theme {
   .table-container {
-    background-color: #ffffff;
+    background-color: transparent;
     
     .table-header {
       background-color: #f5f7fa;
@@ -1273,7 +1273,7 @@ export default {
     }
     
     .table-body {
-      background-color: #ffffff;
+      background-color: transparent;
       
       .table-row {
         color: #303133;
@@ -1289,7 +1289,7 @@ export default {
     }
     
     .carousel-indicators {
-      background-color: #ffffff;
+      background-color: transparent;
       
       .indicator {
         background-color: #c0c4cc;
