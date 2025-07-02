@@ -28,7 +28,7 @@ export const settingConfig = {
     },
     params: { enable: false }
   },
-  
+
   // 轮播设置
   isCarousel: false, // 是否启用轮播
   autoPlay: true, // 自动播放
@@ -36,40 +36,40 @@ export const settingConfig = {
   carouselPageSize: 5, // 每页显示行数
   animationType: 'slide', // 动画类型：slide, fade, zoom, flip
   animationDuration: 300, // 动画持续时间（毫秒）
-  
+
   // 弹窗设置
   enableModal: false, // 启用弹窗
   dialogTitle: '详细信息', // 弹窗标题
   dialogWidth: 50, // 弹窗宽度（百分比）
-  
+
   // 表格设置
   rowHeight: 45, // 行高
   tableSize: 'medium', // 表格尺寸：small, medium, large
   stripe: true, // 斑马纹
-  
+
   // 边框设置
   showBorder: true, // 显示边框
   borderMode: 'inner', // 边框模式：outer, inner, full
   borderWidth: 1, // 边框宽度
   borderColor: '#434343', // 边框颜色
   borderStyle: 'solid', // 边框样式：solid, dashed, dotted, double
-  
+
   // 表头样式
   headerBgColor: '#2D2D2D', // 表头背景色
   headerTextColor: '#E0E0E0', // 表头文字颜色
   headerFontSize: 14, // 表头字体大小
   headerFontWeight: 600, // 表头字体粗细
   headerHeight: 45, // 表头高度
-  
+
   // 单元格样式
   cellBgColor: '#1A1A1A', // 单元格背景色
   cellTextColor: '#C0C4CC', // 单元格文字颜色
   cellFontSize: 13, // 单元格字体大小
-  
+
   // 斑马纹颜色
   oddRowBgColor: '#1F1F1F', // 奇数行背景色
   evenRowBgColor: '#1A1A1A', // 偶数行背景色
-  
+
   // 列配置
   columns: [
     { prop: 'name', label: '姓名', width: 120, align: 'center' },
@@ -111,7 +111,7 @@ const customConfig = {
     rowHeight: 45,            // 表格行高
     tableSize: 'small',       // 表格尺寸: medium, small, mini
     stripe: true,             // 是否显示斑马纹
-    
+
     // 轮播模式配置
     isCarousel: false,        // 是否轮播模式
     autoPlay: true,           // 是否自动播放轮播
@@ -119,37 +119,40 @@ const customConfig = {
     carouselPageSize: 5,      // 轮播每页显示行数
     animationType: 'slide',   // 轮播动画类型: slide, fade, zoom, flip
     animationDuration: 300,   // 动画持续时间(ms)
-    
+
     // 弹窗配置
     enableModal: true,        // 是否启用弹窗
     dialogTitle: '数据详情',
     dialogWidth: 70,          // 适配大屏显示
-    
+
     // 边框配置
     showBorder: true,         // 是否显示边框
     borderMode: 'inner',      // 边框模式: outer(外边框), inner(内边框), full(完整边框)
     borderWidth: 1,           // 边框宽度
     borderColor: '#434343',   // 适配黑色主题的边框颜色
     borderStyle: 'solid',     // 边框样式: solid, dashed, dotted, double
-    
+
     // 表头样式 - 适配黑色主题
     headerBgColor: '#2C2C2C', // 深色表头背景
     headerTextColor: '#E4E7ED',
     headerFontSize: 14,
     headerFontWeight: 'bold',
-    
+
     // 单元格样式 - 适配黑色主题
     cellBgColor: '#1E1E1E',   // 深色单元格背景
     cellTextColor: '#C0C4CC',
     cellFontSize: 13,
-    
+
     // 奇偶行背景色 - 适配黑色主题
     oddRowBgColor: 'rgba(255, 255, 255, 0.02)',   // 微弱的亮色
     evenRowBgColor: 'rgba(255, 255, 255, 0.05)',  // 稍微亮一点
-    
+
     // 列配置
     columns: [],              // 表格列配置数组
-    columnSettings: []        // 列设置配置数组 { key: string, name: string, width: number, align: string }
+    columnSettings: [],       // 列设置配置数组 { key: string, name: string, width: number, align: string }
+
+    // API配置
+    apiBaseUrl: 'http://47.92.253.145:9102/api/v1'  // 设备监控API基础URL
   }
 }
 

@@ -55,28 +55,15 @@
       </div>
     </div>
     
-    <!-- 自定义弹窗 -->
-    <div v-if="config.customize.enableModal && dialogVisible" class="modal-overlay" @click="closeModal">
-      <div class="modal-dialog" :style="modalStyle" @click.stop>
-        <div class="modal-header">
-          <h3>{{ config.customize.dialogTitle || '数据详情' }}</h3>
-          <button class="close-btn" @click="closeModal">&times;</button>
-        </div>
-        <div class="modal-body">
-          <div 
-            v-for="column in tableColumns" 
-            :key="column.prop"
-            class="detail-item"
-          >
-            <label>{{ column.label }}：</label>
-            <span>{{ formatCellValue(selectedRowData[column.prop], column) }}</span>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" @click="closeModal">关闭</button>
-          <button class="btn btn-primary" @click="handleConfirm">确定</button>
-        </div>
-      </div>
+    <!-- 设备监控大屏弹窗容器 -->
+    <div id="device-monitor-modal-container" v-if="config.customize.enableModal">
+      <DeviceMonitorModal
+        :visible="dialogVisible"
+        :selected-row-data="selectedRowData"
+        :table-columns="tableColumns"
+        :config="config"
+        @close="closeModal"
+      />
     </div>
   </div>
 </template>
@@ -85,10 +72,14 @@
 import commonMixins from 'data-room-ui/js/mixins/commonMixins'
 import paramsMixins from 'data-room-ui/js/mixins/paramsMixins'
 import linkageMixins from 'data-room-ui/js/mixins/linkageMixins'
+import DeviceMonitorModal from './components/DeviceMonitorModal.vue'
 
 export default {
   name: 'ModalComponent',
   mixins: [commonMixins, paramsMixins, linkageMixins],
+  components: {
+    DeviceMonitorModal
+  },
   props: {
     config: {
       type: Object,
@@ -216,6 +207,17 @@ export default {
       }
     },
     
+    // 设备监控弹窗样式
+    deviceMonitorModalStyle() {
+      return {
+        width: '80%',
+        maxWidth: '1400px',
+        minWidth: '1000px',
+        height: '80vh',
+        maxHeight: '800px'
+      }
+    },
+    
     // 表格列配置
     tableColumns() {
       let columns = []
@@ -296,6 +298,47 @@ export default {
       return this.tableData ? this.tableData.length : 0
     },
     
+    // 遥测数据显示（轮播）
+    displayTelemetryData() {
+      if (!this.telemetryData || !this.telemetryData.length) {
+        return []
+      }
+      
+      const pageSize = 8 // 遥测数据每页显示8行
+      const startIndex = this.currentTelemetryRow % this.telemetryData.length
+      const result = []
+      
+      // 获取连续的pageSize+1行数据，用于滚动效果
+      for (let i = 0; i < pageSize + 1; i++) {
+        const index = (startIndex + i) % this.telemetryData.length
+        result.push(this.telemetryData[index])
+      }
+      
+      return result
+    },
+    
+    // 遥测数据内容样式（用于轮播动画）
+    telemetryContentStyle() {
+      const rowHeight = 40
+      const baseStyle = {
+        height: `${8 * rowHeight}px`, // 显示8行
+        overflow: 'hidden'
+      }
+      
+      if (!this.isTelemetryTransitioning) {
+        return {
+          ...baseStyle,
+          transition: 'none'
+        }
+      }
+      
+      return {
+        ...baseStyle,
+        transform: `translateY(-${rowHeight}px)`,
+        transition: `transform 300ms ease-in-out`
+      }
+    },
+    
     // 是否显示指示器
     showIndicators() {
       return this.config.customize.showIndicators !== false && this.totalRows > (this.config.customize.carouselPageSize || 5)
@@ -307,10 +350,17 @@ export default {
     // 调用chartInit来触发数据获取和处理流程
     this.chartInit()
     this.initCarousel()
+    
+    // 将弹窗容器移动到body中，实现真正的脱离文档流
+    this.$nextTick(() => {
+      this.moveModalToBody()
+    })
   },
-  
+
   beforeDestroy() {
     this.clearCarousel()
+    // 清理移动到body的弹窗容器
+    this.removeModalFromBody()
   },
   
   methods: {
@@ -850,10 +900,32 @@ export default {
         // 没有数据源时，直接调用dataFormatting处理默认数据
         this.dataFormatting(this.config, {})
       }
-    }
-  },
-  
+    },
+    
+    // 将弹窗容器移动到body中，实现真正的脱离文档流
+    moveModalToBody() {
+      const modalContainer = document.getElementById('device-monitor-modal-container')
+      if (modalContainer && this.config.customize.enableModal) {
+        // 将容器从当前位置移动到body中
+        document.body.appendChild(modalContainer)
+        console.log('弹窗容器已移动到body中，实现脱离文档流')
+      }
+    },
+    
+    // 从body中移除弹窗容器
+    removeModalFromBody() {
+      const modalContainer = document.getElementById('device-monitor-modal-container')
+      if (modalContainer && modalContainer.parentNode === document.body) {
+        // 从body中移除容器
+        document.body.removeChild(modalContainer)
+        console.log('弹窗容器已从body中移除')
+      }
+    },
+    
 
+    
+
+  },
   
   watch: {
     // 监听轮播配置变化
@@ -1276,5 +1348,363 @@ export default {
 
 .modal-dialog {
   animation: fadeIn 0.3s ease;
+}
+
+/* ========== 设备监控弹窗样式 ========== */
+
+.device-monitor-modal {
+  background: #0D1117;
+  border: 1px solid #30363D;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+}
+
+.device-monitor-header {
+  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  border-bottom: 1px solid #374151;
+  border-radius: 12px 12px 0 0;
+}
+
+.device-monitor-title {
+  color: #F9FAFB;
+  font-size: 20px;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+}
+
+.device-monitor-body {
+  padding: 24px;
+  background: #0D1117;
+}
+
+.device-monitor-content {
+  display: flex;
+  gap: 24px;
+  height: 600px;
+}
+
+.device-monitor-left {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.device-monitor-right {
+  width: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 设备信息卡片 */
+.device-info-card {
+  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.device-info-title {
+  color: #F9FAFB;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+}
+
+.device-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.device-info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(55, 65, 81, 0.3);
+  border-radius: 6px;
+  border: 1px solid rgba(55, 65, 81, 0.5);
+}
+
+.device-info-label {
+  color: #9CA3AF;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.device-info-value {
+  color: #F9FAFB;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* 设备汇总统计 */
+.device-summary-card {
+  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.device-summary-title {
+  color: #F9FAFB;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+}
+
+.device-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.summary-item {
+  text-align: center;
+  padding: 16px;
+  background: rgba(55, 65, 81, 0.3);
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.5);
+  transition: all 0.3s ease;
+}
+
+.summary-item:hover {
+  background: rgba(55, 65, 81, 0.5);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.summary-label {
+  color: #9CA3AF;
+  font-size: 12px;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.summary-value {
+  color: #F9FAFB;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.summary-unit {
+  color: #6B7280;
+  font-size: 11px;
+}
+
+/* 状态指示器 */
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-running {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22C55E;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.status-standby {
+  background: rgba(251, 191, 36, 0.2);
+  color: #FBBF24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.status-offline {
+  background: rgba(239, 68, 68, 0.2);
+  color: #EF4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-unknown {
+  background: rgba(107, 114, 128, 0.2);
+  color: #6B7280;
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* 产量图表 */
+.production-chart-card {
+  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  flex: 1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.production-chart-title {
+  color: #F9FAFB;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+}
+
+.production-chart-container {
+  height: 300px;
+  background: rgba(13, 17, 23, 0.5);
+  border-radius: 6px;
+  border: 1px solid #30363D;
+}
+
+/* 遥测数据表格 */
+.telemetry-card {
+  background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
+  border: 1px solid #374151;
+  border-radius: 8px;
+  padding: 16px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.telemetry-title {
+  color: #F9FAFB;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #374151;
+  padding-bottom: 8px;
+}
+
+.telemetry-table-container {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: rgba(13, 17, 23, 0.5);
+  border-radius: 6px;
+  border: 1px solid #30363D;
+}
+
+.telemetry-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.telemetry-table th {
+  background: #1F2937;
+  color: #F9FAFB;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  border-bottom: 1px solid #374151;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.telemetry-table td {
+  padding: 10px 16px;
+  color: #E5E7EB;
+  font-size: 13px;
+  border-bottom: 1px solid rgba(55, 65, 81, 0.3);
+}
+
+.telemetry-table tbody {
+  display: block;
+  height: 320px;
+  overflow: hidden;
+}
+
+.telemetry-table thead,
+.telemetry-table tbody tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.telemetry-content {
+  transition: transform 0.3s ease;
+}
+
+.telemetry-content.transitioning {
+  opacity: 0.7;
+}
+
+.telemetry-row {
+  transition: background-color 0.2s ease;
+}
+
+.telemetry-row:hover {
+  background-color: rgba(55, 65, 81, 0.4) !important;
+}
+
+.telemetry-key {
+  font-weight: 600;
+  color: #93C5FD;
+}
+
+.telemetry-value {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: #34D399;
+  font-weight: 500;
+}
+
+.telemetry-timestamp {
+  color: #9CA3AF;
+  font-size: 11px;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  .device-monitor-content {
+    flex-direction: column;
+    height: auto;
+  }
+  
+  .device-monitor-right {
+    width: 100%;
+  }
+  
+  .device-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .device-monitor-body {
+    padding: 16px;
+  }
+  
+  .device-monitor-content {
+    gap: 16px;
+  }
+  
+  .device-summary-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .device-info-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

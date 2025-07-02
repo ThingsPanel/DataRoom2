@@ -1,27 +1,27 @@
 <template>
   <div class="bs-setting-wrap">
-    <el-form 
-      ref="form" 
-      :model="config" 
-      label-width="100px" 
-      label-position="left" 
+    <el-form
+      ref="form"
+      :model="config"
+      label-width="100px"
+      label-position="left"
       class="setting-body bs-el-form"
     >
       <div>
         <slot name="top" />
-        
+
         <!-- 位置设置 -->
         <SettingTitle>位置</SettingTitle>
         <div class="lc-field-body">
           <PosWhSetting :config="config" />
         </div>
-        
+
         <!-- 旋转设置 -->
         <SettingTitle>旋转</SettingTitle>
         <div class="lc-field-body">
           <RotateSetting :config="config" />
         </div>
-        
+
         <!-- 表格基础设置 -->
         <SettingTitle>表格设置</SettingTitle>
         <div class="lc-field-body">
@@ -34,7 +34,7 @@
               :max="80"
             />
           </el-form-item>
-          
+
           <el-form-item label="表格尺寸">
             <el-select
               v-model="config.customize.tableSize"
@@ -46,7 +46,7 @@
               <el-option label="小" value="mini"></el-option>
             </el-select>
           </el-form-item>
-          
+
           <el-form-item label="斑马纹">
             <el-switch
               v-model="config.customize.stripe"
@@ -55,7 +55,7 @@
             />
           </el-form-item>
         </div>
-        
+
         <!-- 轮播模式 -->
         <SettingTitle>轮播模式</SettingTitle>
         <div class="lc-field-body">
@@ -66,7 +66,7 @@
               inactive-color="#C0C4CC"
             />
           </el-form-item>
-          
+
           <template v-if="config.customize.isCarousel">
             <el-form-item label="自动播放">
               <el-switch
@@ -75,7 +75,7 @@
                 inactive-color="#C0C4CC"
               />
             </el-form-item>
-            
+
             <el-form-item label="轮播间隔(ms)" v-if="config.customize.autoPlay">
               <el-input-number
                 v-model="config.customize.carouselInterval"
@@ -86,7 +86,7 @@
                 :step="500"
               />
             </el-form-item>
-            
+
             <el-form-item label="每页显示行数">
               <el-input-number
                 v-model="config.customize.carouselPageSize"
@@ -96,7 +96,7 @@
                 :max="20"
               />
             </el-form-item>
-            
+
             <el-form-item label="动画类型">
               <el-select
                 v-model="config.customize.animationType"
@@ -109,7 +109,7 @@
                 <el-option label="翻转" value="flip"></el-option>
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="动画时长(ms)">
               <el-input-number
                 v-model="config.customize.animationDuration"
@@ -122,7 +122,7 @@
             </el-form-item>
           </template>
         </div>
-        
+
         <!-- 弹窗设置 -->
         <SettingTitle>弹窗设置</SettingTitle>
         <div class="lc-field-body">
@@ -133,7 +133,7 @@
               inactive-color="#C0C4CC"
             />
           </el-form-item>
-          
+
           <template v-if="config.customize.enableModal">
             <el-form-item label="弹窗标题">
               <el-input
@@ -142,7 +142,7 @@
                 clearable
               />
             </el-form-item>
-            
+
             <el-form-item label="弹窗宽度(%)">
               <el-input-number
                 v-model="config.customize.dialogWidth"
@@ -152,9 +152,18 @@
                 :max="90"
               />
             </el-form-item>
+
+            <el-form-item label="API基础URL">
+              <el-input
+                v-model="config.customize.apiBaseUrl"
+                class="bs-el-input"
+                placeholder="http://47.92.253.145:9102/api/v1"
+                clearable
+              />
+            </el-form-item>
           </template>
         </div>
-        
+
         <!-- 边框设置 -->
         <SettingTitle>边框设置</SettingTitle>
         <div class="lc-field-body">
@@ -165,7 +174,7 @@
               inactive-color="#C0C4CC"
             />
           </el-form-item>
-          
+
           <template v-if="config.customize.showBorder">
             <el-form-item label="边框模式">
               <el-select
@@ -178,7 +187,7 @@
                 <el-option label="完整边框" value="full"></el-option>
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="边框宽度(px)">
               <el-input-number
                 v-model="config.customize.borderWidth"
@@ -188,14 +197,14 @@
                 :max="5"
               />
             </el-form-item>
-            
+
             <el-form-item label="边框颜色">
               <ColorPicker
                 v-model="config.customize.borderColor"
                 :predefine="predefineThemeColors"
               />
             </el-form-item>
-            
+
             <el-form-item label="边框样式">
               <el-select
                 v-model="config.customize.borderStyle"
@@ -210,7 +219,7 @@
             </el-form-item>
           </template>
         </div>
-        
+
         <!-- 表头样式 -->
         <SettingTitle>表头样式</SettingTitle>
         <div class="lc-field-body">
@@ -220,14 +229,14 @@
               :predefine="predefineThemeColors"
             />
           </el-form-item>
-          
+
           <el-form-item label="文字颜色">
             <ColorPicker
               v-model="config.customize.headerTextColor"
               :predefine="predefineThemeColors"
             />
           </el-form-item>
-          
+
           <el-form-item label="字体大小">
             <el-input-number
               v-model="config.customize.headerFontSize"
@@ -237,7 +246,7 @@
               :max="24"
             />
           </el-form-item>
-          
+
           <el-form-item label="字体粗细">
             <el-select
               v-model="config.customize.headerFontWeight"
@@ -250,7 +259,7 @@
             </el-select>
           </el-form-item>
         </div>
-        
+
         <!-- 单元格样式 -->
         <SettingTitle>单元格样式</SettingTitle>
         <div class="lc-field-body">
@@ -260,14 +269,14 @@
               :predefine="predefineThemeColors"
             />
           </el-form-item>
-          
+
           <el-form-item label="文字颜色">
             <ColorPicker
               v-model="config.customize.cellTextColor"
               :predefine="predefineThemeColors"
             />
           </el-form-item>
-          
+
           <el-form-item label="字体大小">
             <el-input-number
               v-model="config.customize.cellFontSize"
@@ -277,7 +286,7 @@
               :max="20"
             />
           </el-form-item>
-          
+
           <el-form-item label="奇数行背景" v-if="config.customize.stripe">
             <ColorPicker
               v-model="config.customize.oddRowBgColor"
@@ -285,7 +294,7 @@
               show-alpha
             />
           </el-form-item>
-          
+
           <el-form-item label="偶数行背景" v-if="config.customize.stripe">
             <ColorPicker
               v-model="config.customize.evenRowBgColor"
@@ -294,7 +303,7 @@
             />
           </el-form-item>
         </div>
-        
+
         <!-- 列宽配置 -->
         <SettingTitle>列宽配置</SettingTitle>
         <div class="lc-field-body">
@@ -369,12 +378,12 @@ export default {
       if (!this.config.customize.columnSettings) {
         this.$set(this.config.customize, 'columnSettings', [])
       }
-      
+
       // 如果有维度字段配置，同步生成列设置
       if (this.config.displayOption?.dimensionField?.value?.length) {
         const dimensions = this.config.displayOption.dimensionField.value
         const existingSettings = this.config.customize.columnSettings
-        
+
         // 为新的维度字段创建设置项
         dimensions.forEach(dim => {
           const existing = existingSettings.find(setting => setting.key === dim.field)
@@ -390,13 +399,13 @@ export default {
             existing.name = dim.name || dim.field
           }
         })
-        
+
         // 移除不存在的维度字段设置
-        this.config.customize.columnSettings = existingSettings.filter(setting => 
+        this.config.customize.columnSettings = existingSettings.filter(setting =>
           dimensions.some(dim => dim.field === setting.key)
         )
       }
-      
+
       return this.config.customize.columnSettings || []
     }
   },
@@ -425,31 +434,31 @@ export default {
   justify-content: space-between;
   padding: 8px 0;
   border-bottom: 1px solid #f0f0f0;
-  
+
   &:last-child {
     border-bottom: none;
   }
-  
+
   .column-info {
     flex: 1;
-    
+
     .column-name {
       font-size: 13px;
       color: #303133;
       font-weight: 500;
     }
-    
+
     .column-key {
       font-size: 11px;
       color: #909399;
       margin-left: 5px;
     }
   }
-  
+
   .column-controls {
     display: flex;
     align-items: center;
-    
+
     .unit {
       font-size: 12px;
       color: #909399;
