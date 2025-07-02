@@ -22,45 +22,14 @@
         <div class="error-message">{{ telemetryData.errorMessage }}</div>
       </div>
       
-      <!-- 正常状态 -->
-      <div v-else-if="hasData" class="telemetry-table-wrapper">
-        <div 
-          class="telemetry-table" 
-          :class="{ 'transitioning': isTransitioning }"
-          :style="tableTransform"
-        >
-          <div class="table-header">
-            <div class="header-cell">参数名称</div>
-            <div class="header-cell">当前值</div>
-            <div class="header-cell">更新时间</div>
-          </div>
-          <div class="table-body">
-            <div 
-              v-for="(item, index) in displayData" 
-              :key="index"
-              class="table-row"
-              :class="{ 
-                'highlight': isNewData(item),
-                'warning': isWarningValue(item),
-                'error': isErrorValue(item)
-              }"
-            >
-              <div class="table-cell param-name">
-                <span class="param-icon" :class="getParamIconClass(item.key)"></span>
-                {{ item.key }}
-              </div>
-              <div class="table-cell param-value">
-                <span class="value-text">{{ item.value }}</span>
-                <span v-if="getTrend(item)" class="trend-indicator" :class="getTrend(item)">
-                  {{ getTrendSymbol(item) }}
-                </span>
-              </div>
-              <div class="table-cell update-time">
-                {{ formatTimestamp(item.timestamp) }}
-              </div>
-            </div>
-          </div>
-        </div>
+      <!-- 正常状态 - 使用DvScrollBoard -->
+      <div v-else-if="hasData" class="telemetry-scroll-wrapper">
+        <dv-scroll-board
+          :key="updateKey"
+          :config="scrollBoardConfig"
+          :style="boardStyle"
+          class="telemetry-scroll-board"
+        />
       </div>
       
       <!-- 无数据状态 -->
@@ -90,12 +59,18 @@
 </template>
 
 <script>
+import DvScrollBoard from '@jiaminghi/data-view/lib/components/scrollBoard/src/main.vue'
+import '@jiaminghi/data-view/lib/components/scrollBoard/src/main.css'
+
 /**
  * 遥测数据展示组件
  * 负责显示实时遥测数据，支持数据轮播和状态监控
  */
 export default {
   name: 'TelemetryDataSection',
+  components: {
+    DvScrollBoard
+  },
   props: {
     // 遥测数据
     telemetryData: {
@@ -115,9 +90,10 @@ export default {
   },
   data() {
     return {
-      maxDisplayRows: 5, // 最大显示行数
+      maxDisplayRows: 10, // 最大显示行数
       previousData: [], // 上一次的数据，用于对比变化
-      newDataTimestamp: 0 // 新数据时间戳
+      newDataTimestamp: 0, // 新数据时间戳
+      updateKey: 0 // 用于强制更新DvScrollBoard组件
     }
   },
   computed: {
@@ -135,45 +111,46 @@ export default {
       return (now - latestTimestamp) < 300 // 5分钟内的数据认为是活跃的
     },
     
-    // 显示的数据（支持轮播）
-    displayData() {
-      if (!this.hasData) return []
+    // DvScrollBoard配置
+    scrollBoardConfig() {
+      if (!this.hasData) return { data: [], header: [] }
       
-      if (this.telemetryData.length <= this.maxDisplayRows) {
-        return this.telemetryData
-      }
+      // 表头配置
+      const header = ['参数名称', '当前值', '更新时间']
       
-      // 轮播显示
-      const startIndex = this.currentIndex
-      const endIndex = startIndex + this.maxDisplayRows
+      // 数据转换为二维数组格式
+      const data = this.telemetryData.map(item => [
+        item.key || '未知参数',
+        `${item.value || '--'} ${item.unit || ''}`.trim(),
+        this.formatTimestamp(item.timestamp)
+      ])
       
-      if (endIndex <= this.telemetryData.length) {
-        return this.telemetryData.slice(startIndex, endIndex)
-      } else {
-        // 处理循环轮播
-        const firstPart = this.telemetryData.slice(startIndex)
-        const secondPart = this.telemetryData.slice(0, endIndex - this.telemetryData.length)
-        return [...firstPart, ...secondPart]
-      }
-    },
-    
-    // 表格变换样式（用于轮播动画）
-    tableTransform() {
-      if (!this.isTransitioning) {
-        return {
-          transform: 'translateY(0)',
-          transition: 'transform 0.3s ease-in-out'
-        }
-      }
+      // 限制显示行数，但不超过10行
+      const limitedData = data.slice(0, Math.min(data.length, this.maxDisplayRows))
       
       return {
-        transform: 'translateY(-10px)',
-        transition: 'transform 0.15s ease-in-out',
-        opacity: '0.7'
+        header,
+        data: limitedData,
+        index: false, // 不显示序号
+        columnWidth: [120, 120, 100], // 列宽配置
+        align: ['left', 'center', 'center'], // 对齐方式
+        rowNum: Math.min(limitedData.length, this.maxDisplayRows), // 显示行数
+        waitTime: 2000, // 轮播间隔2秒
+        carousel: 'single' // 单行轮播
       }
     },
     
-    // 异常参数数量
+    // 样式配置
+    boardStyle() {
+      return {
+        '--dv-header-text-color': '#ffffff',
+        '--dv-data-text-color': 'rgba(255, 255, 255, 0.8)',
+        '--dv-header-font-size': '14px',
+        '--dv-data-font-size': '12px'
+      }
+    },
+     
+     // 异常参数数量
     errorCount() {
       return this.telemetryData.filter(item => this.isErrorValue(item)).length
     },
@@ -229,6 +206,11 @@ export default {
     
     // 判断是否为警告值
     isWarningValue(item) {
+      // 安全检查：确保 item 和 item.key 存在
+      if (!item || !item.key || typeof item.key !== 'string') {
+        return false
+      }
+      
       // 这里可以根据实际业务逻辑判断
       const value = parseFloat(item.value)
       if (isNaN(value)) return false
@@ -248,6 +230,11 @@ export default {
     
     // 判断是否为错误值
     isErrorValue(item) {
+      // 安全检查：确保 item 和 item.key 存在
+      if (!item || !item.key || typeof item.key !== 'string') {
+        return false
+      }
+      
       // 这里可以根据实际业务逻辑判断
       const value = parseFloat(item.value)
       if (isNaN(value)) return false
@@ -267,6 +254,11 @@ export default {
     
     // 获取参数图标类
     getParamIconClass(paramName) {
+      // 安全检查：确保 paramName 存在且为字符串
+      if (!paramName || typeof paramName !== 'string') {
+        return 'icon-default'
+      }
+      
       const iconMap = {
         '温度': 'icon-temperature',
         '压力': 'icon-pressure',
@@ -317,7 +309,12 @@ export default {
     updateData(newData) {
       this.previousData = [...this.telemetryData]
       this.newDataTimestamp = Date.now()
+      // 强制更新DvScrollBoard组件
+      this.updateKey++
     }
+},
+  mounted() {
+    // 组件挂载完成
   },
   watch: {
     // 监听遥测数据变化
@@ -335,9 +332,11 @@ export default {
 
 <style scoped>
 .telemetry-data-section {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
   overflow: hidden;
   height: 100%;
   display: flex;
@@ -345,31 +344,34 @@ export default {
 }
 
 .section-header {
-  padding: 16px 20px;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 20px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.06) 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  position: relative;
 }
 
 .section-header h4 {
   margin: 0;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
   color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .section-header h4::before {
   content: '';
-  width: 4px;
-  height: 16px;
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-  border-radius: 2px;
+  width: 6px;
+  height: 20px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  border-radius: 3px;
+  box-shadow: 0 0 12px rgba(0, 212, 255, 0.4);
 }
 
 .data-status {
@@ -405,167 +407,26 @@ export default {
   overflow: hidden;
 }
 
-.telemetry-table-wrapper {
+/* DvScrollBoard样式 */
+.telemetry-scroll-wrapper {
   flex: 1;
   overflow: hidden;
-  position: relative;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  padding: 8px;
 }
 
-.telemetry-table {
+.telemetry-scroll-board {
+  width: 100%;
   height: 100%;
-  display: flex;
-  flex-direction: column;
+  background: transparent;
 }
 
-.telemetry-table.transitioning {
-  opacity: 0.7;
-  transform: translateY(-5px);
-}
 
-.table-header {
-  display: flex;
-  background: rgba(255, 255, 255, 0.08);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  flex-shrink: 0;
-}
 
-.header-cell {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-}
 
-.header-cell:last-child {
-  border-right: none;
-}
-
-.table-body {
-  flex: 1;
-  overflow: hidden;
-}
-
-.table-row {
-  display: flex;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: all 0.3s ease;
-  position: relative;
-}
-
-.table-row:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-.table-row.highlight {
-  background: rgba(0, 212, 255, 0.1);
-  border-color: rgba(0, 212, 255, 0.3);
-  animation: highlight 1s ease-out;
-}
-
-.table-row.warning {
-  background: rgba(251, 191, 36, 0.1);
-  border-color: rgba(251, 191, 36, 0.3);
-}
-
-.table-row.error {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: rgba(239, 68, 68, 0.3);
-}
-
-.table-cell {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 13px;
-  color: #ffffff;
-  border-right: 1px solid rgba(255, 255, 255, 0.05);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.table-cell:last-child {
-  border-right: none;
-}
-
-.param-name {
-  font-weight: 500;
-}
-
-.param-icon {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-.icon-temperature {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-}
-
-.icon-pressure {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-}
-
-.icon-speed {
-  background: linear-gradient(135deg, #10b981, #059669);
-}
-
-.icon-current {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-}
-
-.icon-voltage {
-  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-}
-
-.icon-power {
-  background: linear-gradient(135deg, #06b6d4, #0891b2);
-}
-
-.icon-flow {
-  background: linear-gradient(135deg, #14b8a6, #0d9488);
-}
-
-.icon-level {
-  background: linear-gradient(135deg, #84cc16, #65a30d);
-}
-
-.icon-default {
-  background: linear-gradient(135deg, #6b7280, #4b5563);
-}
-
-.param-value {
-  font-weight: 600;
-  justify-content: space-between;
-}
-
-.value-text {
-  flex: 1;
-}
-
-.trend-indicator {
-  font-size: 14px;
-  font-weight: bold;
-  animation: trend 0.5s ease-in-out;
-}
-
-.trend-up {
-  color: #22c55e;
-}
-
-.trend-down {
-  color: #ef4444;
-}
-
-.update-time {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.6);
-  justify-content: flex-end;
-}
 
 .no-data {
   flex: 1;
@@ -593,20 +454,50 @@ export default {
   opacity: 0.7;
 }
 
+
+
 .data-summary {
   display: flex;
   justify-content: space-around;
-  padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.03);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 16px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
   flex-shrink: 0;
+  backdrop-filter: blur(5px);
 }
 
 .summary-item {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-item:hover {
+  background: rgba(0, 212, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.2);
+}
+
+.summary-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.summary-item:hover::before {
+  left: 100%;
 }
 
 .summary-label {
@@ -617,43 +508,64 @@ export default {
 }
 
 .summary-value {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 700;
   color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
-.summary-value.error {
-  color: #ef4444;
-}
+
 
 /* 动画效果 */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 0.7;
+    transform: scale(1.05);
   }
 }
 
 @keyframes highlight {
   0% {
-    background: rgba(0, 212, 255, 0.3);
+    background: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
   }
   100% {
     background: rgba(0, 212, 255, 0.1);
+    box-shadow: 0 0 8px rgba(0, 212, 255, 0.1);
   }
 }
 
 @keyframes trend {
   0% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
   }
   50% {
-    transform: scale(1.2);
+    transform: scale(1.3) rotate(5deg);
   }
   100% {
-    transform: scale(1);
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(0, 212, 255, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(0, 212, 255, 0.6), 0 0 30px rgba(0, 212, 255, 0.4);
   }
 }
 

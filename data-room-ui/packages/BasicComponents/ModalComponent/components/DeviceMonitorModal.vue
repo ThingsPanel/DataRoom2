@@ -9,39 +9,38 @@
       <div class="modal-body device-monitor-body">
         <!-- 左侧区域 -->
         <div class="left-panel">
-          <!-- 设备基本信息组件 -->
-          <DeviceInfoSection
-            :device-data="selectedRowData"
-            :table-columns="tableColumns"
-            :device-info="deviceInfo"
-          />
+          <!-- 设备基本信息组件 - 固定高度 -->
+          <div class="device-info-container">
+            <DeviceInfoSection
+              :device-data="selectedRowData"
+              :table-columns="tableColumns"
+              :device-info="deviceInfo"
+            />
+          </div>
 
-          <!-- 设备汇总统计组件 -->
-          <DeviceSummarySection
-            :device-summary="deviceSummary"
-            :device-info="deviceInfo"
-          />
+          <!-- 设备汇总统计组件 - flex: 1 -->
+          <div class="device-summary-container">
+            <DeviceSummarySection
+              :device-summary="deviceSummary"
+              :device-info="deviceInfo"
+            />
+          </div>
 
-          <!-- 产量曲线图组件 -->
-          <ProductionChartSection
-            ref="productionChart"
-            :production-data="productionData"
-          />
+          <!-- 产量曲线图组件 - flex: 1 -->
+          <div class="production-chart-container">
+            <ProductionChartSection
+              ref="productionChart"
+              :production-data="productionData"
+            />
+          </div>
         </div>
 
-        <!-- 右侧区域 - 更窄 -->
+        <!-- 右侧区域 - 撑满 -->
         <div class="right-panel">
-          <CarouselTable
+          <TelemetryDataSection
             :telemetry-data="telemetryData"
-            :current-index="currentTelemetryIndex"
-            :is-transitioning="isTelemetryTransitioning"
-            :table-columns="tableColumns"
-            :config="config"
           />
         </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" @click="handleClose">关闭</button>
       </div>
     </div>
   </div>
@@ -51,7 +50,7 @@
 import DeviceInfoSection from './DeviceInfoSection.vue'
 import DeviceSummarySection from './DeviceSummarySection.vue'
 import ProductionChartSection from './ProductionChartSection.vue'
-import CarouselTable from './CarouselTable.vue'
+import TelemetryDataSection from './TelemetryDataSection.vue'
 import { createDeviceMonitorApi, apiErrorHandler } from '../api'
 
 /**
@@ -64,7 +63,7 @@ export default {
     DeviceInfoSection,
     DeviceSummarySection,
     ProductionChartSection,
-    CarouselTable
+    TelemetryDataSection
   },
   props: {
     // 弹窗显示状态
@@ -95,9 +94,6 @@ export default {
       deviceSummary: {}, // 设备汇总统计
       telemetryData: [], // 实时遥测数据
       productionData: [], // 产量曲线数据
-      telemetryTimer: null, // 遥测数据轮播定时器
-      currentTelemetryIndex: 0, // 当前遥测数据轮播索引
-      isTelemetryTransitioning: false, // 遥测数据是否正在过渡
       modalKey: 0 // 用于强制重新渲染的 key
     }
   },
@@ -140,19 +136,52 @@ export default {
   methods: {
     // 关闭弹窗
     handleClose() {
-      // 清除遥测轮播
-      this.clearTelemetryCarousel()
+      console.log('DeviceMonitorModal: handleClose 被调用')
       
       // 销毁生产图表
       this.destroyProductionChart()
       
       // 触发关闭事件 - 使用更直接的方式确保事件能够传递
+      console.log('DeviceMonitorModal: 触发 close 事件')
       this.$emit('close')
       
-      // 如果emit失败，尝试通过父组件实例直接调用
-      if (this.$parent && this.$parent.closeModal) {
-        this.$parent.closeModal()
-      }
+      // 强制通过多种方式确保弹窗能够关闭
+      this.$nextTick(() => {
+        // 方式1: 通过父组件实例直接调用
+        if (this.$parent && this.$parent.closeModal) {
+          console.log('DeviceMonitorModal: 通过父组件关闭')
+          this.$parent.closeModal()
+        }
+        
+        // 方式2: 通过根组件查找并调用
+        let parent = this.$parent
+        while (parent && !parent.closeModal && parent.$parent) {
+          parent = parent.$parent
+        }
+        if (parent && parent.closeModal) {
+          console.log('DeviceMonitorModal: 通过根组件关闭')
+          parent.closeModal()
+        }
+        
+        // 方式3: 直接设置visible为false（如果前面的方式都失败）
+        if (this.$parent && this.$parent.dialogVisible !== undefined) {
+          console.log('DeviceMonitorModal: 直接设置 dialogVisible 为 false')
+          this.$parent.dialogVisible = false
+        }
+        
+        // 方式4: 通过DOM操作直接隐藏弹窗容器（最强制的方式）
+        try {
+          const modalContainer = document.getElementById('device-monitor-modal-container')
+          if (modalContainer) {
+            console.log('DeviceMonitorModal: 通过DOM操作隐藏弹窗容器')
+            modalContainer.style.display = 'none'
+            // 或者直接移除元素
+            // modalContainer.remove()
+          }
+        } catch (error) {
+          console.error('DeviceMonitorModal: DOM操作失败', error)
+        }
+      })
     },
 
     // 加载设备监控数据
@@ -174,9 +203,6 @@ export default {
           this.loadTelemetryData(deviceId),
           this.loadProductionData(deviceId)
         ])
-
-        // 启动遥测数据轮播
-        this.startTelemetryCarousel()
 
         // 渲染产量图表
         this.$nextTick(() => {
@@ -334,6 +360,8 @@ export default {
         this.telemetryData = apiErrorHandler.handleError(error)
       }
     },
+    
+
 
     // 加载产量曲线数据
     async loadProductionData(deviceId) {
@@ -356,43 +384,7 @@ export default {
 
 
 
-    // 启动遥测数据轮播
-    startTelemetryCarousel() {
-      if (this.telemetryData.length <= 5) {
-        return // 数据不足，不需要轮播
-      }
 
-      this.clearTelemetryCarousel()
-
-      this.telemetryTimer = setInterval(() => {
-        this.nextTelemetryRow()
-      }, 2000)
-    },
-
-    // 清除遥测数据轮播
-    clearTelemetryCarousel() {
-      if (this.telemetryTimer) {
-        clearInterval(this.telemetryTimer)
-        this.telemetryTimer = null
-      }
-    },
-
-    // 遥测数据下一行
-    nextTelemetryRow() {
-      if (this.telemetryData.length <= 5) {
-        return
-      }
-
-      this.isTelemetryTransitioning = true
-
-      setTimeout(() => {
-        this.currentTelemetryIndex = (this.currentTelemetryIndex + 1) % this.telemetryData.length
-
-        setTimeout(() => {
-          this.isTelemetryTransitioning = false
-        }, 50)
-      }, 150)
-    },
 
     // 渲染产量图表
     renderProductionChart() {
@@ -416,7 +408,6 @@ export default {
         this.loadDeviceMonitorData(this.selectedRowData)
       } else if (!newVal) {
         // 弹窗关闭时清理资源
-        this.clearTelemetryCarousel()
         this.destroyProductionChart()
       }
     }
@@ -431,7 +422,6 @@ export default {
   },
   beforeDestroy() {
     // 组件销毁前清理资源
-    this.clearTelemetryCarousel()
     this.destroyProductionChart()
     // 移除窗口大小变化监听器
     if (this.handleResize) {
@@ -471,15 +461,15 @@ export default {
   margin: 0 !important;
   padding: 0 !important;
   box-sizing: border-box !important;
-  /* 强制使用固定定位，实现全屏居中 */
-  position: fixed !important;
+  /* 移除强制定位样式，让modalStyle生效 */
+  /* position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
   width: 90vw !important;
   height: 85vh !important;
   max-width: 1400px !important;
-  max-height: 900px !important;
+  max-height: 900px !important; */
 }
 
 /* 弹窗头部 - 缩小占用空间 */
@@ -545,54 +535,43 @@ export default {
   overflow: hidden;
 }
 
-/* 左侧面板 */
+/* 左侧面板 - 3:1 比例 */
 .left-panel {
   flex: 3;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  overflow-y: auto;
+  gap: 28px;
+  overflow: hidden;
 }
 
-/* 右侧面板 - 更窄 */
+/* 右侧面板 - 3:1 比例 */
 .right-panel {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  max-width: 320px;
 }
 
-/* 弹窗底部 */
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+/* 左侧三个组件容器的高度分配 */
+.device-info-container {
+  flex: none;
+  /* 保持原有高度，不参与flex分配 */
+  overflow-y: auto;
 }
 
-.btn {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.device-summary-container {
+  flex: 1;
+  /* 与产量图表容器按1:1分配剩余高度 */
+  overflow-y: auto;
 }
 
-.btn-secondary {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.production-chart-container {
+  flex: 1;
+  /* 与设备汇总容器按1:1分配剩余高度 */
+  overflow-y: auto;
 }
 
-.btn-secondary:hover {
-  background-color: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
-}
+
 
 /* 动画效果 */
 @keyframes fadeIn {

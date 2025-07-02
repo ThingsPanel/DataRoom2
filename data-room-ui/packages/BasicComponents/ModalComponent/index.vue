@@ -692,6 +692,18 @@ export default {
       // 如果启用了弹窗，则显示弹窗
       if (this.config.customize.enableModal) {
         this.dialogVisible = true
+        
+        // 确保弹窗容器显示
+        this.$nextTick(() => {
+          try {
+            const modalContainer = document.getElementById('device-monitor-modal-container')
+            if (modalContainer) {
+              modalContainer.style.display = 'block'
+            }
+          } catch (error) {
+            console.error('ModalComponent: 恢复弹窗显示失败', error)
+          }
+        })
       }
       
       // 触发联动
@@ -704,7 +716,22 @@ export default {
     
     // 关闭弹窗
     closeModal() {
+      console.log('ModalComponent: closeModal 被调用，当前 dialogVisible:', this.dialogVisible)
       this.dialogVisible = false
+      console.log('ModalComponent: dialogVisible 已设置为 false')
+      
+      // 通过DOM操作确保弹窗容器被隐藏
+      this.$nextTick(() => {
+        try {
+          const modalContainer = document.getElementById('device-monitor-modal-container')
+          if (modalContainer) {
+            console.log('ModalComponent: 通过DOM操作隐藏弹窗容器')
+            modalContainer.style.display = 'none'
+          }
+        } catch (error) {
+          console.error('ModalComponent: DOM操作失败', error)
+        }
+      })
     },
     
     // 弹窗确定按钮处理

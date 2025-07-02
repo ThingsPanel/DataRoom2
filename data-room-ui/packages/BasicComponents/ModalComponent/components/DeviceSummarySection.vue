@@ -17,44 +17,68 @@
       <div class="error-text">{{ deviceSummary.errorMessage || '加载失败' }}</div>
     </div>
     
-    <!-- 正常状态 - 极简数据展示 -->
+    <!-- 正常状态 - 左右布局 -->
     <div v-else class="summary-layout">
-      <!-- 设备状态 -->
-      <div class="data-item">
-        <svg class="data-icon" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-          <circle cx="12" cy="12" r="3" fill="currentColor"/>
-        </svg>
-        <div class="data-content">
-          <div class="data-label">状态</div>
-          <div class="data-value" :class="getStatusClass(deviceInfo.status)">
-            {{ deviceInfo.status || '未知' }}
+      <!-- 左侧数据区域 -->
+      <div class="data-section">
+        <!-- 设备状态 -->
+        <div class="data-item">
+          <svg class="data-icon" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" fill="currentColor"/>
+          </svg>
+          <div class="data-content">
+            <span class="data-label">状态</span>
+            <span class="data-value" :class="getStatusClass(deviceInfo.status)">
+              {{ deviceInfo.status || '未知' }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- 开机率 -->
+        <div class="data-item">
+          <svg class="data-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M8 5v14l11-7z" fill="currentColor"/>
+          </svg>
+          <div class="data-content">
+            <span class="data-label">开机率</span>
+            <span class="data-value">
+              {{ formatPercentage(deviceSummary.startup_rate) }}
+            </span>
+          </div>
+        </div>
+        
+        <!-- 今日产量 -->
+        <div class="data-item">
+          <svg class="data-icon" viewBox="0 0 24 24" fill="none">
+            <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
+          </svg>
+          <div class="data-content">
+            <span class="data-label">产量</span>
+            <span class="data-value">
+              {{ formatNumber(deviceInfo.today_production) }}
+            </span>
           </div>
         </div>
       </div>
       
-      <!-- 开机率 -->
-      <div class="data-item">
-        <svg class="data-icon" viewBox="0 0 24 24" fill="none">
-          <path d="M8 5v14l11-7z" fill="currentColor"/>
-        </svg>
-        <div class="data-content">
-          <div class="data-label">开机率</div>
-          <div class="data-value">
-            {{ formatPercentage(deviceSummary.startup_rate) }}
-          </div>
-        </div>
-      </div>
-      
-      <!-- 今日产量 -->
-      <div class="data-item">
-        <svg class="data-icon" viewBox="0 0 24 24" fill="none">
-          <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/>
-        </svg>
-        <div class="data-content">
-          <div class="data-label">产量</div>
-          <div class="data-value">
-            {{ formatNumber(deviceInfo.today_production) }}
+      <!-- 右侧图片区域 -->
+      <div class="image-section">
+        <div class="device-image-container">
+          <img 
+            v-if="deviceInfo.image_url" 
+            :src="deviceInfo.image_url" 
+            :alt="deviceInfo.name || '设备图片'"
+            class="device-image"
+            @error="handleImageError"
+          />
+          <div v-else class="image-placeholder">
+            <svg class="placeholder-icon" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" stroke-width="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+              <path d="M21 15l-5-5L5 21" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="placeholder-text">暂无图片</span>
           </div>
         </div>
       </div>
@@ -84,27 +108,36 @@ export default {
   methods: {
     // 格式化百分比
     formatPercentage(value) {
-      if (value === null || value === undefined || isNaN(value)) {
+      if (value === null || value === undefined) {
         return '-'
       }
       
-      const percentage = Number(value)
-      if (percentage <= 1) {
+      const num = Number(value)
+      if (isNaN(num)) {
+        return '-'
+      }
+      
+      if (num <= 1) {
         // 如果是小数形式（0-1），转换为百分比
-        return `${(percentage * 100).toFixed(1)}%`
+        return `${(num * 100).toFixed(1)}%`
       } else {
         // 如果已经是百分比形式
-        return `${percentage.toFixed(1)}%`
+        return `${num.toFixed(1)}%`
       }
     },
     
     // 格式化数字
     formatNumber(value) {
-      if (value === null || value === undefined || isNaN(value)) {
+      if (value === null || value === undefined) {
         return '-'
       }
       
-      return Number(value).toLocaleString()
+      const num = Number(value)
+      if (isNaN(num)) {
+        return '-'
+      }
+      
+      return num.toLocaleString()
     },
     
     // 获取百分比宽度（用于进度条）
@@ -157,10 +190,14 @@ export default {
     
     // 处理图片加载错误
     handleImageError(event) {
+      // 隐藏失败的图片，显示占位符
       event.target.style.display = 'none'
-      const placeholder = event.target.nextElementSibling
-      if (placeholder && placeholder.classList.contains('image-placeholder')) {
-        placeholder.style.display = 'flex'
+      const container = event.target.parentElement
+      if (container) {
+        const placeholder = container.querySelector('.image-placeholder')
+        if (placeholder) {
+          placeholder.style.display = 'flex'
+        }
       }
     }
   }
@@ -168,29 +205,47 @@ export default {
 </script>
 
 <style scoped>
-/* 主容器 - 带线框无背景 */
+/* 主容器 - 带线框无背景，撑满高度 */
 .device-summary-section {
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  padding: 16px;
+  padding: 32px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 布局容器 - 水平排列 */
+/* 布局容器 - 左右分栏，撑满剩余高度 */
 .summary-layout {
   display: flex;
-  gap: 20px;
-  align-items: center;
-}
-
-/* 数据项 - 极简设计 */
-.data-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  gap: 24px;
+  align-items: flex-start;
   flex: 1;
 }
 
-/* SVG图标样式 */
+/* 左侧数据区域 - 居中对齐 */
+.data-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* 数据项 - 居中对齐，增大间距 */
+.data-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 12px 0;
+  width: 100%;
+  max-width: 300px;
+}
+
+/* SVG图标样式 - 增大尺寸 */
 .data-icon {
   width: 20px;
   height: 20px;
@@ -198,28 +253,89 @@ export default {
   flex-shrink: 0;
 }
 
-/* 数据内容 */
+/* 数据内容 - 水平排列，居中对齐 */
 .data-content {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  flex: 1;
 }
 
-/* 数据标签 */
+/* 数据标签 - 增大字体 */
 .data-label {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  min-width: 60px;
+  text-align: center;
 }
 
-/* 数据值 */
+/* 数据值 - 显著增大字体 */
 .data-value {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 20px;
+  font-weight: 700;
   color: #ffffff;
   line-height: 1.2;
+  text-align: center;
+}
+
+/* 右侧图片区域 - 增大宽度 */
+.image-section {
+  width: 280px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 设备图片容器 - 撑满高度 */
+.device-image-container {
+  width: 100%;
+  flex: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  min-height: 200px;
+  display: flex;
+  align-items: stretch;
+}
+
+/* 设备图片 */
+.device-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.2s ease;
+  flex: 1;
+}
+
+.device-image:hover {
+  transform: scale(1.05);
+}
+
+/* 图片占位符 */
+.image-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.4);
+  gap: 6px;
+}
+
+.placeholder-icon {
+  width: 24px;
+  height: 24px;
+  opacity: 0.6;
+}
+
+.placeholder-text {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.8;
 }
 /* 状态样式 */
 .status-running {
@@ -242,15 +358,16 @@ export default {
   color: #9ca3af;
 }
 
-/* 空状态样式 */
+/* 空状态样式 - 撑满高度 */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   text-align: center;
   color: rgba(255, 255, 255, 0.6);
+  flex: 1;
 }
 
 .empty-icon {
@@ -266,15 +383,16 @@ export default {
   color: rgba(255, 255, 255, 0.7);
 }
 
-/* 错误状态样式 */
+/* 错误状态样式 - 撑满高度 */
 .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 20px;
+  padding: 60px 20px;
   text-align: center;
   color: rgba(239, 68, 68, 0.8);
+  flex: 1;
 }
 
 .error-icon {
@@ -294,24 +412,50 @@ export default {
 @media (max-width: 768px) {
   .summary-layout {
     flex-direction: column;
-    gap: 16px;
+    gap: 24px;
   }
   
   .device-summary-section {
-    padding: 12px;
+    padding: 24px;
+    min-height: 160px;
+  }
+  
+  .data-section {
+    gap: 24px;
+  }
+  
+  .data-item {
+    padding: 6px 0;
   }
   
   .data-icon {
-    width: 18px;
-    height: 18px;
+    width: 14px;
+    height: 14px;
   }
   
   .data-value {
-    font-size: 13px;
+    font-size: 14px;
   }
   
   .data-label {
-    font-size: 10px;
+    font-size: 11px;
+    min-width: 45px;
+  }
+  
+  .image-section {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+  
+  .device-image-container {
+    height: 200px;
+  }
+  
+  .empty-state,
+  .error-state {
+    padding: 50px 20px;
+    min-height: 160px;
   }
 }
 </style>
