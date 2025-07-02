@@ -568,6 +568,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+    case 'modalComponent':  // 弹窗组件
+      return {
+        name: '弹窗组件',
+        title: '弹窗组件',
+        icon: Icon.getNameList()[0],
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
     default:
       return {}
   }
