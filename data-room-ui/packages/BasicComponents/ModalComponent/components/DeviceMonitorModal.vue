@@ -357,7 +357,7 @@ export default {
         this.telemetryData = await api.getCurrentTelemetry(deviceId)
       } catch (error) {
         console.error('加载遥测数据失败:', error)
-        this.telemetryData = apiErrorHandler.handleError(error)
+        this.telemetryData = [] // 确保是数组，避免访问错误
       }
     },
     
@@ -378,7 +378,7 @@ export default {
         }))
       } catch (error) {
         console.error('加载产量数据失败:', error)
-        this.productionData = apiErrorHandler.handleError(error)
+        this.productionData = [] // 确保是数组，避免map错误
       }
     },
 
