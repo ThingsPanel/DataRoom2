@@ -211,7 +211,12 @@ httpCustom.interceptors.response.use(response => {
  */
 export function get (url, params = {}, customHandlerException = false, axiosRequestConfig = {}) {
   if (!url.startsWith('http')) {
-    url = window.BS_CONFIG?.httpConfigs?.baseURL + url
+    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
+    if (baseURL && baseURL.trim()) {
+      url = baseURL + url
+    } else {
+      console.warn('BaseURL is not configured properly, using relative URL:', url)
+    }
   }
   // 如果是ie浏览器要添加个时间戳，解决浏览器缓存问题
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {
@@ -285,7 +290,12 @@ export function get (url, params = {}, customHandlerException = false, axiosRequ
  */
 export function post (url, data = {}, customHandlerException = false, axiosRequestConfig = {}) {
   if (!url.startsWith('http')) {
-    url = window.BS_CONFIG?.httpConfigs?.baseURL + url
+    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
+    if (baseURL && baseURL.trim()) {
+      url = baseURL + url
+    } else {
+      console.warn('BaseURL is not configured properly, using relative URL:', url)
+    }
   }
   const axiosInstance = customHandlerException ? httpCustom : http
   const jsonData = JSON.stringify(data)
@@ -345,7 +355,12 @@ export function post (url, data = {}, customHandlerException = false, axiosReque
 
 export function download (url, headers = {}, params = {}, body = {}) {
   if (!url.startsWith('http')) {
-    url = window.BS_CONFIG?.httpConfigs?.baseURL + url
+    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
+    if (baseURL && baseURL.trim()) {
+      url = baseURL + url
+    } else {
+      console.warn('BaseURL is not configured properly, using relative URL:', url)
+    }
   }
   // 如果是ie浏览器要添加个时间戳，解决浏览器缓存问题
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {

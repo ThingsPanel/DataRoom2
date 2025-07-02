@@ -8,14 +8,14 @@ import axios from 'axios'
 export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/v1') {
   // 确保baseURL有效，防止null或空值
   const validBaseURL = (baseURL && baseURL.trim()) ? baseURL.trim() : 'http://47.92.253.145:9102/api/v1'
-  
+
   // 创建独立的axios实例
   const apiClient = axios.create({
     baseURL: validBaseURL,
     timeout: 10000,
     headers: {
       'Content-Type': 'application/json',
-      'Accept': 'application/json'
+      Accept: 'application/json'
     }
   })
 
@@ -37,11 +37,21 @@ export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/
   // 响应拦截器
   apiClient.interceptors.response.use(
     response => {
-      return response.data
+      const result = response.data
+      // 检查API响应格式
+      if (result && result.code === 200) {
+        return result.data
+      } else {
+        const errorMsg = result?.message || '请求失败'
+        console.error('API响应错误:', errorMsg, result)
+        throw new Error(errorMsg)
+      }
     },
     error => {
       console.error('API请求错误:', error)
-      return Promise.reject(error)
+      // 处理网络错误或其他错误
+      const errorMsg = error.response?.data?.message || error.message || '网络请求失败'
+      return Promise.reject(new Error(errorMsg))
     }
   )
 
@@ -102,15 +112,15 @@ export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/
         page: page,
         page_size: pageSize
       }
-      
+
       if (keyword) {
         params.keyword = keyword
       }
-      
+
       if (time) {
         params.time = time
       }
-      
+
       return apiClient.get('/monitor/alarm_history', {
         params: params
       })

@@ -359,7 +359,7 @@ export default {
 
   beforeDestroy() {
     this.clearCarousel()
-    // 清理移动到body的弹窗容器
+    // 清理：将弹窗从body中移除
     this.removeModalFromBody()
   },
   

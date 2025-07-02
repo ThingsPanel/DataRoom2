@@ -45,9 +45,9 @@
 export default {
   name: 'ProductionChartSection',
   props: {
-    // 产量数据
+    // 产量数据 - 可以是数组（正常数据）或对象（错误/空状态）
     productionData: {
-      type: Array,
+      type: [Array, Object],
       default: () => []
     }
   },
@@ -132,14 +132,14 @@ export default {
     }
   },
   computed: {
-    // 是否有数据
+    // 是否有数据 - 只有当productionData是数组且有数据时才返回true
     hasData() {
-      return this.productionData && this.productionData.length > 0
+      return Array.isArray(this.productionData) && this.productionData.length > 0
     },
     
-    // 图表数据
+    // 图表数据 - 只有当productionData是数组时才处理
     chartData() {
-      if (!this.hasData) {
+      if (!this.hasData || !Array.isArray(this.productionData)) {
         return null
       }
       

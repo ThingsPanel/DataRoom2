@@ -123,7 +123,7 @@ const customConfig = {
     // 弹窗配置
     enableModal: true,        // 是否启用弹窗
     dialogTitle: '数据详情',
-    dialogWidth: 70,          // 适配大屏显示
+    dialogWidth: 90,          // 适配大屏显示
 
     // 边框配置
     showBorder: true,         // 是否显示边框
