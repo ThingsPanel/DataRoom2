@@ -278,12 +278,13 @@ export default {
     },
 
     // 显示空状态
-    showEmptyState() {
-      this.deviceInfo = apiErrorHandler.createEmptyState('设备信息不存在')
-      this.deviceSummary = apiErrorHandler.createEmptyState('设备汇总统计不存在')
-      this.telemetryData = apiErrorHandler.createEmptyState('遥测数据不存在')
-      this.productionData = apiErrorHandler.createEmptyState('产量数据不存在')
-    },
+     showEmptyState() {
+       // 如果没有选中的行数据，设置为空状态
+       this.deviceInfo = {}
+       this.deviceSummary = {}
+       this.telemetryData = []
+       this.productionData = []
+     },
 
     // 显示错误状态
     showErrorState(error) {
@@ -333,7 +334,7 @@ export default {
         this.deviceInfo = await api.getDeviceInfo(deviceId)
       } catch (error) {
         console.error('加载设备信息失败:', error)
-        this.deviceInfo = apiErrorHandler.handleError(error)
+        this.deviceInfo = {} // 确保是对象
       }
     },
 
@@ -345,7 +346,7 @@ export default {
         this.deviceSummary = await api.getDeviceSummary()
       } catch (error) {
         console.error('加载设备汇总统计失败:', error)
-        this.deviceSummary = apiErrorHandler.handleError(error)
+        this.deviceSummary = {} // 确保是对象
       }
     },
 

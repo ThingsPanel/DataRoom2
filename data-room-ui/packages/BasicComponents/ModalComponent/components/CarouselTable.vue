@@ -4,8 +4,8 @@
     <div class="table-container" :class="{ 'modal-mode': config.customize.enableModal }">
       <!-- 表格头部 -->
       <div class="table-header" :style="headerStyle">
-        <div 
-          v-for="(column, colIndex) in tableColumns" 
+        <div
+          v-for="(column, colIndex) in tableColumns"
           :key="column.prop"
           class="header-cell"
           :style="getHeaderCellStyle(column, colIndex)"
@@ -13,24 +13,24 @@
           {{ column.label }}
         </div>
       </div>
-      
+
       <!-- 表格主体 -->
       <div class="table-body" :style="bodyStyle" ref="tableBody">
-        <div 
+        <div
           class="table-content"
           :style="contentStyle"
           ref="tableContent"
         >
-          <div 
-            v-for="(row, rowIndex) in displayData" 
+          <div
+            v-for="(row, rowIndex) in displayData"
             :key="rowIndex"
             class="table-row"
             :style="getRowStyle(rowIndex)"
             @click="handleRowClick(row, rowIndex)"
             v-if="row"
           >
-            <div 
-              v-for="(column, colIndex) in tableColumns" 
+            <div
+              v-for="(column, colIndex) in tableColumns"
               :key="column.prop"
               class="table-cell"
               :style="getCellStyle(column, row, rowIndex, colIndex)"
@@ -42,11 +42,11 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 轮播指示器 -->
       <div v-if="config.customize.isCarousel && showIndicators" class="carousel-indicators">
-        <span 
-          v-for="(row, index) in Math.min(totalRows, 10)" 
+        <span
+          v-for="(row, index) in Math.min(totalRows, 10)"
           :key="index"
           class="indicator"
           :class="{ active: index === (currentRow % Math.min(totalRows, 10)) }"
@@ -96,24 +96,24 @@ export default {
       const borderStyle = this.config.customize.borderStyle || 'solid'
       const borderColor = this.config.customize.borderColor || '#434343'
       const borderMode = this.config.customize.borderMode || 'inner'
-      
+
       const style = {
         width: `${this.config.w || 400}px`,
         height: `${this.config.h || 300}px`,
-        backgroundColor: this.config.customize.backgroundColor || '#1A1A1A',
+        backgroundColor: this.config.customize.backgroundColor || '#1A1A1A00',
         borderRadius: (this.config.customize.borderRadius || 4) + 'px',
-        boxShadow: this.config.customize.showShadow ? 
+        boxShadow: this.config.customize.showShadow ?
           `0 4px 16px 0 ${this.config.customize.shadowColor || 'rgba(0, 0, 0, 0.3)'}` : 'none'
       }
-      
+
       // 只有外边框模式才在容器上设置边框
       if (this.config.customize.showBorder && borderMode === 'outer') {
         style.border = `${borderWidth}px ${borderStyle} ${borderColor}`
       }
-      
+
       return style
     },
-    
+
     // 表头样式
     headerStyle() {
       return {
@@ -121,7 +121,7 @@ export default {
         display: 'flex'
       }
     },
-    
+
     // 表体样式
     bodyStyle() {
       const headerHeight = this.config.customize.headerHeight || 40
@@ -131,29 +131,29 @@ export default {
         backgroundColor: this.config.customize.bodyBgColor || 'transparent'
       }
     },
-    
+
     // 内容样式（用于轮播动画）
     contentStyle() {
       if (!this.config.customize.isCarousel) {
         return {}
       }
-      
+
       const rowHeight = this.config.customize.rowHeight || 40
       const animationType = this.config.customize.animationType || 'slide'
       const duration = this.config.customize.animationDuration || 300
-      
+
       const baseStyle = {
         height: `${(this.config.customize.carouselPageSize || 5) * rowHeight}px`,
         overflow: 'hidden'
       }
-      
+
       if (!this.isTransitioning) {
         return {
           ...baseStyle,
           transition: 'none'
         }
       }
-      
+
       // 根据动画类型设置不同的过渡效果
       switch (animationType) {
         case 'slide':
@@ -172,34 +172,34 @@ export default {
           return baseStyle
       }
     },
-    
+
     // 显示的数据（根据轮播状态）
     displayData() {
       if (!this.tableData || this.tableData.length === 0) {
         return []
       }
-      
+
       if (!this.config.customize.isCarousel) {
         return this.tableData
       }
-      
+
       const pageSize = this.config.customize.carouselPageSize || 5
       const startIndex = this.currentRow
       const result = []
-      
+
       for (let i = 0; i < pageSize; i++) {
         const index = (startIndex + i) % this.tableData.length
         result.push(this.tableData[index])
       }
-      
+
       return result
     },
-    
+
     // 总行数
     totalRows() {
       return this.tableData ? this.tableData.length : 0
     },
-    
+
     // 是否显示指示器
     showIndicators() {
       return this.config.customize.showIndicators !== false && this.totalRows > 1
@@ -210,14 +210,14 @@ export default {
     handleRowClick(row, rowIndex) {
       this.$emit('row-click', row, rowIndex)
     },
-    
+
     // 获取表头单元格样式
     getHeaderCellStyle(column, colIndex) {
       const borderWidth = this.config.customize.borderWidth || 1
       const borderStyle = this.config.customize.borderStyle || 'solid'
       const borderColor = this.config.customize.borderColor || '#434343'
       const borderMode = this.config.customize.borderMode || 'inner'
-      
+
       const style = {
         flex: column.width ? `0 0 ${column.width}px` : '1',
         minWidth: '0',
@@ -232,10 +232,10 @@ export default {
         textOverflow: 'ellipsis',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: column.align === 'left' ? 'flex-start' : 
+        justifyContent: column.align === 'left' ? 'flex-start' :
                        column.align === 'right' ? 'flex-end' : 'center'
       }
-      
+
       // 内边框模式下添加边框
       if (this.config.customize.showBorder && borderMode === 'inner') {
         if (colIndex < this.tableColumns.length - 1) {
@@ -243,10 +243,10 @@ export default {
         }
         style.borderBottom = `${borderWidth}px ${borderStyle} ${borderColor}`
       }
-      
+
       return style
     },
-    
+
     // 获取行样式
     getRowStyle(rowIndex) {
       const rowHeight = this.config.customize.rowHeight || 40
@@ -255,25 +255,25 @@ export default {
         display: 'flex',
         cursor: this.config.customize.enableModal ? 'pointer' : 'default'
       }
-      
+
       // 斑马纹效果
       if (this.config.customize.showStripe) {
         const isEven = rowIndex % 2 === 0
-        style.backgroundColor = isEven ? 
-          (this.config.customize.evenRowBgColor || 'transparent') : 
+        style.backgroundColor = isEven ?
+          (this.config.customize.evenRowBgColor || 'transparent') :
           (this.config.customize.oddRowBgColor || 'rgba(255, 255, 255, 0.05)')
       }
-      
+
       return style
     },
-    
+
     // 获取单元格样式
     getCellStyle(column, row, rowIndex, colIndex) {
       const borderWidth = this.config.customize.borderWidth || 1
       const borderStyle = this.config.customize.borderStyle || 'solid'
       const borderColor = this.config.customize.borderColor || '#434343'
       const borderMode = this.config.customize.borderMode || 'inner'
-      
+
       const style = {
         flex: column.width ? `0 0 ${column.width}px` : '1',
         minWidth: '0',
@@ -286,10 +286,10 @@ export default {
         textOverflow: 'ellipsis',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: column.align === 'left' ? 'flex-start' : 
+        justifyContent: column.align === 'left' ? 'flex-start' :
                        column.align === 'right' ? 'flex-end' : 'center'
       }
-      
+
       // 内边框模式下添加边框
       if (this.config.customize.showBorder && borderMode === 'inner') {
         if (colIndex < this.tableColumns.length - 1) {
@@ -299,17 +299,17 @@ export default {
           style.borderBottom = `${borderWidth}px ${borderStyle} ${borderColor}`
         }
       }
-      
+
       return style
     },
-    
+
     // 获取列样式
     getColumnStyle(column, value) {
       return {
         width: '100%'
       }
     },
-    
+
     // 格式化单元格值
     formatCellValue(value, column) {
       if (value === null || value === undefined) {
@@ -317,7 +317,7 @@ export default {
       }
       return String(value)
     },
-    
+
     // 跳转到指定行
     goToRow(index) {
       if (this.config.customize.isCarousel) {
@@ -325,21 +325,21 @@ export default {
         this.updateKey++
       }
     },
-    
+
     // 初始化轮播
     initCarousel() {
       if (!this.config.customize.isCarousel || !this.config.customize.autoPlay) {
         return
       }
-      
+
       this.clearCarousel()
-      
+
       const interval = this.config.customize.carouselInterval || 3000
       this.carouselTimer = setInterval(() => {
         this.nextRow()
       }, interval)
     },
-    
+
     // 清除轮播
     clearCarousel() {
       if (this.carouselTimer) {
@@ -347,22 +347,22 @@ export default {
         this.carouselTimer = null
       }
     },
-    
+
     // 下一行
     nextRow() {
       if (!this.tableData || this.tableData.length === 0) {
         return
       }
-      
+
       const animationType = this.config.customize.animationType || 'slide'
       const duration = this.config.customize.animationDuration || 300
-      
+
       this.isTransitioning = true
-      
+
       setTimeout(() => {
         this.currentRow = (this.currentRow + 1) % this.tableData.length
         this.updateKey++
-        
+
         setTimeout(() => {
           this.isTransitioning = false
         }, 50)
@@ -392,7 +392,7 @@ export default {
         this.clearCarousel()
       }
     },
-    
+
     // 监听自动播放配置变化
     'config.customize.autoPlay'(newVal) {
       if (newVal && this.config.customize.isCarousel) {
