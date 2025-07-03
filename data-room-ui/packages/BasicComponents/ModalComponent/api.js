@@ -3,11 +3,15 @@ import axios from 'axios'
 /**
  * 创建设备监控API实例
  * @param {string} baseURL - API基础URL
+ * @param {string} apiKey - API密钥，留空则从存储空间获取
  * @returns {Object} 设备监控API对象
  */
-export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/v1') {
+export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/v1', apiKey = '') {
   // 确保baseURL有效，防止null或空值
   const validBaseURL = (baseURL && baseURL.trim()) ? baseURL.trim() : 'http://47.92.253.145:9102/api/v1'
+  
+  // 确保apiKey有效
+  const validApiKey = (apiKey && apiKey.trim()) ? apiKey.trim() : ''
 
   // 创建独立的axios实例
   const apiClient = axios.create({
@@ -22,10 +26,10 @@ export function createDeviceMonitorApi(baseURL = 'http://47.92.253.145:9102/api/
   // 请求拦截器
   apiClient.interceptors.request.use(
     config => {
-      // 添加API认证密钥
-      const apiKey = sessionStorage.getItem('ticket')
-      if (apiKey) {
-        config.headers['x-api-key'] = apiKey
+      // 添加API认证密钥，优先使用传入的apiKey，作为降级从存储空间获取
+      const finalApiKey = validApiKey || sessionStorage.getItem('ticket') || localStorage.getItem('ticket')
+      if (finalApiKey) {
+        config.headers['x-api-key'] = finalApiKey
       }
       return config
     },

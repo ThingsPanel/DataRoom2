@@ -161,6 +161,20 @@
                 clearable
               />
             </el-form-item>
+
+            <el-form-item label="API密钥">
+              <el-input
+                v-model="config.customize.apiKey"
+                class="bs-el-input"
+                placeholder="请输入API密钥"
+                clearable
+                type="password"
+                show-password
+              />
+              <div class="field-tip">
+                API认证密钥，用于接口调用权限验证。系统会自动从存储空间获取，如未获取到请手动输入。
+              </div>
+            </el-form-item>
           </template>
         </div>
 
@@ -410,8 +424,24 @@ export default {
     }
   },
   watch: {},
-  mounted() {},
-  methods: {}
+  mounted() {
+    this.populateApiKeyIfNeeded()
+  },
+  methods: {
+    populateApiKeyIfNeeded () {
+      // 仅当配置中 apiKey 为空时，才尝试从存储中获取
+      if (!this.config.customize.apiKey) {
+        try {
+          const ticket = sessionStorage.getItem('ticket') || localStorage.getItem('ticket')
+          if (ticket && ticket.trim()) {
+            this.config.customize.apiKey = ticket.trim()
+          }
+        } catch (error) {
+          console.warn('无法从存储空间获取API密钥:', error)
+        }
+      }
+    }
+  }
 }
 </script>
 
@@ -473,4 +503,6 @@ export default {
   font-size: 12px;
   padding: 20px 0;
 }
+
+
 </style>

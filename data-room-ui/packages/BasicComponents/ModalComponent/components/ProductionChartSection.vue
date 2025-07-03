@@ -41,24 +41,7 @@ export default {
     // 产量数据 - 可以是数组（正常数据）或对象（错误/空状态）
     productionData: {
       type: [Array, Object],
-      default: () => [
-        // 示例数据 - 匹配API格式 (timestamp, production)
-        { timestamp: 1704067200, production: 120 }, // 2024-01-01
-        { timestamp: 1704153600, production: 135 }, // 2024-01-02
-        { timestamp: 1704240000, production: 98 },  // 2024-01-03
-        { timestamp: 1704326400, production: 156 }, // 2024-01-04
-        { timestamp: 1704412800, production: 142 }, // 2024-01-05
-        { timestamp: 1704499200, production: 178 }, // 2024-01-06
-        { timestamp: 1704585600, production: 165 }, // 2024-01-07
-        { timestamp: 1704672000, production: 189 }, // 2024-01-08
-        { timestamp: 1704758400, production: 203 }, // 2024-01-09
-        { timestamp: 1704844800, production: 176 }, // 2024-01-10
-        { timestamp: 1704931200, production: 145 }, // 2024-01-11
-        { timestamp: 1705017600, production: 167 }, // 2024-01-12
-        { timestamp: 1705104000, production: 192 }, // 2024-01-13
-        { timestamp: 1705190400, production: 158 }, // 2024-01-14
-        { timestamp: 1705276800, production: 134 }  // 2024-01-15
-      ]
+      default: () => []
     }
   },
   data() {

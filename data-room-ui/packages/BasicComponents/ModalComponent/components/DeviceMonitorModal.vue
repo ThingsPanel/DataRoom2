@@ -277,6 +277,13 @@ export default {
       return (configUrl && configUrl.trim()) ? configUrl.trim() : 'http://47.92.253.145:9102'
     },
 
+    // 获取API密钥
+    getApiKey() {
+      const configApiKey = this.config?.customize?.apiKey
+      // 返回配置中的API密钥，如果为空则返回空字符串（让API函数自己从存储空间获取）
+      return (configApiKey && configApiKey.trim()) ? configApiKey.trim() : ''
+    },
+
     // 显示空状态
      showEmptyState() {
        // 如果没有选中的行数据，设置为空状态
@@ -330,7 +337,8 @@ export default {
     async loadDeviceInfo(deviceId) {
       try {
         const baseURL = this.getApiBaseUrl()
-        const api = createDeviceMonitorApi(baseURL)
+        const apiKey = this.getApiKey()
+        const api = createDeviceMonitorApi(baseURL, apiKey)
         this.deviceInfo = await api.getDeviceInfo(deviceId)
       } catch (error) {
         console.error('加载设备信息失败:', error)
@@ -342,7 +350,8 @@ export default {
     async loadDeviceSummary() {
       try {
         const baseURL = this.getApiBaseUrl()
-        const api = createDeviceMonitorApi(baseURL)
+        const apiKey = this.getApiKey()
+        const api = createDeviceMonitorApi(baseURL, apiKey)
         this.deviceSummary = await api.getDeviceSummary()
       } catch (error) {
         console.error('加载设备汇总统计失败:', error)
@@ -354,7 +363,8 @@ export default {
     async loadTelemetryData(deviceId) {
       try {
         const baseURL = this.getApiBaseUrl()
-        const api = createDeviceMonitorApi(baseURL)
+        const apiKey = this.getApiKey()
+        const api = createDeviceMonitorApi(baseURL, apiKey)
         this.telemetryData = await api.getCurrentTelemetry(deviceId)
       } catch (error) {
         console.error('加载遥测数据失败:', error)
@@ -368,7 +378,8 @@ export default {
     async loadProductionData(deviceId) {
       try {
         const baseURL = this.getApiBaseUrl()
-        const api = createDeviceMonitorApi(baseURL)
+        const apiKey = this.getApiKey()
+        const api = createDeviceMonitorApi(baseURL, apiKey)
         const data = await api.getProductionCurve(deviceId, 'hour', 24)
 
         // 转换数据格式为图表需要的格式

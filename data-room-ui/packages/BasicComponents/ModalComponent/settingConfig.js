@@ -152,7 +152,17 @@ const customConfig = {
     columnSettings: [],       // 列设置配置数组 { key: string, name: string, width: number, align: string }
 
     // API配置
-    apiBaseUrl: 'http://47.92.253.145:9102/api/v1'  // 设备监控API基础URL
+    apiBaseUrl: 'http://47.92.253.145:9102/api/v1',  // 设备监控API基础URL
+    apiKey: (() => {
+      // 自动从存储空间获取API密钥，获取不到则留空等用户填写
+      try {
+        const ticket = sessionStorage.getItem('ticket') || localStorage.getItem('ticket')
+        return ticket ? ticket.trim() : ''
+      } catch (error) {
+        console.warn('无法访问存储空间，API密钥留空等用户填写')
+        return ''
+      }
+    })()  // API密钥，自动从存储空间获取
   }
 }
 
