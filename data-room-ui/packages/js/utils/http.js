@@ -85,6 +85,18 @@ http.interceptors.request.use(config => {
   }
   // 修复配置合并问题，确保不会覆盖原始配置
   const mergedConfig = merge({}, config, merge(httpConfig, window.BS_CONFIG?.httpConfigs))
+  
+  // 检查并修复重复的 bigScreenServer 路径
+  if (mergedConfig.url && mergedConfig.baseURL) {
+    const baseURL = mergedConfig.baseURL
+    const url = mergedConfig.url
+    
+    // 如果 baseURL 包含 bigScreenServer 且 URL 也以 /bigScreenServer 开头，则移除 URL 中的重复部分
+    if (baseURL.includes('bigScreenServer') && url.startsWith('/bigScreenServer')) {
+      mergedConfig.url = url.replace('/bigScreenServer', '')
+    }
+  }
+  
   return mergedConfig
 }, error => {
   return Promise.reject(error)
@@ -210,14 +222,7 @@ httpCustom.interceptors.response.use(response => {
  * @returns {Promise<any>}
  */
 export function get (url, params = {}, customHandlerException = false, axiosRequestConfig = {}) {
-  if (!url.startsWith('http')) {
-    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
-    if (baseURL && baseURL.trim()) {
-      url = baseURL + url
-    } else {
-      console.warn('BaseURL is not configured properly, using relative URL:', url)
-    }
-  }
+  // 移除手动 baseURL 拼接逻辑，让 axios 实例通过拦截器处理 baseURL
   // 如果是ie浏览器要添加个时间戳，解决浏览器缓存问题
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {
     params._t = new Date().getTime()
@@ -289,14 +294,7 @@ export function get (url, params = {}, customHandlerException = false, axiosRequ
  * @returns {Promise<any>}
  */
 export function post (url, data = {}, customHandlerException = false, axiosRequestConfig = {}) {
-  if (!url.startsWith('http')) {
-    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
-    if (baseURL && baseURL.trim()) {
-      url = baseURL + url
-    } else {
-      console.warn('BaseURL is not configured properly, using relative URL:', url)
-    }
-  }
+  // 移除手动 baseURL 拼接逻辑，让 axios 实例通过拦截器处理 baseURL
   const axiosInstance = customHandlerException ? httpCustom : http
   const jsonData = JSON.stringify(data)
   
@@ -354,14 +352,7 @@ export function post (url, data = {}, customHandlerException = false, axiosReque
  */
 
 export function download (url, headers = {}, params = {}, body = {}) {
-  if (!url.startsWith('http')) {
-    const baseURL = window.BS_CONFIG?.httpConfigs?.baseURL
-    if (baseURL && baseURL.trim()) {
-      url = baseURL + url
-    } else {
-      console.warn('BaseURL is not configured properly, using relative URL:', url)
-    }
-  }
+  // 移除手动 baseURL 拼接逻辑，让 axios 实例通过拦截器处理 baseURL
   // 如果是ie浏览器要添加个时间戳，解决浏览器缓存问题
   if (!!window.ActiveXObject || 'ActiveXObject' in window) {
     params._t = new Date().getTime()
