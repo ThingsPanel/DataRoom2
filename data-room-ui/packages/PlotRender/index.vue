@@ -64,6 +64,38 @@ export default {
     this.plotList = [...this.plotList, ...getCustomPlots()]
   },
   watch: {
+    // 监听整个config对象的变化作为备用方案
+    config: {
+      handler(newConfig, oldConfig) {
+        const newData = newConfig?.option?.data
+        const oldData = oldConfig?.option?.data
+        
+        if (newData !== oldData) {
+          console.log('🔄 config对象变化检测到数据更新:', newData)
+          if (this.chart) {
+            this.chart.update(newConfig.option)
+          }
+        }
+      },
+      deep: true,
+      immediate: false
+    },
+    'config.option.data': {
+      handler(newData, oldData) {
+        console.log('chartInit', newData)
+        if (this.chart && JSON.stringify(newData) !== JSON.stringify(oldData)) {
+          this.chart.update(this.config.option)
+        }
+      },
+      deep: true
+    },
+    'config.key': {
+      handler(newKey, oldKey) {
+        if (newKey !== oldKey) {
+          this.chartInit()
+        }
+      }
+    },
     // 监听主题变化手动触发组件配置更新
     'config.option.theme': {
       handler (val) {
@@ -74,15 +106,20 @@ export default {
     }
   },
   mounted () {
+    // 根本问题已解决，移除定时检查机制
   },
   beforeDestroy () {
+    // 销毁图表实例
     if (this.chart) {
       this.chart.destroy()
+      this.chart = null
     }
   },
   methods: {
     ...mapMutations('bigScreen', ['changeChartConfig', 'changeActiveItemConfig', 'changeChartLoading']),
     chartInit () {
+      
+      
       let config = this.config
       // key和code相等，说明是一进来刷新，调用list接口
       if (this.config.code === this.config.key || this.isPreview) {
@@ -114,6 +151,12 @@ export default {
      * 构造chart
      */
     newChart (config) {
+      // 先销毁旧实例
+      if (this.chart) {
+        this.chart.destroy()
+        this.chart = null
+      }
+      // 再创建新实例
       this.chart = new g2Plot[config.chartType](this.chatId, {
         renderer: 'svg',
         // 仪表盘缩放状态下，点击准确
@@ -190,19 +233,23 @@ export default {
             }
             return item
           })
+          // 强制创建新的数组引用，确保Vue响应式检测到变化
           config.option.data = { name: 'root', children: [...listData] }
         } else {
           // 如果维度为数字类型则转化为字符串，否则在不增加其他配置的情况下会导致图标最后一项不显示（g2plot官网已说明）
           const xAxis = config.setting.find(item => item.field === 'xField')?.value
           const yAxis = config.setting.find(item => item.field === 'yField')?.value
-          config.option.data = data?.map(item => {
-            if (config.chartType !== 'Bar' && xAxis && typeof item[xAxis] === 'number') {
-              item[xAxis] = (item[xAxis]).toString()
-            } else if (config.chartType === 'Bar' && yAxis && typeof item[yAxis] === 'number') {
-              item[yAxis] = (item[yAxis]).toString()
+          // 强制创建新的数组引用，确保Vue响应式检测到变化
+          const processedData = data?.map(item => {
+            const newItem = { ...item } // 创建新对象引用
+            if (config.chartType !== 'Bar' && xAxis && typeof newItem[xAxis] === 'number') {
+              newItem[xAxis] = (newItem[xAxis]).toString()
+            } else if (config.chartType === 'Bar' && yAxis && typeof newItem[yAxis] === 'number') {
+              newItem[yAxis] = (newItem[yAxis]).toString()
             }
-            return item
-          })
+            return newItem
+          }) || []
+          config.option.data = [...processedData] // 确保数组引用不同
         }
       } else {
         // 数据返回失败则赋前端的模拟数据
@@ -212,6 +259,13 @@ export default {
         const _seriesField = this.plotList?.find(plot => plot.name === config.name)?.option?.seriesField || config?.option?.seriesField
         config.option = _seriesField ? { ...config.option, xField: _xField, yField: _yField, seriesField: _seriesField } : { ...config.option, xField: _xField, yField: _yField }
       }
+
+      // 移除重复的Vuex更新调用，因为commonMixins中的changeData已经会处理
+      // this.changeChartConfig(cloneDeep(config))
+      // if (config.code === this.activeCode) {
+      //   this.changeActiveItemConfig(cloneDeep(config))
+      // }
+      
       return config
     },
     // 组件的样式改变，返回改变后的config

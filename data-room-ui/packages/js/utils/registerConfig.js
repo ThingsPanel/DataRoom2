@@ -168,11 +168,31 @@ function registerTheme (config) {
 
 // 注册配置
 export default function (config, router) {
+  // 初始化默认的 httpConfigs 配置
+  const defaultConfig = {
+    httpConfigs: {
+      baseURL: '', // 默认为空字符串，避免 undefined
+      fileUrlPrefix: ''
+    }
+  }
+  
   window.BS_CONFIG = {}
-  window.BS_CONFIG = configDeepMerge(window.BS_CONFIG, config)
-  if (!config?.httpConfigs?.fileUrlPrefix) {
+  window.BS_CONFIG = configDeepMerge(defaultConfig, config || {})
+  
+  // 确保 httpConfigs 存在
+  if (!window.BS_CONFIG.httpConfigs) {
+    window.BS_CONFIG.httpConfigs = { baseURL: '', fileUrlPrefix: '' }
+  }
+  
+  // 确保 baseURL 不为 null 或 undefined
+  if (!window.BS_CONFIG.httpConfigs.baseURL) {
+    window.BS_CONFIG.httpConfigs.baseURL = ''
+  }
+  
+  if (!window.BS_CONFIG.httpConfigs.fileUrlPrefix) {
     // 如果没有配置文件访问前缀，使用baseURL加上/static作为文件前缀
-    window.BS_CONFIG.httpConfigs.fileUrlPrefix = window.BS_CONFIG.httpConfigs.baseURL + '/static'
+    const baseURL = window.BS_CONFIG.httpConfigs.baseURL
+    window.BS_CONFIG.httpConfigs.fileUrlPrefix = baseURL ? baseURL + '/static' : '/static'
   }
   // 注册路由
   registerRouters(config, router)

@@ -69,7 +69,10 @@ const typeList = [
 
   // 9. 主题控制
   'themeSelect', // 主题选择器
-  'themeSwitcher' // 主题切换器
+  'themeSwitcher', // 主题切换器
+  
+  // 10. 自定义组件
+  'modalComponent' // 弹窗组件
 ]
 let basicConfigList = []
 basicConfigList = typeList.map((type) => {
