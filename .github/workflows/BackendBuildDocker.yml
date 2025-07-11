@@ -20,9 +20,17 @@
 name: Docker Image Build
 
 on:
+  # 当 2.1.0.RELEASE 分支有代码 push 时自动构建
+  push:
+    branches: [ 2.1.0.RELEASE ]
+
+  # 发布 Release 时（任意分支）依旧触发
   release:
-    types: [published]
+    types: [ published ]
+
+  # 手动触发，只允许在 2.1.0.RELEASE 分支执行
   workflow_dispatch:
+    branches: [ 2.1.0.RELEASE ]
 
 jobs:
   build:
