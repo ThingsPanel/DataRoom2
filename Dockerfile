@@ -17,6 +17,8 @@ COPY doc/docker/index-production.js /app/dataRoom/ui/config
 RUN mkdir -p /data
 # 创建数据库文件目录
 RUN mkdir -p /db
+# 将 SQL 脚本复制到数据库目录，方便容器外部使用
+COPY DataRoom/doc/*.sql /db
 # 设置工作目录
 WORKDIR /app/dataRoom
 # 添加环境变量
