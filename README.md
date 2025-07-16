@@ -96,55 +96,6 @@
 
 <br/>
 
-## 快速开始
-
-1️⃣ 如果你想源码启动体验，[请点击这里](https://www.yuque.com/chuinixiongkou/bigscreen/ofy1bqhqgua1fu0f)
-
-2️⃣ 如果你想使用Docker启动体验 ，[请点击这里](https://www.yuque.com/chuinixiongkou/bigscreen/ahhq3i7zxea46ox2)
-
-3️⃣ 如果你想将大屏集成到项目中，[请点击这里](https://www.yuque.com/chuinixiongkou/bigscreen/ofy1bqhqgua1fu0f)
-
-4️⃣ 如果你想设计一个大屏，[请点击这里](https://www.yuque.com/chuinixiongkou/bigscreen/ofy1bqhqgua1fu0f)
-
-5️⃣ 如果你想独立部署大屏，[请点击这里](https://www.yuque.com/chuinixiongkou/bigscreen/xd78cw7t12q7kfbl#gGrS2)
-
-<br/>
-
-## 演示环境
-
-演示环境会不定时进行更新  <a href="http://gcpaas.gccloud.com/bigScreen" target="_blank">点击立即体验</a><span style='color:red;font-style: italic'>**（请不要在演示环境中放入生产数据）**</span>
-
-<br/>
-
-## 常见问题（文档访问密码在QQ群公告中）
-
-⚠️&nbsp;&nbsp;[使用手册、二次开发、部署手册、常见问题](https://www.yuque.com/chuinixiongkou/bigscreen/index)<br/>
-⚠️&nbsp;&nbsp;[(码云仓库](https://gitee.com/gcpaas/DataRoom)<br/>
-⚠️&nbsp;&nbsp;[GitHub仓库](https://github.com/gcpaas/DataRoom)<br/>
-
-## 生态插件
-
-| 组件         | 地址                                                         |
-| ------------ | ------------------------------------------------------------ |
-| 大屏设计器   | [码云](https://gitee.com/gcpaas/DataRoom)、[GitHub](https://github.com/gcpaas/DataRoom) |
-| 仪表盘设计器 | [码云](https://gitee.com/gcpaas/DashBoard)、[GitHub](https://github.com/gcpaas/DashBoard) |
-| 数据集       | [码云](https://gitee.com/gcpaas/dataset)、[GitHub](https://github.com/gcpaas/dataset) |
-
-<br/>
-
-## 公司登记
-
-为了更好的做开源与产品推广，欢迎接入的公司在[此处登记](https://gitee.com/gcpaas/DataRoom/issues/IAQO4F )
-
-
-## 联系我们
-<table>
-    <tr>
-        <td style="text-align: center;font-weight: bold;"><p>群1(已满)</p><p><img alt="logo" width="200" src="./doc/images/qq1.png"></p></td>
-        <td style="text-align: center;font-weight: bold;"><p>群2(已满)</p><p><img alt="logo" width="200" src="./doc/images/qq2.png"></p></td>
-        <td style="text-align: center;font-weight: bold;"><p>群3</p><p><img alt="logo" width="200" src="./doc/images/qq3.png"></p></td>
-    </tr>
-</table>
 
 
 ## 许可证
