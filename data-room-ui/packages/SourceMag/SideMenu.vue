@@ -126,7 +126,7 @@ export default {
   components: {},
   data () {
     const validateName = (rule, value, callback) => {
-      this.$dataRoomAxios.post('/bigScreen/type/nameRepeat', {
+      this.$dataRoomAxios.post(window.BS_CONFIG?.httpConfigs?.baseURL + '/bigScreen/type/nameRepeat', {
         id: this.currentCatalog.id,
         name: value,
         type: 'resourceCatalog'

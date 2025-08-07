@@ -208,7 +208,8 @@ export default {
       list: [],
       fileUploadParam: {},
       headers: {
-        ...window.BS_CONFIG?.httpConfigs?.headers
+        ...window.BS_CONFIG?.httpConfigs?.headers,
+        'x-api-key': window.sessionStorage.getItem('ticket')
       },
       fileList: [],
       loading: false,
@@ -271,6 +272,12 @@ export default {
       })
     },
     beforeUpload(file) {
+      // ticket校验
+      const ticket = window.sessionStorage.getItem('ticket')
+      if (!ticket) {
+        this.$message.error('获取不到ticket，无法上传！')
+        return false
+      }
       // 获取文件后缀
       const extension = file.name.split('.').pop()
       // 判断文件类型是否符合要求
