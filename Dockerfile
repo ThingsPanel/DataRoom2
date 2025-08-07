@@ -17,5 +17,6 @@ COPY DataRoom/doc/*.sql /db
 WORKDIR /app/dataRoom
 # 添加环境变量
 ENV RUN_ENV=docker
-ENTRYPOINT ["sh", "-c", "java -jar -Duser.timezone=GMT+8 dataroom-server.jar --spring.profiles.active=docker --server.servlet.context-path= "]
+# 移除 --server.servlet.context-path= 参数，让配置文件中的设置生效
+ENTRYPOINT ["sh", "-c", "java -jar -Duser.timezone=GMT+8 dataroom-server.jar --spring.profiles.active=docker"]
 

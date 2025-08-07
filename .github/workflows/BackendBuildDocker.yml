@@ -5,13 +5,17 @@
 # 2. 推送到阿里云容器镜像服务
 #
 # 触发方式:
-# - Release触发: 当创建或更新 Release 时自动触发
-# - 手动触发: 可以通过 GitHub Actions 页面手动触发
+# - Release触发: 当创建或更新 Release 时自动触发（任意分支）
+# - 手动触发: 只允许在 2.1.0.RELEASE 分支执行，需要手动输入版本号
 #
 # 版本号处理:
 # - Release 触发: 使用 Release 的 tag 作为版本号
-# - 手动触发: 使用最新的 tag 作为版本号
-# - 无 tag 时: 使用 'latest' 作为版本号
+# - 手动触发: 使用用户输入的版本号
+# - 不允许构建 latest 标签，所有镜像都必须有明确的版本号
+#
+# 分支限制:
+# - 手动触发仅允许在 2.1.0.RELEASE 分支执行
+# - Release 触发不受分支限制
 #
 # 必需的 Secrets:
 # - IMAGE_USER: 阿里云容器镜像服务用户名
@@ -20,17 +24,19 @@
 name: Docker Image Build
 
 on:
-  # 当 2.1.0.RELEASE 分支有代码 push 时自动构建
-  push:
-    branches: [ 2.1.0.RELEASE ]
+  # 手动触发，只允许在 2.1.0.RELEASE 分支执行
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v2.1.0)'
+        required: true
+        type: string
 
   # 发布 Release 时（任意分支）依旧触发
   release:
     types: [ published ]
 
-  # 手动触发，只允许在 2.1.0.RELEASE 分支执行
-  workflow_dispatch:
-    branches: [ 2.1.0.RELEASE ]
+
 
 jobs:
   build:
@@ -41,6 +47,17 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: 验证分支限制
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref_name }}" != "2.1.0.RELEASE" ]; then
+            echo "❌ 错误: 手动触发只允许在 2.1.0.RELEASE 分支执行"
+            echo "当前分支: ${{ github.ref_name }}"
+            echo "允许的分支: 2.1.0.RELEASE"
+            exit 1
+          fi
+          echo "✅ 分支验证通过: ${{ github.ref_name }}"
+
       - name: 获取版本号
         id: get_version
         run: |
@@ -48,10 +65,11 @@ jobs:
           if [ "${{ github.event_name }}" == "release" ]; then
             VERSION="${{ github.event.release.tag_name }}"
           else
-            # 手动触发时使用latest
-            VERSION="latest"
+            # 手动触发时使用输入的版本号
+            VERSION="${{ github.event.inputs.version }}"
           fi
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "🏷️ 使用版本号: $VERSION"
 
       - name: 设置 JDK 1.8
         uses: actions/setup-java@v3
@@ -82,6 +100,5 @@ jobs:
           platforms: linux/amd64
           tags: |
             registry.cn-hangzhou.aliyuncs.com/thingspanel/dataroom-server:${{ env.VERSION }}
-            registry.cn-hangzhou.aliyuncs.com/thingspanel/dataroom-server:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
