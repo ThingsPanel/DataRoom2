@@ -257,7 +257,6 @@ export default {
   methods: {
     // 更新配置
     updateConfig() {
-      console.log('Updating config from setting')
       this.$emit('update:config', JSON.parse(JSON.stringify(this.config)))
     },
     

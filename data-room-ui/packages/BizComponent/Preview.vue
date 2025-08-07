@@ -160,7 +160,6 @@ export default {
             // 此处函数处理data
             eval(config.dataHandler)
           } catch (e) {
-            console.error(e)
           }
         }
         config.option.data = data
@@ -182,7 +181,6 @@ export default {
           // 此处函数处理config
           eval(this.config.optionHandler)
         } catch (e) {
-          console.error(e)
         }
       }
       if (this.chart) {

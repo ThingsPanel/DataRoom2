@@ -2,17 +2,61 @@ import axios from 'axios'
 // import { Loading, Message } from 'element-ui'
 // import _ from 'lodash'
 import cloneDeep from 'lodash/cloneDeep'
+
+/**
+ * HTTP请求格式化函数 - 轮询功能已禁用
+ * 
+ * 注意：此函数已被修改为禁止轮询功能
+ * - 不支持重复调用
+ * - 不支持定时器循环
+ * - 每次调用只执行一次请求
+ * 
+ * 如需轮询功能，请使用 httpRequest.js 中的轮询相关函数
+ */
+
+// 轮询检测和阻止机制
+const requestTracker = {
+  activeRequests: new Set(),
+  maxConcurrentRequests: 1, // 限制最大并发请求数为1，防止轮询
+  
+  // 检查是否允许发起新请求
+  canMakeRequest(requestId) {
+    // 如果已经有活跃请求，拒绝新的请求（防止轮询）
+    if (this.activeRequests.size >= this.maxConcurrentRequests) {
+      console.warn('轮询功能已禁用：检测到重复请求，已阻止执行')
+      return false
+    }
+    return true
+  },
+  
+  // 添加活跃请求
+  addRequest(requestId) {
+    this.activeRequests.add(requestId)
+  },
+  
+  // 移除活跃请求
+  removeRequest(requestId) {
+    this.activeRequests.delete(requestId)
+  }
+}
+
 export default function axiosFormatting (customConfig) {
-  console.log('axiosFormatting 被调用，数据集类型:', customConfig.datasetType)
+  // 生成请求ID用于跟踪
+  const requestId = `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  
+  // 检查是否允许发起请求（防止轮询）
+  if (!requestTracker.canMakeRequest(requestId)) {
+    return Promise.reject(new Error('轮询功能已禁用：不允许重复请求'))
+  }
+  
+  // 添加请求到跟踪器
+  requestTracker.addRequest(requestId)
+  
   const newCustomConfig = replaceParams(customConfig)
-  console.log('处理后的请求配置:', {
-    url: newCustomConfig.url,
-    method: newCustomConfig.method,
-    datasetType: newCustomConfig.datasetType
-  })
+
   // 将请求头和请求参数的值转化为对象形式
   const httpConfig = {
-    timeout: 1000 * 30,
+    timeout: 1000 * 300, // Default instance timeout, can be overridden per request
     baseURL: '',
     headers: { 'Content-Type': 'application/json', ...newCustomConfig.headers }
   }
@@ -35,6 +79,8 @@ export default function axiosFormatting (customConfig) {
     return config
   }, error => {
     // 对请求错误做些什么
+    // 移除请求跟踪
+    requestTracker.removeRequest(requestId)
     return Promise.reject(error)
   })
 
@@ -50,16 +96,18 @@ export default function axiosFormatting (customConfig) {
     } else {
       return Promise.resolve(resp)
     }
+  }, error => {
+    // 响应错误时也要移除请求跟踪
+    requestTracker.removeRequest(requestId)
+    return Promise.reject(error)
   })
+  
   const body = newCustomConfig?.body.replace(/: ,/g, ':undefined,').replace(/, }/g, ',undefined}')
   /** 发送请求  **/
   return new Promise((resolve, reject) => {
-    console.log('准备发送请求:', {
-      method: newCustomConfig.method,
-      url: newCustomConfig.url,
-      params: newCustomConfig.params,
-      datasetType: newCustomConfig.datasetType
-    })
+  
+    // === Add diagnostic log ===
+    // === End diagnostic log ===
     instance({
       method: newCustomConfig.method,
       url: newCustomConfig.url,
@@ -76,10 +124,16 @@ export default function axiosFormatting (customConfig) {
           })
           .join('&')
       },
-      data: newCustomConfig.method === 'post' ? body : undefined
+      data: newCustomConfig.method === 'post' ? body : undefined,
+      timeout: newCustomConfig.timeout || httpConfig.timeout, // Allow timeout override from customConfig
+      signal: newCustomConfig.signal // Allow passing an AbortSignal from customConfig
     }).then(response => {
+      // 请求成功后移除跟踪
+      requestTracker.removeRequest(requestId)
       resolve(response)
     }).catch(error => {
+      // 请求失败后移除跟踪
+      requestTracker.removeRequest(requestId)
       reject(error)
     })
   })
@@ -110,7 +164,6 @@ function replaceParams (customConfig) {
     newConfig.params = evalArrFunc(newConfig.paramsList, newConfig.params)
     newConfig.body = evalStrFunc(newConfig.paramsList, newConfig.body)
   } catch (error) {
-    console.error('参数替换错误:', error)
   }
   return newConfig
 }
@@ -128,7 +181,6 @@ function evalStrFunc (paramsList, string) {
     })
     return processedString
   } catch (error) {
-    console.error('字符串参数处理错误:', error)
     return string || ''
   }
 }
@@ -164,7 +216,6 @@ function evalArrFunc (paramsList, arr) {
     }, {})
     return result
   } catch (error) {
-    console.error('数组参数处理错误:', error)
     return {}
   }
 }
@@ -179,3 +230,32 @@ function createParamMap (paramsList) {
     return map
   }, {})
 }
+
+/**
+ * 轮询功能禁用说明：
+ * 
+ * 此文件已被修改为禁止轮询功能，主要措施包括：
+ * 1. 限制最大并发请求数为1
+ * 2. 检测重复请求并阻止执行
+ * 3. 添加请求跟踪机制
+ * 4. 在控制台输出警告信息
+ * 
+ * 如果需要轮询功能，请使用以下替代方案：
+ * - 使用 httpRequest.js 中的 startPolling() 函数
+ * - 使用 httpRequest.js 中的 stopPolling() 函数
+ * - 或者使用其他专门的轮询库
+ */
+
+// 清理函数：清除所有活跃请求（用于调试或重置）
+export const clearAllRequests = () => {
+  requestTracker.activeRequests.clear()
+  console.log('已清除所有活跃请求跟踪')
+}
+
+// 获取当前活跃请求数量（用于调试）
+export const getActiveRequestCount = () => {
+  return requestTracker.activeRequests.size
+}
+
+// 导出轮询禁用状态（供外部检查）
+export const isPollingDisabled = true

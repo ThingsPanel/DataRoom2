@@ -134,7 +134,7 @@ export default {
           }
           this.columnData = res.columnData || {}
           this.fieldsFormat()
-        }).catch(err => { console.log(err) }).finally(() => {
+        }).catch(err => {  }).finally(() => {
           this.loading = false
         })
       }

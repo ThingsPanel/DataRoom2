@@ -16,10 +16,11 @@
     <vdr
       v-for="chart in chartList"
       :id="chart.code"
-      :key="chart.updateKey || chart.code"
+      :key="chart.code"
       class="drag-item"
       :class="{
         'multiple-selected': activeCodes.includes(chart.code),
+        'no-border-item': isNoBorderType(chart.type)
       }"
       :scale-ratio="scale"
       :x="chart.x"
@@ -50,19 +51,43 @@
       @dragstop="dragstop(...arguments, chart)"
       @refLineParams="getRefLineParams"
       @mouseleave.native="resetPresetLineDelay"
+      @request-layout-and-points-update="handleLayoutUpdate"
     >
-      <Configuration
-        v-if="isInit"
-        :config="chart"
-        @openRightPanel="openRightPanel"
-        @openDataViewDialog="openDataViewDialog"
-      >
-        <RenderCard
-          :ref="'RenderCard' + chart.code"
+      <template v-if="isNoBorderType(chart.type)">
+        <Configuration
+          v-if="isInit"
           :config="chart"
-          @styleHandler="styleHandler"
-        />
-      </Configuration>
+          @openRightPanel="openRightPanel"
+          @openDataViewDialog="openDataViewDialog"
+          class="no-border-configuration"
+        >
+          <RenderCard
+            :ref="'RenderCard' + chart.code"
+            :config="chart"
+            :page-width="pageInfo.pageConfig.w"
+            :page-height="pageInfo.pageConfig.h"
+            @styleHandler="styleHandler"
+            @request-layout-and-points-update="handleLayoutUpdate"
+          />
+        </Configuration>
+      </template>
+      <template v-else>
+        <Configuration
+          v-if="isInit"
+          :config="chart"
+          @openRightPanel="openRightPanel"
+          @openDataViewDialog="openDataViewDialog"
+        >
+          <RenderCard
+            :ref="'RenderCard' + chart.code"
+            :config="chart"
+            :page-width="pageInfo.pageConfig.w"
+            :page-height="pageInfo.pageConfig.h"
+            @styleHandler="styleHandler"
+            @request-layout-and-points-update="handleLayoutUpdate"
+          />
+        </Configuration>
+      </template>
     </vdr>
     <span
       v-for="(vl, index) in vLine"
@@ -198,8 +223,32 @@ export default {
       'emptyComputedDatas',
       'CLEAR_POLLING_TIMER'
     ]),
+    handleLayoutUpdate(payload) {
+      const { code, layout, relativePoints } = payload;
+      const chartIndex = this.chartList.findIndex(c => c.code === code);
+      if (chartIndex !== -1) {
+        const targetChart = this.chartList[chartIndex];
+        const newConfig = {
+          ...targetChart,
+          x: layout.x,
+          y: layout.y,
+          w: layout.w,
+          h: layout.h,
+          customize: {
+            ...(targetChart.customize || {}),
+            points: relativePoints
+          },
+          key: new Date().getTime()
+        };
+
+        this.changeChartConfig(newConfig);
+        if (this.activeCode === code) {
+          this.changeActiveItemConfig(newConfig);
+        }
+        this.saveTimeLine(`更新 ${targetChart.title || '线条'} 布局`);
+      }
+    },
     // 判断鼠标点击的是画布中的高亮元素（被框选的）还是非高亮元素或者空白区域
-    // 如果是高亮元素则不会取消高亮状态，如果不是则取消高亮状态
     handleClickOutside (event) {
       // 获取被点击的元素
       const clickedElement = event.target
@@ -216,6 +265,7 @@ export default {
       })
       if (!isElementInHighlights) {
         this.changeActiveCodes([])
+        this.changeActiveCode('')
       }
     },
     // 切换主题时针对远程组件触发样式修改的方法
@@ -253,31 +303,21 @@ export default {
       this.$emit('openDataViewDialog', config)
     },
     drop (e) {
-      console.log('接收到拖放事件')
       try {
         const jsonData = e.dataTransfer.getData('dragComponent')
         if (!jsonData) {
-          console.warn('未获取到拖放数据')
           return
         }
         
-        console.log('拖放数据原始JSON:', jsonData)
         
         const component = customDeserialize(jsonData)
-        console.log('解析后的拖放数据:', {
-          type: component.type,
-          name: component.name,
-          category: component.category,
-          className: component.className,
-          title: component.title
-        })
+    
         
         this.addChart(jsonData, {
           x: e.clientX,
           y: e.clientY
         })
       } catch (error) {
-        console.error('处理拖放事件时出错:', error)
       }
     },
     /**
@@ -391,54 +431,33 @@ export default {
     },
     // 新增元素
     addChart (chart, position, isComponent) {
-      console.log('添加新组件:', {
-        chartType: typeof chart,
-        position,
-        isComponent
-      })
+    
       
       const { left, top } = this.$el.getBoundingClientRect()
       const _chart = !chart.code ? customDeserialize(chart) : chart
       
-      console.log('解析后的组件数据:', {
-        type: _chart.type,
-        name: _chart.name,
-        category: _chart.category,
-        className: _chart.className
-      })
+   
       
       let option = _chart.option
       
-      // 处理customComponent的特殊情况
-      if (_chart.type === 'customComponent') {
-        console.log('检测到customComponent类型组件')
+      // 处理 customComponent 或 threeJs 类型
+      // --- 优先检查 chartType --- 
+      if (_chart.chartType === 'threeJs') {
+         // 保留option，可能后续需要特殊处理主题等
+      }  else if (_chart.type === 'customComponent') {
         
-        // 使用更多特征精确检测是否是3D模型组件
-        const is3DModelComponent = 
-          (_chart.category && _chart.category.includes('模型')) || 
-          (_chart.name && (_chart.name.includes('3D') || _chart.name.includes('模型') || _chart.name === 'PM25监测器')) ||
-          (_chart.title && _chart.title.includes('3D')) ||
-          (_chart.icon && _chart.icon === 'kongjian');
+        // G2Plot处理逻辑
+        const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name);
         
-        if (is3DModelComponent) {
-          console.log('检测到3D模型组件，保留原有配置')
-          // 保留原有的option，不覆盖
-        } else {
-          // G2Plot处理逻辑
-          console.log('检测到普通自定义组件，查找Plot配置')
-          const plotConfig = this.plotList?.find((plot) => plot.name === _chart.name)
-          console.log('找到的Plot配置:', plotConfig ? plotConfig.name : '未找到')
-          
-          // 只有找到对应的Plot配置时才应用
-          if (plotConfig) {
-            option = {
-              ...(plotConfig.option || {}),
-              theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
-            }
+        // 只有找到对应的Plot配置时才应用
+        if (plotConfig) {
+          option = {
+            ...(plotConfig.option || {}),
+            theme: this.pageConfig.customTheme === 'dark' ? 'transparent' : 'light'
           }
-        }
-      }
-      
+        } 
+      } 
+     
       const config = {
         ..._chart,
         x: parseInt(!chart.code
@@ -461,13 +480,7 @@ export default {
         config.theme = settingToTheme(config, 'light')
       }
       
-      console.log('最终添加的组件配置:', {
-        type: config.type,
-        name: config.name,
-        category: config.category,
-        className: config.className,
-        code: config.code
-      })
+
       
       this.addItem(config)
     },
@@ -575,6 +588,10 @@ export default {
       const rotateZ = parseFloat(chart.rotateZ || 0)
 
       return `skew(${skewX}deg, ${skewY}deg) rotateX(${rotateX}deg) rotateY(${rotateY}deg) rotateZ(${rotateZ}deg)`
+    },
+    // 判断是否为无边界类型组件
+    isNoBorderType(type) {
+      return type === 'svgLine' || type === 'canvasLine' || type === 'fabricLine';
     }
   }
 }
@@ -598,6 +615,32 @@ export default {
   }
   .ref-line {
     background-color: transparent;
+  }
+  
+  // 无边界项目的特殊样式
+  .no-border-item {
+    cursor: default;
+    
+    ::v-deep .render-item-wrap {
+      overflow: visible !important;
+      border: none !important;
+    }
+    
+    // 选中和悬停时不显示边框
+    &.multiple-selected, 
+    &:hover {
+      border: none !important;
+      box-shadow: none !important;
+    }
+    
+    // 无边界配置包装器样式
+    ::v-deep .no-border-configuration {
+      border: none !important;
+      
+      &.active, &.hover {
+        border: none !important;
+      }
+    }
   }
 }
 .design-drag-wrap {

@@ -103,7 +103,8 @@ export default {
         module: 'attachment'
       },
       headers: {
-        ...window.BS_CONFIG?.httpConfigs?.headers
+        ...window.BS_CONFIG?.httpConfigs?.headers,
+        'x-api-key': window.sessionStorage.getItem('ticket')
       },
       actionUrl: window?.BS_CONFIG.httpConfigs?.baseURL + '/bigScreen/file/upload'
     }
@@ -140,6 +141,12 @@ export default {
       this.imgUrl = ''
     },
     beforeUpload (file) {
+      // ticket校验
+      const ticket = window.sessionStorage.getItem('ticket')
+      if (!ticket) {
+        this.$message.error('获取不到ticket，无法上传！')
+        return false
+      }
       if (file.size > 30 * 1024 * 1024) {
         this.$message.error('上传图片大小不能超过 30MB!')
         return false

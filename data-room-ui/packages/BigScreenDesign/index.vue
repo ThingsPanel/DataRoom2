@@ -291,11 +291,11 @@ export default {
   },
   created () {
     this.changePageLoading(true)
-    console.log('页面查询参数:', this.$route.query)
+
     // 如果URL中有ticket参数，将其保存到sessionStorage中
     if (this.$route.query.ticket) {
       sessionStorage.setItem('ticket', this.$route.query.ticket)
-      console.log('已将ticket保存到sessionStorage:', this.$route.query.ticket)
+   
     }
     this.permission()
     /**
@@ -503,12 +503,9 @@ export default {
             const componentRef = renderCardRef[0].$refs[config.code];
             if (componentRef && typeof componentRef.changeStyle === 'function') {
               componentRef.changeStyle(cloneDeep(config), true);
-            } else {
-              console.warn(`组件 ${config.code} 没有 changeStyle 方法`);
             }
           }
         } catch (error) {
-          console.error('执行 styleHandler 失败:', error);
         }
       });
     },
@@ -591,7 +588,6 @@ export default {
     },
     // 处理选中的本地图片
     handleLocalSourceImg(img) {
-      console.log('选中的本地图片:', img)
     }
   }
 }

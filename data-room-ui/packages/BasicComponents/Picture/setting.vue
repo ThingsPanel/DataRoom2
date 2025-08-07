@@ -140,7 +140,8 @@ export default {
         module: 'form'
       },
       headers: {
-        ...window.BS_CONFIG?.httpConfigs?.headers
+        ...window.BS_CONFIG?.httpConfigs?.headers,
+        'x-api-key': window.sessionStorage.getItem('ticket')
       },
       fileList: [],
       accept: 'image/*',
@@ -226,6 +227,12 @@ export default {
       this.config.customize.url = ''
     },
     beforeUpload (file) {
+      // ticket校验
+      const ticket = window.sessionStorage.getItem('ticket')
+      if (!ticket) {
+        this.$message.error('获取不到ticket，无法上传！')
+        return false
+      }
       const isLt2M = file.size / 1024 / 1024 < 2
       if (!isLt2M) {
         this.$message.error('上传图片大小不能超过 2MB!')

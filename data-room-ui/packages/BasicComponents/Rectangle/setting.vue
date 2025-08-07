@@ -45,28 +45,43 @@
           </div>
           <SettingTitle>基础</SettingTitle>
           <div class="lc-field-body">
-            <el-form-item label="背景色一">
+            <el-form-item label="颜色类型">
+              <el-radio-group v-model="config.customize.colorType">
+                <el-radio-button label="single">单色</el-radio-button>
+                <el-radio-button label="gradient">渐变</el-radio-button>
+              </el-radio-group>
+            </el-form-item>
+            <el-form-item v-if="config.customize.colorType === 'single'" label="背景色">
               <ColorPicker
-                v-model="config.customize.gradientColor0"
+                v-model="config.customize.backgroundColor"
                 placeholder="请选择背景色"
                 :predefine-colors="predefineThemeColors"
               />
             </el-form-item>
-            <el-form-item label="背景色二">
-              <ColorPicker
-                v-model="config.customize.gradientColor1"
-                placeholder="请选择背景色"
-                :predefine-colors="predefineThemeColors"
-              />
-            </el-form-item>
-            <el-form-item label="渐变方向">
-              <el-select v-model="config.customize.gradientDirection">
-                <el-option label="从左到右" value="to right" />
-                <el-option label="从右到左" value="to left" />
-                <el-option label="从上到下" value="to bottom" />
-                <el-option label="从下到上" value="to top" />
-              </el-select>
-            </el-form-item>
+            <template v-if="config.customize.colorType === 'gradient'">
+              <el-form-item label="背景色一">
+                <ColorPicker
+                  v-model="config.customize.gradientColor0"
+                  placeholder="请选择背景色"
+                  :predefine-colors="predefineThemeColors"
+                />
+              </el-form-item>
+              <el-form-item label="背景色二">
+                <ColorPicker
+                  v-model="config.customize.gradientColor1"
+                  placeholder="请选择背景色"
+                  :predefine-colors="predefineThemeColors"
+                />
+              </el-form-item>
+              <el-form-item label="渐变方向">
+                <el-select v-model="config.customize.gradientDirection">
+                  <el-option label="从左到右" value="to right" />
+                  <el-option label="从右到左" value="to left" />
+                  <el-option label="从上到下" value="to bottom" />
+                  <el-option label="从下到上" value="to top" />
+                </el-select>
+              </el-form-item>
+            </template>
             <el-form-item
               label="不透明度"
               label-width="100px"
@@ -80,6 +95,46 @@
                 :precision="2"
                 :step="0.01"
               />
+            </el-form-item>
+          </div>
+          <SettingTitle>圆角</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="左上圆角">
+              <el-input-number v-model="config.customize.borderRadiusTopLeft" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="右上圆角">
+              <el-input-number v-model="config.customize.borderRadiusTopRight" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="左下圆角">
+              <el-input-number v-model="config.customize.borderRadiusBottomLeft" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="右下圆角">
+              <el-input-number v-model="config.customize.borderRadiusBottomRight" :min="0" /> px
+            </el-form-item>
+          </div>
+          <SettingTitle>阴影</SettingTitle>
+           <div class="lc-field-body">
+            <el-form-item label="阴影样式">
+              <el-input
+                v-model="config.customize.boxShadow"
+                clearable
+                placeholder="例: 2px 2px 5px rgba(0,0,0,0.5)"
+              />
+            </el-form-item>
+          </div>
+          <SettingTitle>内边距</SettingTitle>
+          <div class="lc-field-body">
+             <el-form-item label="上边距">
+              <el-input-number v-model="config.customize.paddingTop" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="右边距">
+              <el-input-number v-model="config.customize.paddingRight" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="下边距">
+              <el-input-number v-model="config.customize.paddingBottom" :min="0" /> px
+            </el-form-item>
+            <el-form-item label="左边距">
+              <el-input-number v-model="config.customize.paddingLeft" :min="0" /> px
             </el-form-item>
           </div>
         </el-form>
@@ -121,5 +176,11 @@ export default {
 <style lang="scss" scoped>
 .lc-field-body {
   padding: 12px 16px;
+}
+
+// 给 input-number 后面的单位腾出空间
+.el-form-item__content .el-input-number {
+  width: calc(100% - 20px) !important;
+  margin-right: 5px;
 }
 </style> 

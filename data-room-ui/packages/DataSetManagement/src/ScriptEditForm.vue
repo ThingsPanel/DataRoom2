@@ -753,7 +753,6 @@ return ElasticsearchDsService.query(host, port, username, password, path, dsl);
           try {
             this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
           } catch (error) {
-            console.error(error)
           }
         })
       }

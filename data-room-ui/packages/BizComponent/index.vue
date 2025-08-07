@@ -351,7 +351,6 @@ export default {
       try {
         dataUrl = await toJpeg(childrenNode, { quality: 0.2 })
       } catch (error) {
-        console.info(error)
       }
       if (dataUrl) {
         if (showSize(dataUrl) > 200) {
@@ -392,7 +391,6 @@ export default {
         })
         this.loading = false
       }).catch((error) => {
-        console.info(error)
         this.loading = false
       })
     },
@@ -407,7 +405,7 @@ export default {
         .then((dataUrl) => {
           const link = document.createElement('a')
           link.download = `${this.form.name}.png`
-          link.href = dataUrl
+          link.href = dataUrl||''
           link.click()
           link.addEventListener('click', () => {
             link.remove()
@@ -415,7 +413,6 @@ export default {
           this.loading = false
         })
         .catch((error) => {
-          console.info(error)
           this.loading = false
           // 判断的error.currentTarget是img标签，如果是的，就弹出消息说是图片跨域
           // 确认框

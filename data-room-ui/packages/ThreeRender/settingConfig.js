@@ -16,18 +16,6 @@ export const settingConfig = {
     metricField: {
       enable: false
     }
-  },
-  customize: {
-    backgroundColor: '#111111',
-    cameraPosition: {
-      x: 0,
-      y: 3,
-      z: 7
-    },
-    rotationSpeed: 0.005,
-    modelScale: 1,
-    modelPositionY: 0,
-    pm25Value: 99
   }
 }
 

@@ -3,6 +3,15 @@ import promise from 'es6-promise'
 
 import Vue from 'vue'
 import ElementUI from 'element-ui'
+import VueKonva from 'vue-konva'
+
+// !! 新增 VChart 及主题包导入 !!
+import VChart from '@visactor/vchart';
+import { allThemeMap } from '@visactor/vchart-theme';
+import { initVChartSemiTheme } from '@visactor/vchart-semi-theme';
+import { initVChartVeOTheme } from '@visactor/vchart-ve-o-theme';
+import { initVChartArcoTheme } from '@visactor/vchart-arco-theme';
+import { initVChartTTPlatformTheme } from '@visactor/vchart-tt-platform-theme';
 
 import App from './App'
 import store from './store'
@@ -15,10 +24,23 @@ import { registerConfig } from '@gcpaas/data-room-ui'
 import remoteComponents from '@/remoteComponents/exports.js'
 import customDatasetComponents from '@/customDatasetComponents/exports.js'
 import { Column } from '@antv/g2plot'
+import 'qweather-icons/font/qweather-icons.css' 
+initVChartSemiTheme()
+initVChartVeOTheme()
+initVChartArcoTheme()
+initVChartTTPlatformTheme();
 // import customPlots from '@/customPlots/exports'
 Vue.use(ElementUI, { size: 'mini' })
+Vue.use(VueKonva)
 Vue.prototype.Column = Column
-console.log('window.CONFIG', window.CONFIG)
+
+// !! 新增 VChart 主题注册 !!
+
+allThemeMap.forEach((theme, name) => {
+  VChart.ThemeManager.registerTheme(name, theme);
+
+});
+VChart.ThemeManager.setCurrentTheme('veODesignDarkConsumer');
 registerConfig(
   {
     routers: {

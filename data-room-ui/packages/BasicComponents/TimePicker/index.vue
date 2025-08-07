@@ -96,7 +96,6 @@ export default {
             // 此处函数处理data
             eval(config.dataHandler)
           } catch (e) {
-            console.info(e)
           }
         }
         config.option.data = data

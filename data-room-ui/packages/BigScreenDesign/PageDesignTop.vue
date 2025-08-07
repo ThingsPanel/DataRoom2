@@ -10,6 +10,22 @@
       <span class="logo-text name-span">{{ pageInfo.name }}</span>
     </div>
     <div class="head-btn-group">
+      <CusBtn
+        style="margin-right:10px"
+        @click.native="exportJson"
+      >
+        导出JSON
+      </CusBtn>
+      <!-- 自动保存功能已禁用 -->
+      <!-- <span v-if="lastAutoSaveTime" class="auto-save-indicator">
+        {{ lastAutoSaveTime }} 已自动保存
+      </span> -->
+      <CusBtn
+        style="margin-right:10px"
+        @click.native="importJson"
+      >
+        导入JSON
+      </CusBtn>
       <span style="margin-right:8px;font-size:12px">缩放</span>
       <el-input-number
         ref="zoomInput"
@@ -195,7 +211,11 @@ export default {
       appInfo: '',
       saveLoading: false,
       createdImgLoading: false,
-      saveAndPreviewLoading: false
+      saveAndPreviewLoading: false,
+      // 自动保存相关
+      autoSaveIntervalId: null,
+      autoSaveInterval: 3 * 60 * 1000, // 3分钟
+      lastAutoSaveTime: ''
     }
   },
   computed: {
@@ -225,9 +245,13 @@ export default {
   mounted () {
     this.initialCoverPicture = this.pageInfo.coverPicture || ''
     this.$refs.zoomInput.$el.addEventListener('mousewheel', this.handleMouseWheel)
+    // 自动保存功能已禁用
+    // this.startAutoSave()
   },
   beforeDestroy () {
     this.$refs.zoomInput.$el.removeEventListener('mousewheel', this.handleMouseWheel)
+    // 自动保存功能已禁用
+    // this.stopAutoSave()
   },
   methods: {
     ...mapActions({
@@ -420,15 +444,17 @@ export default {
       return isValid
     },
     // 保存
-    async save (type, hasPageTemplateId = false) {
+    async save (type, hasPageTemplateId = false, isAutoSave = false) {
       const pageInfo = cloneDeep(this.handleSaveData())
-      console.log(pageInfo,type,"pageInfo1")
-
+   
 
       // 保存时判断tabs组件里面的元素是否符合要求
       const flag = this.validateTabs(pageInfo?.chartList)
       if (!flag) {
-        this.$message.warning('请完成tab项配置')
+        // 自动保存时，如果校验失败，不提示用户
+        if (!isAutoSave) {
+          this.$message.warning('请完成tab项配置')
+        }
         return false
       }
       // 保存页面
@@ -438,65 +464,104 @@ export default {
         }
         if (type === 'preview') {
           pageInfo.isPreview = true
-          
-         
           const res = await saveScreen(pageInfo)
           return res
         } else {
           pageInfo.isPreview = false
-          this.saveLoading = true
-          pageInfo.coverPicture = this.initialCoverPicture
-          const node = document.querySelector('.render-theme-wrap')
+          if (!isAutoSave) {
+            this.saveLoading = true
+          }
+          pageInfo.coverPicture = this.initialCoverPicture // 默认使用初始封面
           let dataUrl = ''
           let res = null
-          try {
-            dataUrl = await toJpeg(node, { quality: 0.2 })
-          } catch (error) {
-            // 判断的error.currentTarget是img标签，如果是的，就弹出消息说是图片跨域
-            // 确认框
-            this.$confirm('保存封面失败，我们将使用上次保存的封面，不会影响大屏数据的保存。可能是因为图片、视频资源跨域了导致使用toDataURL API生成图片失败，我们可以将资源上传到资源库。然后在组件中使用资源库中的图片资源，以确保没有跨域问题。', '提示', {
-              confirmButtonText: '确定',
-              showCancelButton: false,
-              type: 'warning',
-              customClass: 'bs-el-message-box'
-            }).then(async () => {
-              res = await saveScreen(pageInfo)
-              this.$message.success('保存成功')
-            }).catch(async () => {
-              res = await saveScreen(pageInfo)
-              this.$message.success('保存成功')
-            })
-          }
-          if (dataUrl) {
-            if (showSize(dataUrl) > 200) {
-              // const newData = compressImage(dataUrl, 800)
-              // const url = dataURLtoBlob(dataUrl)
-              // // 压缩到500KB,这里的500就是要压缩的大小,可自定义
-              // const imgRes = await imageConversion.compressAccurately(url, {
-              //   size: 200, // 图片大小压缩到100kb
-              //   width: 1280, // 宽度压缩到1280
-              //   height: 720 // 高度压缩到720
-              // })
-              // const base64 = await translateBlobToBase64(imgRes)
-              // pageInfo.coverPicture = base64.result
-              this.$message.info('由于封面图片过大，进行压缩中')
-              const compressCoverPicture = await compressImage(dataUrl, { width: 1280, height: 720, size: 400, quality: 1 })
-              pageInfo.coverPicture = compressCoverPicture
-            } else {
-              pageInfo.coverPicture = dataUrl
+
+          // 仅在手动保存时生成新的封面图
+          if (!isAutoSave) {
+            const node = document.querySelector('.render-theme-wrap')
+            try {
+              dataUrl = await toJpeg(node, { quality: 0.2 })
+            } catch (error) {
+              this.$confirm('保存封面失败，我们将使用上次保存的封面，不会影响大屏数据的保存。可能是因为图片、视频资源跨域了导致使用toDataURL API生成图片失败，我们可以将资源上传到资源库。然后在组件中使用资源库中的图片资源，以确保没有跨域问题。', '提示', {
+                confirmButtonText: '确定',
+                showCancelButton: false,
+                type: 'warning',
+                customClass: 'bs-el-message-box'
+              }).then(async () => {
+                // 即使封面失败，也继续保存数据
+              }).catch(async () => {
+                // 点击遮罩层关闭也继续保存
+              })
+              // 无论用户是否确认提示，都继续尝试保存
             }
-         
-            res = await saveScreen(pageInfo)
+
+            if (dataUrl) {
+              if (showSize(dataUrl) > 200) {
+                this.$message.info('由于封面图片过大，进行压缩中')
+                try {
+                  const compressCoverPicture = await compressImage(dataUrl, { width: 1280, height: 720, size: 400, quality: 1 })
+                  pageInfo.coverPicture = compressCoverPicture
+                  this.initialCoverPicture = compressCoverPicture // 更新封面缓存
+                } catch (compressError) {
+                  this.$message.warning('封面压缩失败，将使用上次保存的封面')
+                  // 压缩失败，继续使用 initialCoverPicture
+                }
+              } else {
+                pageInfo.coverPicture = dataUrl
+                this.initialCoverPicture = dataUrl // 更新封面缓存
+              }
+            }
+          } // end if (!isAutoSave)
+
+          // 执行保存
+          res = await saveScreen(pageInfo)
+          if (!isAutoSave) {
             this.$message.success('保存成功')
           }
           return res
         }
       } catch (error) {
-        console.error(error)
-        this.saveLoading = false
-        throw error
+        if (!isAutoSave) {
+          this.saveLoading = false
+          this.$message.error('保存失败')
+        }
+        // 对于自动保存，我们不向上抛出错误，避免中断其他操作
+        if (!isAutoSave) {
+           throw error
+        }
+        return false // 表示保存失败
       } finally {
-        this.saveLoading = false
+        if (!isAutoSave) {
+          this.saveLoading = false
+        }
+      }
+    },
+    // 自动保存方法
+    async autoSave () {
+   
+      try {
+        const success = await this.save(null, false, true) // 调用静默保存
+        if (success) {
+          const now = new Date()
+          this.lastAutoSaveTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+ 
+        }
+      } catch (error) {
+        // 错误已在 save 方法内部处理（仅记录日志）
+      }
+    },
+    // 启动自动保存定时器
+    startAutoSave () {
+      // 清除可能已存在的定时器
+      this.stopAutoSave()
+      this.autoSaveIntervalId = setInterval(this.autoSave, this.autoSaveInterval)
+
+    },
+    // 停止自动保存定时器
+    stopAutoSave () {
+      if (this.autoSaveIntervalId) {
+        clearInterval(this.autoSaveIntervalId)
+        this.autoSaveIntervalId = null
+   
       }
     },
     goBack (path) {
@@ -550,10 +615,7 @@ export default {
         }
         return chart
       })
-      console.log(cloneDeep({
-        ...this.pageInfo,
-        chartList: newChartList
-      }),"pageInfo3")
+      // 打印保存前的 chartList，调试用
       return cloneDeep({
         ...this.pageInfo,
         chartList: newChartList
@@ -605,65 +667,111 @@ export default {
             this.$message.warning('出现未知错误，请重试')
           }
         })
-    }
-    // createdImg () {
-    //   this.saveAndPreviewLoading = true
-    //   // 暂停跑马灯动画
-    //   EventBus.$emit('stopMarquee')
-    //   const node = document.querySelector('.render-theme-wrap')
-    //   // 获取node 下的所有img标签，拿到他们的src
-    //   const imgTags = node.querySelectorAll('img')
-    //   const requests = Array.from(imgTags).map(img => {
-    //     const src = img.getAttribute('src')
-    //     return fetch(src, {
-    //       headers: { 'Access-Control-Allow-Origin': '*' }
-    //     }).then(response => {
-    //       if (response.ok) {
-    //         return response.blob()
-    //       } else {
-    //         throw new Error('网络请求失败')
-    //       }
-    //     }).then(blob => {
-    //       return new Promise((resolve, reject) => {
-    //         const reader = new FileReader()
-    //         reader.onload = () => resolve(reader.result)
-    //         reader.onerror = reject
-    //         reader.readAsDataURL(blob)
-    //       })
-    //     }).then(dataUrl => {
-    //       img.setAttribute('src', dataUrl)
-    //     }).catch(error => {
-    //       console.error('Fetch error:', error)
-    //     })
-    //   })
+    },
+    // 导出页面配置为 JSON 文件
+    exportJson () {
+      try {
+        // 克隆原始配置
+        const originalConfig = cloneDeep(this.pageInfo)
 
-    //   Promise.all(requests).then(() => {
-    //     toPng(node)
-    //       .then((dataUrl) => {
-    //         const link = document.createElement('a')
-    //         link.download = `${this.pageInfo.name}.png`
-    //         link.href = dataUrl
-    //         link.click()
-    //         link.addEventListener('click', () => {
-    //           link.remove()
-    //         })
-    //         this.saveAndPreviewLoading = false
-    //         // 恢复跑马灯动画
-    //         EventBus.$emit('startMarquee')
-    //       }).catch((error) => {
-    //         console.info(error)
-    //         this.$message.warning('出现未知错误，请重试')
-    //         this.saveAndPreviewLoading = false
-    //       })
-    //   }).catch(error => {
-    //     console.error('Fetch error:', error)
-    //   })
-    // }
+        // 创建一个用于导出的新对象，移除不需要的字段
+        const exportConfig = {
+          ...originalConfig,
+        }
+
+        // 移除 ID 和用户信息等
+        delete exportConfig.id
+        delete exportConfig.code // code 通常也是实例特定的，移除更安全
+        delete exportConfig.tenantId // tenantId 也应移除
+        delete exportConfig.createBy
+        delete exportConfig.createTime
+        delete exportConfig.updateBy
+        delete exportConfig.updateTime
+        delete exportConfig.pageTemplateId // 模板ID通常也只对原实例有意义
+        // 如果还有其他特定于实例或用户的信息字段，也应在此处移除
+
+        // 可以在这里添加对 pageConfig 的额外处理，比如移除不需要导出的字段
+        const jsonStr = JSON.stringify(exportConfig, null, 2) // 格式化输出清理后的配置
+        const blob = new Blob([jsonStr], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = `${this.pageInfo.name || 'page_config'}.json`
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url)
+      } catch (error) {
+        this.$message.error('导出 JSON 失败')
+      }
+    },
+    // 导入 JSON 文件更新页面配置
+    importJson () {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.json'
+      input.onchange = (event) => {
+        const file = event.target.files[0]
+        if (!file) {
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          try {
+            const importedConfig = JSON.parse(e.target.result)
+            // TODO: 在这里可以添加对导入数据的校验逻辑
+            if (typeof importedConfig === 'object' && importedConfig !== null && importedConfig.pageConfig && importedConfig.chartList) {
+              // 使用导入的配置更新页面信息
+              // 保留原有的 code 和 id，防止覆盖导致的问题
+              const currentCode = this.pageInfo.code
+              const currentId = this.pageInfo.id
+              const currentName = this.pageInfo.name // 暂存当前名称，导入后恢复
+              const currentType = this.pageInfo.type // 暂存当前类型
+              const currentTenantId = this.pageInfo.tenantId // 获取当前 tenantId
+              this.changePageInfo({
+                ...importedConfig,
+                code: currentCode,
+                id: currentId,
+                name: currentName, // 恢复名称
+                type: currentType, // 恢复类型
+                tenantId: currentTenantId // 确保使用当前的 tenantId
+              })
+              // --- DEBUG LOG --- 
+           
+              // --- END DEBUG LOG ---
+              this.$message.success('JSON 文件导入成功')
+              // 可以在这里触发一次保存历史记录
+              this.saveTimeLine('导入JSON配置')
+              // 可能需要重新初始化或刷新某些状态
+              this.$nextTick(() => {
+                this.$emit('changeZoom', 'auto') // 触发自适应缩放
+              })
+            } else {
+              this.$message.error('导入的 JSON 文件格式不正确')
+            }
+          } catch (error) {
+            this.$message.error('导入 JSON 文件失败，请检查文件格式')
+          }
+        }
+        reader.onerror = (error) => {
+          this.$message.error('读取文件失败')
+        }
+        reader.readAsText(file)
+      }
+      input.click()
+    }
   }
 }
 </script>
 <style lang="scss" scoped>
 @import '../BigScreenDesign/fonts/iconfont.css';
+
+.auto-save-indicator {
+  font-size: 12px;
+  color: #a1a5aa; // 浅灰色文字
+  margin-right: 10px;
+  user-select: none; // 防止文本被选中
+}
 
 .default-layout-box {
   display: flex;

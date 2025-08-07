@@ -91,7 +91,6 @@ export default {
           const scriptFn = new Function('activeValue', 'inactiveValue', executeScript)
           scriptFn(activeValue, inactiveValue)
         } catch (error) {
-          console.error('执行脚本失败:', error)
         }
       }
       this.$emit('change', value)

@@ -224,7 +224,6 @@ export default {
     // 处理请求错误
     handleError (error) {
       this.$message.error(error.message || '请求失败')
-      console.error('请求错误:', error)
     },
 
     // 测试请求
@@ -257,7 +256,6 @@ export default {
         try {
           stopPolling(this.pollingId)
         } catch (err) {
-          console.warn('停止先前轮询失败:', err)
         }
         
         // 开始新的轮询
@@ -271,7 +269,6 @@ export default {
         
         this.$message.success('轮询已开始')
       } catch (error) {
-        console.error('请求处理错误:', error)
         this.$message.error('处理请求时发生错误')
         this.loading = false
       }
@@ -289,7 +286,6 @@ export default {
         this.$message.success('轮询已停止')
         this.loading = false
       } catch (error) {
-        console.error('停止轮询错误:', error)
         this.$message.error('停止轮询失败')
       }
     },

@@ -2,9 +2,6 @@
   <div
     class="bs-design-wrap bs-bar"
     style="width: 100%; height: 100%"
-    @mousedown.stop
-    @mousemove.stop
-    @mouseup.stop
     @wheel.stop
   >
     <el-button v-if="currentDeep > 0" class="button" type='text' @click.stop="backToPreviousLevel(config)"> 返回上一级</el-button>
@@ -157,7 +154,6 @@ export default {
           this.registerClickEvent(config)
           return
         } catch(e) {
-          console.error('加载本地地图数据失败:', e)
         }
       }
 
@@ -178,7 +174,6 @@ export default {
         // 注册点击事件
         this.registerClickEvent(config)
       } catch(e) {
-        console.error('获取地图数据失败:', e)
         this.$message({
           message: '获取地图数据失败',
           type: 'error'
@@ -361,7 +356,6 @@ export default {
 
         // 确保mapList存在且有当前层级的数据
         if (!this.mapList || !this.mapList[this.currentDeep]) {
-          console.warn('地图数据不完整')
           return
         }
 
@@ -395,7 +389,6 @@ export default {
           echarts.registerMap(params.name, geoJsonObj)
           this.charts.setOption(this.option, true)
         } catch (error) {
-          console.error('下钻操作失败:', error)
           this.$message({
             message: '下钻操作失败',
             type: 'error'

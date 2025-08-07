@@ -45,7 +45,6 @@ const actions = {
       script.async = true
       
       script.onload = () => {
-        console.log('引擎脚本加载成功')
         
         try {
           // 尝试创建场景实例
@@ -53,12 +52,10 @@ const actions = {
           
           // 尝试使用jm类
           if (typeof window.jm === 'function') {
-            console.log('使用jm类初始化场景')
             sceneInstance = new window.jm(container)
           } 
           // 尝试使用SceneBackstage类
           else if (typeof window.SceneBackstage === 'function') {
-            console.log('使用SceneBackstage初始化场景')
             sceneInstance = new window.SceneBackstage(container)
           }
           // 尝试查找其他可能的引擎类
@@ -68,11 +65,9 @@ const actions = {
               /scene|engine|three/i.test(key)
             )
             
-            console.log('找到可能的引擎类:', engineClasses)
             
             if (engineClasses.length > 0) {
               const EngineClass = window[engineClasses[0]]
-              console.log(`使用 ${engineClasses[0]} 初始化场景`)
               sceneInstance = new EngineClass(container)
             } else {
               throw new Error('找不到可用的引擎类')
@@ -86,20 +81,17 @@ const actions = {
           // 注册场景加载完成事件
           if (sceneInstance.addEventListener) {
             sceneInstance.addEventListener('sceneLoaded', () => {
-              console.log('场景加载完成')
             })
           }
           
           resolve(sceneInstance)
         } catch (error) {
-          console.error('初始化场景失败:', error)
           commit('SET_LOADED', false)
           reject(error)
         }
       }
       
       script.onerror = (err) => {
-        console.error('引擎脚本加载失败:', err)
         commit('SET_LOADED', false)
         reject(new Error('脚本加载失败'))
       }
@@ -115,14 +107,11 @@ const actions = {
    */
   freshSensors ({ state }, sensorData) {
     if (!state.scene || !state.isLoaded) {
-      console.warn('场景未初始化，无法更新传感器数据')
       return
     }
     
     if (typeof state.scene.freshSensors === 'function') {
       state.scene.freshSensors(sensorData)
-    } else {
-      console.warn('场景实例不支持freshSensors方法')
     }
   },
   
@@ -133,15 +122,12 @@ const actions = {
    */
   freshAttributes ({ state }, attributesObj) {
     if (!state.scene || !state.isLoaded) {
-      console.warn('场景未初始化，无法更新属性数据')
       return
     }
     
     if (typeof state.scene.freshAttributes === 'function') {
       state.scene.freshAttributes(attributesObj)
-    } else {
-      console.warn('场景实例不支持freshAttributes方法')
-    }
+    } 
   }
 }
 

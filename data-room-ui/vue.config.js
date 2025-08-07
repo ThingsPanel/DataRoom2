@@ -4,7 +4,6 @@
  */
 
 const isExample = process.env.VUE_APP_BUILD_TYPE === 'example'
-
 module.exports = isExample
   ? require('./vue.config.example')
   : require('./vue.config.package')

@@ -3,7 +3,7 @@
     <el-form
       ref="form"
       :model="config"
-      label-width="90px"
+      label-width="100px"
       label-position="left"
       class="setting-body bs-el-form"
     >
@@ -13,7 +13,7 @@
           :model="config.customize"
           label-position="left"
           class="setting-body bs-el-form"
-          label-width="90px"
+          label-width="100px"
         >
           <SettingTitle>标题</SettingTitle>
           <div class="lc-field-body">
@@ -45,43 +45,223 @@
           </div>
           <SettingTitle>基础</SettingTitle>
           <div class="lc-field-body">
-            <el-form-item label="背景色一">
+            <el-form-item label="线条颜色">
               <ColorPicker
-                v-model="config.customize.gradientColor0"
-                placeholder="请选择背景色"
+                v-model="config.customize.lineColor"
+                placeholder="请选择线条颜色"
                 :predefine-colors="predefineThemeColors"
               />
             </el-form-item>
-            <el-form-item label="背景色二">
-              <ColorPicker
-                v-model="config.customize.gradientColor1"
-                placeholder="请选择背景色"
-                :predefine-colors="predefineThemeColors"
-              />
-            </el-form-item>
-            <el-form-item label="高度">
+            <el-form-item label="线条粗细">
               <el-input-number
-                v-model="config.customize.height"
+                v-model="config.customize.lineWidth"
                 class="bs-el-input-number"
-                :min="0"
-                :max="30"
+                :min="1"
+                :max="50"
                 :step="1"
               />
             </el-form-item>
             <el-form-item
               label="不透明度"
-              label-width="100px"
             >
               <el-input-number
                 v-model="config.customize.opacity"
                 class="bs-el-input-number"
                 placeholder="请输入不透明度"
-                :min="0.01"
+                :min="0"
                 :max="1"
                 :precision="2"
                 :step="0.01"
               />
             </el-form-item>
+            <el-form-item label="启用虚线">
+              <el-switch v-model="config.customize.enableLineDash" />
+            </el-form-item>
+            <template v-if="config.customize.enableLineDash">
+              <el-form-item label="虚线长度">
+                <el-input-number
+                  v-model="config.customize.lineDashValue"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="1"
+                />
+              </el-form-item>
+              <el-form-item label="虚线间隔">
+                <el-input-number
+                  v-model="config.customize.lineGapValue"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="1"
+                />
+              </el-form-item>
+            </template>
+          </div>
+          
+          <!-- 新增箭头设置部分 -->
+          <SettingTitle>箭头样式</SettingTitle>
+          <div class="lc-field-body">
+            <!-- 起点箭头设置 -->
+            <el-form-item label="起点箭头">
+              <el-select
+                v-model="config.customize.startArrowStyle"
+                placeholder="选择起点箭头样式"
+                class="bs-el-select"
+              >
+                <el-option
+                  v-for="item in arrowStyleOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <template v-if="config.customize.startArrowStyle !== 'none'">
+              <el-form-item label="起点大小">
+                <el-input-number
+                  v-model="config.customize.startArrowSize"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="2"
+                  :max="20"
+                  :step="1"
+                />
+              </el-form-item>
+              <el-form-item label="起点颜色">
+                <ColorPicker
+                  v-model="config.customize.startArrowColor"
+                  placeholder="继承线条颜色"
+                  :predefine-colors="predefineThemeColors"
+                  allow-clear
+                />
+              </el-form-item>
+            </template>
+            
+            <!-- 终点箭头设置 -->
+            <el-form-item label="终点箭头">
+              <el-select
+                v-model="config.customize.endArrowStyle"
+                placeholder="选择终点箭头样式"
+                class="bs-el-select"
+              >
+                <el-option
+                  v-for="item in arrowStyleOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </el-form-item>
+            <template v-if="config.customize.endArrowStyle !== 'none'">
+              <el-form-item label="终点大小">
+                <el-input-number
+                  v-model="config.customize.endArrowSize"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="2"
+                  :max="20"
+                  :step="1"
+                />
+              </el-form-item>
+              <el-form-item label="终点颜色">
+                <ColorPicker
+                  v-model="config.customize.endArrowColor"
+                  placeholder="继承线条颜色"
+                  :predefine-colors="predefineThemeColors"
+                  allow-clear
+                />
+              </el-form-item>
+            </template>
+          </div>
+          
+          <SettingTitle>动画</SettingTitle>
+          <div class="lc-field-body">
+            <el-form-item label="启用动画">
+              <el-switch v-model="config.customize.animationActive" />
+            </el-form-item>
+            <template v-if="config.customize.animationActive">
+              <el-form-item label="动画类型">
+                <el-select
+                  v-model="config.customize.animationType"
+                  placeholder="选择动画类型"
+                  class="bs-el-select"
+                >
+                  <el-option
+                    v-for="item in animationTypeOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="动画方向">
+                <el-select
+                  v-model="config.customize.animationDirection"
+                  placeholder="选择动画方向"
+                  class="bs-el-select"
+                >
+                  <el-option
+                    v-for="item in animationDirectionOptions"
+                    :key="item.value"
+                    :label="item.label"
+                    :value="item.value"
+                  />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="动画速度">
+                <el-input-number
+                  v-model="config.customize.animationSpeed"
+                  class="bs-el-input-number"
+                  controls-position="right"
+                  :min="0.1"
+                  :step="0.1"
+                />
+              </el-form-item>
+              <el-form-item label="循环播放">
+                <el-switch v-model="config.customize.animationLoop" />
+              </el-form-item>
+
+              <template v-if="config.customize.animationType === 'droplet'">
+                <el-form-item label="水珠颜色">
+                  <ColorPicker
+                    v-model="config.customize.dropletColor"
+                    :predefine="predefineThemeColors"
+                  />
+                </el-form-item>
+                <el-form-item label="水珠大小">
+                  <el-input-number
+                    v-model="config.customize.dropletSize"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+              </template>
+
+              <template v-if="config.customize.animationType === 'flow'">
+                <el-form-item label="流水颜色">
+                  <ColorPicker
+                    v-model="config.customize.flowColor"
+                    :predefine="predefineThemeColors"
+                  />
+                </el-form-item>
+                <el-form-item label="流水粗细">
+                  <el-input-number
+                    v-model="config.customize.flowThickness"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+                <el-form-item label="流水密度">
+                  <el-input-number
+                    v-model="config.customize.flowDensity"
+                    class="bs-el-input-number"
+                    controls-position="right"
+                    :min="1"
+                  />
+                </el-form-item>
+              </template>
+            </template>
           </div>
         </el-form>
       </div>
@@ -95,9 +275,15 @@ import PosWhSetting from 'data-room-ui/BigScreenDesign/RightSetting/PosWhSetting
 import BorderSetting from 'data-room-ui/BigScreenDesign/RightSetting/BorderSetting.vue'
 import RotateSetting from 'data-room-ui/BigScreenDesign/RightSetting/RotateSetting.vue'
 import {predefineColors} from "data-room-ui/js/utils/colorList";
+// Import animation options from FabricLine's settingConfig
+// We might need to create a shared file for these options if they are used in many places
+// For now, let's assume they might be redefined or imported if HorizontalLine needs them specifically.
+// We will need to add AnimationTypeOptions and AnimationDirectionOptions to data() if used.
+import { AnimationTypeOptions, AnimationDirectionOptions } from '../FabricLine/settingConfig.js'
+import { ArrowStyleOptions } from './settingConfig.js'
 
 export default {
-  name: 'Border14Setting',
+  name: 'HorizontalLineSetting', // Changed name from Border14Setting
   components: {
     ColorPicker,
     PosWhSetting,
@@ -116,7 +302,12 @@ export default {
     }
   },
   data () {
-    return {}
+    return {
+      // Provide the animation options for the select dropdowns
+      animationTypeOptions: AnimationTypeOptions,
+      animationDirectionOptions: AnimationDirectionOptions,
+      arrowStyleOptions: ArrowStyleOptions
+    }
   },
   watch: {},
   mounted () {},

@@ -1,0 +1,395 @@
+# 物联网平台前端接口文档
+
+## 基础信息
+
+- **基础URL**: `http://47.92.253.145:9102`
+- **认证方式**: 请求头中添加 `x-api-key`
+- **数据格式**: JSON
+
+### 请求头示例
+```
+x-api-key: 从会话存储空间中取 ticket的值
+Content-Type: application/json
+```
+
+## 统一响应格式
+
+### 成功响应
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        // 具体数据
+    }
+}
+```
+
+### 错误响应
+```json
+{
+    "code": 400,
+    "message": "错误描述",
+    "data": null
+}
+```
+
+### 状态码说明
+- `200` - 成功
+- `400` - 参数错误
+- `401` - 认证失败
+- `404` - 资源不存在
+- `500` - 服务器错误
+
+---
+
+## 接口列表
+
+### 1. 🏠 设备汇总统计
+
+获取设备整体统计信息，用于首页仪表板展示。
+
+**接口地址**: `GET /api/v1/monitor/device_summary`
+
+**请求示例**:
+```bash
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/device_summary" \
+  -H "x-api-key: your-api-key"
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "total_devices": 100,           // 设备总数
+        "running_devices": 80,          // 运行中设备数
+        "offline_devices": 5,           // 离线设备数
+        "standby_devices": 15,          // 待机设备数
+        "online_devices": 95,           // 在线设备数
+        "startup_rate": 0.95,           // 开机率 (在线/总数)
+        "utilization_rate": 0.84        // 利用率 (运行/在线)
+    }
+}
+```
+
+---
+
+### 3. 📊 设备详细信息
+
+获取单个设备的详细监控信息。
+
+**接口地址**: `GET /api/v1/monitor/device_info/{device_id}`
+
+**路径参数**:
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| device_id | string | 是 | 设备ID |
+
+**请求示例**:
+```bash
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/device_info/dev-001" \
+  -H "x-api-key: your-api-key"
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "device_id": "dev-001",                 // 设备ID
+        "device_number": "PUMP-001",            // 设备编号
+        "device_name": "1号水泵",                // 设备名称
+        "today_production": "125.50",           // 今日产量
+        "total_runtime": "115天13小时46分40秒",   // 累计运行时间
+        "status": "运行",                       // 状态: 离线/待机/运行
+        "label": "车间A",                       // 归属
+        "description": "主要水泵设备",           // 描述
+        "image_url": "https://example.com/device.jpg" // 设备图片URL
+    }
+}
+```
+
+---
+
+### 4. 📈 产量曲线数据
+
+获取设备产量趋势数据，用于图表展示。
+
+**接口地址**: `GET /api/v1/monitor/production_curve`
+
+**请求参数**:
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| device_id | string | 是 | 设备ID |
+| time_type | string | 是 | 时间类型: hour/day/month/year |
+| limit | int | 否 | 限制条数，默认10，最大100 |
+
+**请求示例**:
+```bash
+# 获取按小时的产量数据
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/production_curve?device_id=dev-001&time_type=hour&limit=24" \
+  -H "x-api-key: your-api-key"
+
+# 获取按天的产量数据
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/production_curve?device_id=dev-001&time_type=day&limit=30" \
+  -H "x-api-key: your-api-key"
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": [
+        {
+            "timestamp": 1719859200,    // 时间戳
+            "production": 125.5         // 产量
+        },
+        {
+            "timestamp": 1719862800,
+            "production": 130.2
+        }
+    ]
+}
+```
+
+**前端使用建议**:
+```javascript
+// 转换时间戳为可读时间
+const formatTime = (timestamp) => {
+    return new Date(timestamp * 1000).toLocaleString();
+};
+
+// 图表数据处理
+const chartData = response.data.map(item => ({
+    time: formatTime(item.timestamp),
+    value: item.production
+}));
+```
+
+---
+
+### 5. 🔍 设备实时遥测数据
+
+获取设备当前所有传感器数据。
+
+**接口地址**: `GET /api/v1/monitor/current_telemetry/{device_id}`
+
+**路径参数**:
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| device_id | string | 是 | 设备ID |
+
+**请求示例**:
+```bash
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/current_telemetry/dev-001" \
+  -H "x-api-key: your-api-key"
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": [
+        {
+            "key": "CountTB",           // 数据键名
+            "value": "125.5",           // 数据值
+            "timestamp": 1719859200     // 数据时间戳
+        },
+        {
+            "key": "Status",
+            "value": "1",               // 1=运行, 0=待机
+            "timestamp": 1719859200
+        },
+        {
+            "key": "runTime",
+            "value": "1000000",         // 运行时间(秒)
+            "timestamp": 1719859200
+        },
+        {
+            "key": "alarm",
+            "value": "设备温度过高",
+            "timestamp": 1719859200
+        }
+    ]
+}
+```
+
+---
+
+### 6. ⚠️ 告警历史记录
+
+获取设备告警历史，支持分页和时间范围筛选。
+
+**接口地址**: `GET /api/v1/monitor/alarm_history`
+
+**请求参数**:
+| 参数 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| page | int | 否 | 1 | 页码，从1开始 |
+| page_size | int | 否 | 20 | 每页条数，最大100 |
+| keyword | string | 否 | - | 搜索关键词(设备名称或编号) |
+| time | int | 否 | - | 时间范围，单位秒(如3600表示最近1小时) |
+
+**请求示例**:
+```bash
+# 获取最近24小时的告警
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/alarm_history?time=86400&page=1&page_size=20" \
+  -H "x-api-key: your-api-key"
+
+# 搜索特定设备的告警
+curl -X GET "http://47.92.253.145:9102/api/v1/monitor/alarm_history?keyword=pump&page=1&page_size=20" \
+  -H "x-api-key: your-api-key"
+```
+
+**响应示例**:
+```json
+{
+    "code": 200,
+    "message": "success",
+    "data": {
+        "total": 50,                    // 总记录数
+        "page": 1,                      // 当前页码
+        "page_size": 20,                // 每页条数
+        "total_pages": 3,               // 总页数
+        "list": [
+            {
+                "device_id": "dev-001",         // 设备ID
+                "device_number": "PUMP-001",    // 设备编号
+                "device_name": "1号水泵",        // 设备名称
+                "alarm": "设备温度过高",         // 告警内容
+                "alarm_time": 1719859200        // 告警时间戳
+            }
+        ]
+    }
+}
+```
+
+---
+
+## 前端集成建议
+
+### 1. 封装API请求
+```javascript
+// api.js
+const API_BASE = 'http://47.92.253.145:9102';
+const API_KEY = 'your-api-key';
+
+const request = async (url, options = {}) => {
+    const response = await fetch(`${API_BASE}${url}`, {
+        headers: {
+            'x-api-key': API_KEY,
+            'Content-Type': 'application/json',
+            ...options.headers
+        },
+        ...options
+    });
+    
+    const data = await response.json();
+    
+    if (data.code !== 200) {
+        throw new Error(data.message);
+    }
+    
+    return data.data;
+};
+
+// 设备相关API
+export const deviceAPI = {
+    // 获取设备汇总
+    getSummary: () => request('/api/v1/monitor/device_summary'),
+    
+    // 获取设备列表
+    getList: (params) => request(`/api/v1/monitor/device_list?${new URLSearchParams(params)}`),
+    
+    // 获取设备详情
+    getInfo: (deviceId) => request(`/api/v1/monitor/device_info/${deviceId}`),
+    
+    // 获取产量曲线
+    getProductionCurve: (params) => request(`/api/v1/monitor/production_curve?${new URLSearchParams(params)}`),
+    
+    // 获取实时遥测数据
+    getCurrentTelemetry: (deviceId) => request(`/api/v1/monitor/current_telemetry/${deviceId}`),
+    
+    // 获取告警历史
+    getAlarmHistory: (params) => request(`/api/v1/monitor/alarm_history?${new URLSearchParams(params)}`)
+};
+```
+
+### 2. 错误处理
+```javascript
+try {
+    const summary = await deviceAPI.getSummary();
+    console.log('设备汇总:', summary);
+} catch (error) {
+    console.error('获取数据失败:', error.message);
+    // 显示错误提示
+}
+```
+
+### 3. 时间格式化工具
+```javascript
+// utils.js
+export const formatTime = (timestamp) => {
+    return new Date(timestamp * 1000).toLocaleString('zh-CN');
+};
+
+export const formatRuntime = (seconds) => {
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    
+    let result = '';
+    if (days > 0) result += `${days}天`;
+    if (hours > 0) result += `${hours}小时`;
+    if (minutes > 0) result += `${minutes}分`;
+    if (secs > 0) result += `${secs}秒`;
+    
+    return result || '0秒';
+};
+```
+
+### 4. 状态颜色映射
+```javascript
+// 设备状态颜色
+export const statusColors = {
+    '运行': '#52c41a',    // 绿色
+    '待机': '#faad14',    // 黄色
+    '离线': '#ff4d4f'     // 红色
+};
+
+// 告警级别颜色
+export const alarmColors = {
+    '温度过高': '#ff4d4f',
+    '压力异常': '#faad14',
+    '运行异常': '#ff7a45'
+};
+```
+
+---
+
+## 常见问题
+
+### Q: 如何处理设备不存在的情况？
+A: 接口会返回404状态码，前端需要检查响应的code字段来判断。
+
+### Q: 时间戳是什么格式？
+A: Unix时间戳(秒)，需要乘以1000转换为JavaScript的Date对象。
+
+### Q: 产量数据为什么是字符串？
+A: 为了保持精度，避免浮点数精度问题，建议前端使用时转换为数字。
+
+### Q: 如何实现实时数据更新？
+A: 建议使用定时器定期调用接口，或考虑实现WebSocket推送机制。
+
+---
+
+## 更新日志
+
+- **v1.0.0** (2024-01-01): 初始版本，包含基础监控接口
+- **v1.1.0** (2024-01-15): 新增告警历史接口，设备信息接口增加图片字段 

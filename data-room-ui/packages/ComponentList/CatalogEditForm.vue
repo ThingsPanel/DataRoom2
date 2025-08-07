@@ -153,7 +153,7 @@ export default {
   data () {
     // 检验分组名称是否重复
     const validateName = (rule, value, callback) => {
-      this.$dataRoomAxios.post('/bigScreen/type/nameRepeat', {
+      this.$dataRoomAxios.post(window.BS_CONFIG?.httpConfigs?.baseURL + '/bigScreen/type/nameRepeat', {
         id: this.currentCatalog.id,
         name: value,
         type: this.catalogType

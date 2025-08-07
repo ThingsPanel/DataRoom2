@@ -37,9 +37,11 @@ export default {
       videoOptions: {
         live: true,
         // 浏览器准备好时开始回放
-        autoplay: false,
-        // true：默认视频播放无声音，需要手动开启声音
-        muted: false,
+        autoplay: true,
+        // true：默认视频播放无声音，需要手动开启声音 (设置为 true 以允许自动播放)
+        muted: true,
+        // 循环播放
+        loop: true,
         // 播放速度
         playbackRates: [0.5, 1.0, 1.5, 2.0],
         // 语言
@@ -80,9 +82,20 @@ export default {
   methods: {
     // 由于静态组件没有混入公共函数，所以需要定义一个changeStyle方法，以免报错
     changeStyle (config) {
-      this.videoOptions.sources.type = config.customize.videoType
-      this.videoOptions.sources.type = config.customize.videoUrl
-      this.videoOptions.poster = config.customize.posterUrl
+      // Ensure sources array exists and has at least one element
+      if (!this.videoOptions.sources || this.videoOptions.sources.length === 0) {
+        this.videoOptions.sources = [{}]; // Initialize if needed
+      }
+      // Correctly update source properties
+      this.videoOptions.sources[0].type = config.customize.videoType;
+      this.videoOptions.sources[0].src = config.customize.videoUrl;
+      this.videoOptions.poster = config.customize.posterUrl;
+
+      // Optionally, re-initialize the player if necessary after source change
+      // This depends on how vue-video-player handles source updates.
+      // If the player doesn't update automatically, you might need:
+      // this.$refs.videoPlayer1?.load(); 
+      // this.$refs.videoPlayer1?.play(); 
     }
   }
 }

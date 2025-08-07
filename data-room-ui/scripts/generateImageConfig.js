@@ -64,7 +64,4 @@ if (!fs.existsSync(dir)) {
 // 将结果写入文件
 fs.writeFileSync(outputFile, configCode)
 
-console.log(`已生成配置：
-- ${options.length} 个分组
-- ${list.length} 个图片
-配置已保存到 ${outputFile}`)
+

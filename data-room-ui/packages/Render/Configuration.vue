@@ -3,7 +3,8 @@
     class="configuration-wrap"
     :class="{
       'active': activeCodes.includes(config.code) && (!isPreview),
-      'hover': hoverCode === config.code && (!isPreview)
+      'hover': hoverCode === config.code && (!isPreview),
+      'no-border': isNoBorderType(config.type)
     }"
     @mouseenter.stop="changeHover(config.code)"
     @mouseleave="changeHover('')"
@@ -12,7 +13,7 @@
   >
     <!--    <span class="point-text" v-show="hoverCode === config.code"> {{ getPoint(config) }}</span>-->
     <span
-      v-show="!isPreview && config.locked"
+      v-show="!isPreview && config.locked && !isNoBorderType(config.type)"
       class="locked-status el-icon-lock"
     />
     <slot />
@@ -62,12 +63,18 @@ export default {
       'changeZIndex',
       'changeLocked'
     ]),
+    // 判断是否为无边界类型
+    isNoBorderType(type) {
+      if (!type) return false;
+      return type === 'svgLine' || type === 'canvasLine' || type === 'fabricLine';
+    },
     // 改变hover的组件
     changeHover (code) {
       this.changeHoverCode(code)
     },
     // 改变激活的组件
     changeActive (config) {
+      if (!config || !config.code) return;
       this.changeActiveCode(config.code)
       this.$emit('openRightPanel', config)
     }
@@ -81,6 +88,17 @@ export default {
   width: 100%;
   border: 1px solid transparent;
   //cursor: move;
+
+  &.no-border {
+    border: none !important;
+    
+    &.active, &.hover {
+      border: none !important;
+    }
+    
+    // 确保无边界类型下事件仍然正常工作
+    pointer-events: auto !important;
+  }
 
   .opt-icon-wrap {
     z-index: 100;

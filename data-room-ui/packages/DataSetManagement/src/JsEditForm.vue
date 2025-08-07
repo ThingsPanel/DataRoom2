@@ -500,7 +500,6 @@ export default {
           try {
             this.typeName = this.$refs.categorySelectTree.getNode(this.dataForm.typeId).data.name
           } catch (error) {
-            console.error(error)
           }
         })
       }
@@ -672,7 +671,6 @@ export default {
               paramList = []
             }
           } else {
-            console.info(error)
             this.$message.error(`脚本执行错误，请检查脚本，具体错误：${error}`)
           }
           return

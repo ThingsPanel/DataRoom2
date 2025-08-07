@@ -10,26 +10,37 @@ export function getScreenInfo (code) {
 export function saveScreen (data) {
   data.chartList.forEach((item) => {
     if (item.type === 'customComponent') {
-      const a = JSON.parse(item.option)
-      if (a.data) {
-        a.data = []
+      // Attempt to parse item.option if it's a string
+      let chartOption = {};
+      if (typeof item.option === 'string') {
+        try {
+          chartOption = JSON.parse(item.option);
+        } catch (e) {
+          chartOption = {}; // Default to empty object on parse error
+        }
+      } else if (typeof item.option === 'object' && item.option !== null) {
+        chartOption = item.option; // Use as is if already an object
       }
-      item.option = JSON.stringify(a)
-      
-      // 根据组件类型判断是否需要简化 setting
-      // 如果有 type 字段且值为 threeJs，或者是特定名称组件，则保留完整 setting
-      if ((item.type === 'threeJs') || (item.name === 'PM25监测器' || item.name === 'ThreeComponent')) {
-        // 保留完整 setting 结构
+
+      // Clear data from chartOption if it exists, then stringify back
+      if (chartOption.data) {
+        chartOption.data = [];
+      }
+      item.option = JSON.stringify(chartOption);
+
+      // Retain full setting structure for 'vchartComponent' and 'threeJs' based on chartType
+      if (item.chartType === 'vchartComponent' || item.chartType === 'threeJs') {
+        // No change to item.setting, it remains as is
       } else {
-        // 只保留 field 和 value
-        item.setting = item.setting.map((x) => {
-          const { field, value } = x
-          return { field, value }
-        })
+        // For other types, simplify setting to only field and value
+        item.setting = item.setting?.map((x) => {
+          const { field, value } = x;
+          return { field, value };
+        }) || []; // Ensure if setting is null/undefined, it becomes an empty array
       }
     }
-  })
-  return Vue.prototype.$dataRoomAxios.post('/bigScreen/design/update', data)
+  });
+  return Vue.prototype.$dataRoomAxios.post('/bigScreen/design/update', data);
 }
 
 // 根据数据集获取数据集详情

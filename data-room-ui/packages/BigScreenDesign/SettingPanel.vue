@@ -111,7 +111,6 @@ export default {
   mounted () {
     // 监听EventBus的update-chart-data事件
     EventBus.$on('update-chart-data', (chartCode) => {
-      console.log('接收到更新数据请求:', chartCode);
       // 通知父组件需要更新数据
       this.$emit('updateDataSetting', { code: chartCode });
     });

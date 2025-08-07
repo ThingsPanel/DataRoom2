@@ -2,17 +2,18 @@
   <div
     style="width: 100%; height: 100%"
     class="bs-design-wrap"
+    :style="tableWrapperStyle"
   >
     <!-- <span style="color: aliceblue;font-size: 40px;">
       {{ columnData }}
     </span> -->
-    <!-- :border="this.config.customize.border" -->
     <el-table
       :id="config.code"
       ref="table"
       :key="updateKey"
       class="custom-table"
       height="100%"
+      :border="config.customize.border"
       :stripe="config.customize.stripe"
       :data="config.option.tableData"
       :header-cell-style="headerCellStyle"
@@ -26,7 +27,8 @@
         show-overflow-tooltip
         :prop="col.alias"
         :label="getLabel(col)"
-        align="center"
+        :align="getColumnAlign(col.alias)"
+        :width="getColumnWidth(col.alias)"
       />
     </el-table>
   </div>
@@ -65,6 +67,14 @@ export default {
     }
   },
   computed: {
+    tableWrapperStyle() {
+      if (this.config.customize.border && this.config.customize.borderColor) {
+        return {
+          '--configured-table-border-color': this.config.customize.borderColor
+        }
+      }
+      return {}
+    },
     headerCellStyle () {
       const headerBackgroundColor = {
         light: '#ffffff',
@@ -80,7 +90,7 @@ export default {
             : this.headerCellStyleObj.backgroundColor
       }
       const style = {
-        height: '48px',
+        height: `${this.config.customize.headerRowHeight}px`,
         borderBottom: 'solid 2px #007aff',
         backgroundColor:
           this.customTheme !== 'custom'
@@ -98,7 +108,6 @@ export default {
   },
   watch: {
     activeItemConfig (val) {
-      console.dir(val)
     }
   },
   created () {},
@@ -107,6 +116,20 @@ export default {
   },
   beforeDestroy () { },
   methods: {
+    getColumnSettings (key) {
+      if (this.config.customize.columnSettings && this.config.customize.columnSettings.length > 0) {
+        const setting = this.config.customize.columnSettings.find(s => s.key === key)
+        return setting || {}
+      }
+      return {}
+    },
+    getColumnAlign (key) {
+      return this.getColumnSettings(key).align || 'center' // 默认居中
+    },
+    getColumnWidth (key) {
+      const width = this.getColumnSettings(key).width
+      return width || null // 如果width是null或者0，el-table会自适应
+    },
     cellStyle ({ row, column, rowIndex, columnIndex }) {
       const bodyBackgroundColor = {
         light: '#ffffff',
@@ -116,7 +139,9 @@ export default {
       const style = {
         backgroundColor: '',
         color: this.config.customize.bodyFontColor || initColor,
-        fontSize: this.config.customize.bodyFontSize + 'px' || '14px'
+        fontSize: this.config.customize.bodyFontSize + 'px' || '14px',
+        paddingTop: `${this.config.customize.bodyRowVerticalPadding}px`,
+        paddingBottom: `${this.config.customize.bodyRowVerticalPadding}px`
       }
       // 如果设置了奇偶行的背景颜色，则以奇偶行的背景颜色为主
       if (rowIndex % 2 && this.config.customize.evenRowBackgroundColor) {
@@ -261,11 +286,44 @@ export default {
   background-color: transparent;
 }
 
+// Overriding el-table border colors when border is enabled and color is configured
+::v-deep .el-table.el-table--border {
+  border: 1px solid var(--configured-table-border-color, #EBEEF5) !important;
+}
+
+::v-deep .el-table--border th,
+::v-deep .el-table--border td,
+::v-deep .el-table th.is-leaf, // For header bottom border which might not be covered by th
+::v-deep .el-table td.el-table__cell {
+  border-bottom: 1px solid var(--configured-table-border-color, #EBEEF5) !important;
+}
+
+::v-deep .el-table--border th.el-table__cell, 
+::v-deep .el-table--border td.el-table__cell {
+  border-right: 1px solid var(--configured-table-border-color, #EBEEF5) !important;
+}
+
+// Specific overrides for left border of the first column cells/header and top border of header
+::v-deep .el-table--border .el-table__header-wrapper th:first-child,
+::v-deep .el-table--border .el-table__body-wrapper tr td:first-child {
+  border-left: 1px solid var(--configured-table-border-color, #EBEEF5) !important;
+}
+
 // ::v-deep .el-table th.gutter {
 //   border-bottom: 2px solid var(--bs-el-color-primary) !important;
 // }
 ::v-deep .el-table__body {
   height: 100%;
+  // 2. 设置 gutter 列的宽度
+  // 如果 Element UI 未能正确匹配自定义滚动条宽度，则手动设置
+  // 默认情况下，Element UI 会尝试自动适配，可以先不设置width，观察效果
+  // 如果对不齐，再取消注释并设置为实际滚动条宽度
+  th.el-table__cell.gutter,
+  colgroup.el-table__key--ref.gutter {
+    width: 10px !important; // 与下方自定义的滚动条宽度保持一致
+    // border-bottom: none !important; // gutter列本身不需要底部边框，如果有的话
+    // background-color: transparent !important; // gutter列背景通常透明
+  }
 }
 
 ::v-deep .el-table .el-table__header tr {

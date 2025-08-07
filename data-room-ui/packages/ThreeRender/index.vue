@@ -47,11 +47,9 @@ export default {
     chartInit () {
 
       let config = this.config
-      console.log('config1',config)
       // key和code相等，说明是一进来刷新，调用list接口
       if (this.config.code === this.config.key || this.isPreview) {
         // 改变样式
-        console.log('config2',config)
         config = this.changeStyle(config)
         // 改变数据
         config.loading = true
@@ -89,43 +87,103 @@ export default {
         config.option.customize = {}
       }
       // 记录接收到的数据
-      console.log('ThreeRender接收到数据:', data)
-      // 处理数据更新PM2.5值
+
+      // --- 再次确保同步逻辑存在 --- 
       try {
-        // 如果有基本数据且有dataHandler
-        if (config.dataHandler && data) {
-          // 执行数据处理函数，类似进度环图
-          try {
-            // eslint-disable-next-line no-unused-vars
-            const option = config.option
-            // eslint-disable-next-line no-unused-vars
-            const setting = config.setting
-            // 创建处理环境
-            const dataHandlerFn = new Function('data', 'option', 'setting', config.dataHandler)
-            dataHandlerFn(data.data || data, option, setting)
-          } catch (e) {
-            console.error('执行dataHandler出错:', e)
-          }
-        } else if (data) {
-          // 没有dataHandler时进行简单数据提取
-          let pm25Value = null
-          // 尝试从不同格式的数据中提取PM2.5值
-          if (data.data && Array.isArray(data.data) && data.data.length > 0) {
-            // 数据在data.data数组中
-            pm25Value = data.data[0].value || data.data[0].pm25Value
-          } else if (typeof data === 'object') {
-            // 数据可能直接在对象上
-            pm25Value = data.value || data.pm25Value
-          }
-          // 如果找到值，更新配置
-          if (pm25Value !== null && pm25Value !== undefined) {
-            config.option.customize.pm25Value = Number(pm25Value)
-          }
-        }
-      } catch (error) {
-        console.error('处理PM2.5数据失败:', error)
+          if (config && config.setting) { // 检查 config 和 config.setting
+              // 确保调用的是 this 上的方法，并且重新赋值 config
+              config = this.transformSettingToOption(config, 'data');
+          } 
+      } catch (e) {
       }
-      return config
+      // --- 同步逻辑结束 ---
+
+      // --- 获取原始数据源 ---
+      let sourceDataForProcessing = data?.data || data;
+
+      try { // Outer try block for the whole data processing section
+        // --- 步骤 1: 如果 dataHandler 存在，执行它来修改 sourceDataForProcessing ---
+        if (config.dataHandler && sourceDataForProcessing) {
+          const option = config.option;
+          const setting = config.setting;
+          const dataHandlerFn = new Function('data', 'option', 'setting', config.dataHandler);
+          dataHandlerFn(sourceDataForProcessing, option, setting);
+        }
+        // --- 步骤 2: 始终执行默认的绑定映射逻辑（如果数据存在） ---
+        if (sourceDataForProcessing) {
+          const processedData = [];
+          const sourceData = sourceDataForProcessing;
+
+          const bindingConfig = config.option?.customize?.binding;
+          const dataPoints = config.option?.customize?.dataPoints;
+
+          if (bindingConfig && dataPoints) {
+            if (sourceData) {
+              dataPoints.forEach((point, pointIndex) => {
+                 if (point.dataStructure && Array.isArray(point.dataStructure)) {
+                   point.dataStructure.forEach((structureItem, structIndex) => {
+                     const bindingKey = structureItem.bindingKey;
+                     const dataField = bindingConfig[bindingKey];
+
+                     if (bindingKey && dataField) {
+                       let value = undefined;
+                       let found = false;
+
+                       // --- Extract data from sourceData ---
+                       if (Array.isArray(sourceData)) {
+                          const dataItem = sourceData.find(item => item && (item.id === bindingKey || item.key === bindingKey));
+                          if (dataItem && dataItem.hasOwnProperty(dataField)) {
+                             value = dataItem[dataField];
+                             found = true;
+                          } else {
+                             if(sourceData.length > 0 && sourceData[0] && sourceData[0].hasOwnProperty(dataField)) {
+                                value = sourceData[0][dataField];
+                                found = true;
+                             } 
+                          }
+                       } else if (typeof sourceData === 'object' && sourceData !== null) {
+                          if (sourceData.hasOwnProperty(dataField)) {
+                             value = sourceData[dataField];
+                             found = true;
+                          } else if (sourceData.hasOwnProperty(bindingKey)) {
+                            value = sourceData[bindingKey];
+                            found = true;
+                          } 
+                       } 
+                       // --- End data extraction ---
+
+                       if (found && value !== undefined && value !== null) {
+                         processedData.push({
+                           id: bindingKey,
+                           value: Number(value)
+                         });
+                       } 
+                     } 
+                   }); // End structureItem loop
+                 } 
+             }); // End dataPoints loop
+           } 
+
+          // --- 更新 config.option.data ---
+          if (processedData.length > 0) {
+            config.option.data = processedData;
+            this.hasData = true;
+          } else {
+            config.option.data = [];
+            this.hasData = false;
+          }
+        } else {
+           config.option.data = [];
+           this.hasData = false;
+        }
+      }
+      } catch (error) { // Outer catch for the whole section
+        // Ensure data is in a reasonable state even if outer try fails
+        config.option.data = config.option.data || [];
+        this.hasData = !!(config.option.data && config.option.data.length > 0);
+      } // End outer catch
+
+      return config;
     },
     
     // 组件的样式改变，返回改变后的config
@@ -155,7 +213,6 @@ export default {
           try {
             config.theme = settingToTheme(_.cloneDeep(config), this.customTheme)
           } catch (e) {
-            console.error('设置主题失败:', e)
           }
         }
 
@@ -167,13 +224,11 @@ export default {
               this.changeActiveItemConfig(config)
             }
           } catch (e) {
-            console.error('更新配置失败:', e)
           }
         }
 
         return config
       } catch (error) {
-        console.error('changeStyle方法执行出错:', error)
         return config || this.config || {}
       }
     },
@@ -181,37 +236,32 @@ export default {
     // 转换设置到选项
     transformSettingToOption (config, tabName) {
       try {
-        if (!config || !config.setting) return config
+        if (!config || !config.setting) {
+            return config
+        }
 
-        // 直接在原始对象上操作，不创建新副本
+
         config.setting.filter(item => item.tabName === tabName).forEach(item => {
           if (item.optionField) {
             const fields = item.optionField.split('.')
-            
-            // 确保 config.option 存在
-            if (!config.option) {
-              config.option = {}
-            }
-            
+
+            if (!config.option) { config.option = {} }
             let current = config.option
-            
-            // 创建必要的嵌套对象
+
             for (let i = 0; i < fields.length - 1; i++) {
               if (!current[fields[i]]) {
                 current[fields[i]] = {}
               }
               current = current[fields[i]]
             }
-            
-            // 设置值
+
             const lastField = fields[fields.length - 1]
             current[lastField] = item.value
-          }
+          } 
         })
-        
+
         return config
       } catch (error) {
-        console.error('transformSettingToOption方法执行出错:', error)
         return config
       }
     }

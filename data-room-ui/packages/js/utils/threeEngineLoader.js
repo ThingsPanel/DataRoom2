@@ -14,7 +14,6 @@ export async function getLocalEngineList () {
     { label: '基础引擎', value: 'basic-engine.js' }
   ]
   
-  console.log('返回默认引擎列表:', engines)
   return engines
 }
 
@@ -24,7 +23,6 @@ export async function getLocalEngineList () {
  * @returns {Promise<Object>} 返回引擎对象
  */
 export async function loadLocalEngine (engineName) {
-  console.log('加载本地引擎:', engineName)
   
   // 默认返回一个空对象，因为实际加载过程已在ThreeRender组件中处理
   return {}

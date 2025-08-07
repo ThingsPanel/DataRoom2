@@ -3,6 +3,8 @@ name: Backend Build and Deploy
 on:
   push:
     branches: [ 2.1.0.RELEASE.CLOUD ]
+    paths:
+      - 'DataRoom/**'
   workflow_dispatch:
 
 jobs:

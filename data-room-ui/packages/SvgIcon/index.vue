@@ -11,6 +11,7 @@
 </template>
 
 <script>
+
 export default {
   name: 'IconSvg',
   props: {
@@ -24,10 +25,10 @@ export default {
     }
   },
   computed: {
-    getName () {
+    getName() {
       return `#icon-${this.name}`
     },
-    getClassName () {
+    getClassName() {
       return [
         'icon-svg',
         `icon-svg__${this.name}`,

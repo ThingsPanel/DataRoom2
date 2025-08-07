@@ -5,10 +5,10 @@
 -->
 
 <template>
-  <div class="content">
+  <div class="content" :class="{'special-content': isSpecialType}">
     <!-- 旋转控制器，只在设计模式下且组件被选中时显示 -->
     <div 
-      v-if="isSelected && !isPreviewMode" 
+      v-if="isSelected && !isPreviewMode && !isSpecialType" 
       class="rotate-handler"
       @mousedown.stop="startRotate"
       @dblclick.stop="resetRotate"
@@ -19,7 +19,7 @@
 
     <component
       :is="resolveComponentType(config.border.type)"
-      v-if="config.border&&config.border.type"
+      v-if="config.border&&config.border.type && !isSpecialType"
       :id="`border${config.code}`"
       :ref="`border${config.code}`"
       :key="`border${config.key}`"
@@ -27,6 +27,7 @@
     />
     <div
       class="render-item-wrap"
+      :class="{'special-wrap': isSpecialType}"
       :style="wrapStyle"
     >
       <component
@@ -36,7 +37,11 @@
         :key="config.key"
         :config="config"
         :selected="isSelected && !isPreviewMode"
+        :page-width="pageWidth"
+        :page-height="pageHeight"
+        :active-code="activeCode"
         @styleHandler="styleHandler"
+        @bounds-update="handleBoundsUpdate"
         @error="handleError"
       />
     </div>
@@ -48,11 +53,15 @@ import { mapMutations } from 'vuex'
 import { resolveComponentType } from 'data-room-ui/js/utils'
 import pcComponent from 'data-room-ui/js/utils/componentImport'
 import { dataInit, destroyedEvent } from 'data-room-ui/js/utils/eventBus'
+import chartContextMenu from 'data-room-ui/js/mixins/chartContextMenu'
 import CustomComponent from '../PlotRender/index.vue'
 import EchartsComponent from '../EchartsRender/index.vue'
 import ThreeComponent from '../ThreeRender/index.vue'
+import VchartCustomComponent from '../VchartRender/index.vue'
 import Svgs from '../Svgs/index.vue'
 import RemoteComponent from 'data-room-ui/RemoteComponents/index.vue'
+import BasicComponentFabricLine from '../BasicComponents/FabricLine/index.vue'
+
 const components = {}
 for (const key in pcComponent) {
   if (Object.hasOwnProperty.call(pcComponent, key)) {
@@ -62,13 +71,16 @@ for (const key in pcComponent) {
 export default {
   name: 'RenderCard',
   // mixins: [commonMixins],
+  mixins: [chartContextMenu],
   components: {
     ...components,
     CustomComponent,
     Svgs,
     RemoteComponent,
     EchartsComponent,
-    ThreeComponent
+    ThreeComponent,
+    VchartCustomComponent,
+    BasicComponentFabricLine
   },
   props: {
     // 卡片的属性
@@ -79,6 +91,15 @@ export default {
     ruleKey: {
       type: Number,
       default: 0
+    },
+    // 新增：接收页面宽度和高度
+    pageWidth: {
+      type: Number,
+      default: Infinity
+    },
+    pageHeight: {
+      type: Number,
+      default: Infinity
     }
   },
   data () {
@@ -115,6 +136,10 @@ export default {
       }
       
       return previewPaths.includes(currentPath) || inBigScreenRun;
+    },
+    // 添加计算属性判断是否为特殊类型
+    isSpecialType() {
+      return this.config.type === 'svgLine' || this.config.type === 'canvasLine' || this.config.type === 'fabricLine';
     },
     wrapStyle() {
       return this.getWrapStyle()
@@ -220,17 +245,29 @@ export default {
       document.removeEventListener('mouseup', this.stopRotate)
     },
     handleError(error) {
-      console.warn('Chart render error:', error)
       // 可以在这里添加错误处理逻辑，比如显示错误提示或重置图表
     },
     getWrapStyle() {
       try {
+        // 检查是否为特殊类型
+        const isSpecialType = this.config.type === 'svgLine' || this.config.type === 'canvasLine';
+        
+        if (isSpecialType) {
+          // 对于特殊类型组件，应用不同的样式
+          return {
+            height: '100%',
+            width: '100%',
+            padding: '0',
+            overflow: 'visible' // 允许内容溢出
+          };
+        }
+        
+        // 常规组件使用原有样式
         return {
           height: `calc(100% - ${this.getTitleHeight()}px)`,
           padding: this.getPadding()
         }
       } catch (error) {
-        console.warn('Style calculation error:', error)
         return {}
       }
     },
@@ -253,76 +290,49 @@ export default {
     },
     // 添加获取组件类型的方法
     getComponentType(config) {
-      // 打印接收到的组件配置，便于调试
-      console.log('渲染组件配置:', {
-        type: config.type,
-        category: config.category,
-        className: config.className,
-        name: config.name,
-        title: config.title,
-        option: config.option
-      })
-      
-      // 优先根据type直接判断组件类型（最准确的方式）
-      if (config.type === 'echartsComponent') {
-        console.log('1. 根据type=echartsComponent判断为Echarts组件')
-        return 'EchartsComponent'
+      // 优先使用 config.chartType 进行判断
+      if (config?.chartType === 'vchartComponent') {
+        return 'VchartCustomComponent';
       }
-      
-      if (config.type === 'threeComponent' || config.type === 'threeJs') {
-        console.log('2. 根据type=threeComponent或threeJs判断为3D模型组件')
-        return 'ThreeComponent'
+      if (config?.chartType === 'threeJs') { // Also prioritize chartType for ThreeJs
+        return 'ThreeComponent';
       }
-      
-      // 然后根据category判断
-      if (config.category) {
-        if (config.category.includes('模型')) {
-          console.log('3. 根据category包含"模型"判断为3D模型组件')
-          return 'ThreeComponent'
-        }
-        
-        if (config.category.includes('3D图')) {
-          console.log('4. 根据category包含"3D图"判断为Echarts组件')
-          return 'EchartsComponent'
-        }
+
+      // 保留原有对 comType 的判断作为后备（如果其他组件类型仍使用 comType）
+      const comType = config?.comType;
+      if (comType === 'echartsComponent') {
+        return 'EchartsComponent';
+      } else if (comType === 'threeComponent') {
+        return 'ThreeComponent';
+      } else if (comType === 'customComponent') {
+        return 'CustomComponent';
+      } else if (comType === 'vchartComponent') { // Fallback for comType if chartType wasn't set
+        return 'VchartCustomComponent';
       }
-      
-      // 再根据className和类型组合条件判断
-      if (config.className && config.className.includes('CustomComponentChart')) {
-        // 根据名称进行判断，但要更精确
+
+      // 其他基于 type 的判断逻辑 (保持不变, 但在 chartType/comType 之后)
+      let resolvedComponentType = null;
+      if (config?.type === 'echartsComponent') { 
+        resolvedComponentType = 'EchartsComponent';
+      } else if (config?.type === 'vchartComponent') { // Fallback for type
+        resolvedComponentType = 'VchartCustomComponent';
+      } else if (config?.category?.includes('模型')) { // This seems specific to ThreeComponent
+        resolvedComponentType = 'ThreeComponent';
+      } else if (config?.className?.includes('CustomComponentChart')) {
         if (config.name) {
-          // 判断是否为Echarts 3D图表
-          if (config.name.startsWith('3D') && (
-            config.name.includes('柱状图') || 
-            config.name.includes('图表'))) {
-            console.log('5. 根据name判断为Echarts 3D组件')
-            return 'EchartsComponent'
-          }
-          
-          // 判断是否为ThreeJS 3D模型
-          if (config.name === 'PM25监测器' || 
-            (config.name.includes('模型') && !config.name.includes('图'))) {
-            console.log('6. 根据name判断为ThreeJS 3D模型组件')
-            return 'ThreeComponent'
-          }
-        }
-        
-        // 根据title判断
-        if (config.title) {
-          if (config.title.includes('3D') && (
-            config.title.includes('柱状图') || 
-            config.title.includes('图表'))) {
-            console.log('7. 根据title判断为Echarts 3D组件')
-            return 'EchartsComponent'
+          if (config.name.startsWith('3D') && (config.name.includes('柱状图') || config.name.includes('图表'))) {
+            resolvedComponentType = 'EchartsComponent';
+          } else if (config.name.includes('模型') && !config.name.includes('图')) {
+            resolvedComponentType = 'ThreeComponent';
           }
         }
       }
       
-      // 最后使用默认的resolveComponentType方法
-      const resolvedType = this.resolveComponentType(config.type)
-      console.log('8. 使用默认resolveComponentType解析结果:', resolvedType)
-      
-      return resolvedType
+      // Fallback to default resolver if no specific type matched by above logic
+      if (!resolvedComponentType) {
+        resolvedComponentType = this.resolveComponentType(config?.type);
+      }
+      return resolvedComponentType;
     },
     // 添加 changeStyle 方法
     changeStyle(config, isUpdateTheme) {
@@ -339,9 +349,17 @@ export default {
         }
         return config
       } catch (error) {
-        console.error('RenderCard changeStyle 执行出错:', error, config)
         return config
       }
+    },
+    // 添加处理 bounds-update 事件的方法
+    handleBoundsUpdate(payload) {
+      // 向上冒泡事件，并包含 code 和新的负载结构
+      this.$emit('request-layout-and-points-update', {
+        code: this.config.code, // 包含组件的 code
+        layout: payload.layout, // 新的绝对容器布局 {x, y, w, h}
+        relativePoints: payload.relativePoints // 新的相对点坐标
+      });
     }
   }
 }
@@ -354,6 +372,11 @@ export default {
   height: 100%;
   display: flex;
   align-items: flex-end;
+
+  &.special-content {
+    overflow: visible;
+    border: none;
+  }
 
   .rotate-handler {
     position: absolute;
@@ -401,6 +424,10 @@ export default {
   position: relative;
   overflow: hidden;
   box-sizing: border-box;
-  padding-bottom: 15px;
+  
+  &.special-wrap {
+    overflow: visible;
+    border: none;
+  }
 }
 </style>

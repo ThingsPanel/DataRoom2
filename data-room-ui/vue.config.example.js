@@ -182,6 +182,7 @@ const originalConfig = {
       .add(resolve('packages/assets/images/bigScreenIcon/svg'))
       .add(resolve('packages/Svgs/svg'))
       .add(resolve('packages/assets/images/alignIcon/svg'))
+      .add(resolve('packages/BasicComponents/SvgIcon/icons'))
       .end()
 
     config.module
@@ -192,12 +193,24 @@ const originalConfig = {
       .add(resolve('packages/assets/images/bigScreenIcon/svg'))
       .add(resolve('packages/Svgs/svg'))
       .add(resolve('packages/assets/images/alignIcon/svg'))
+      .add(resolve('packages/BasicComponents/SvgIcon/icons'))
       .end()
       .use('svg-sprite-loader')
       .loader('svg-sprite-loader')
       .options({
         symbolId: 'icon-[name]'
       })
+      .end()
+      
+    // 忽略工具脚本文件
+    config.module
+      .rule('exclude-tools')
+      .test(/(_[^/]*\.js|tools\/.*\.js)$/)
+      .exclude
+      .add(/node_modules/)
+      .end()
+      .use('ignore-loader')
+      .loader('ignore-loader')
       .end()
   },
   // 在这里配置需要对node_modules中需要进行语法转义的依赖

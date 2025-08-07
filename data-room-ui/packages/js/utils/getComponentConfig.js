@@ -16,10 +16,36 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+      case 'texts10':        // 文本
+      return {
+        name: '文本10',
+        title: '文本10',
+        icon: Icon.getNameList()[0],
+        className:
+          'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
     case 'numbers': // 数字
       return {
         name: '数字',
         title: '数字',
+        icon: Icon.getNameList()[28],
+        className:
+          'com.gccloud.dataroom.core.module.chart.components.ScreenNumbersChart',
+        w: 200,
+        h: 60,
+        x: 0,
+        y: 0,
+        type
+      }
+    case 'timestamp': // 时间戳
+      return {
+        name: '时间戳（专用）',
+        title: '时间戳（专用）',
         icon: Icon.getNameList()[28],
         className:
           'com.gccloud.dataroom.core.module.chart.components.ScreenNumbersChart',
@@ -209,6 +235,18 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+      case 'fabricLine':      // SVG线条
+      return {
+        name: 'fabri线条',
+        title: 'fabri线条',
+        icon: Icon.getNameList()[39],
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 200,
+        h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
     case 'canvasLine': // Canvas线条
       return {
         name: 'Canvas线条',
@@ -217,6 +255,19 @@ export default function getComponentConfig (type) {
         className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
         w: 200,
         h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
+    case 'svgIcon': // SVG 图标
+      return {
+        name: 'SVG图标',
+        title: 'SVG图标',
+        icon: Icon.getNameList()[5], // Placeholder icon, adjust as needed
+        className:
+          'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 100, // Default width on canvas
+        h: 100, // Default height on canvas
         x: 0,
         y: 0,
         type
@@ -358,6 +409,19 @@ export default function getComponentConfig (type) {
         y: 0,
         type
       }
+    case 'indicatorCard5': // 指标卡二
+      return {
+        name: '对象数据卡',
+        title: '对象数据卡',
+        icon: Icon.getNameList()[31],
+        // img: require('data-room-ui/assets/images/cardImg/card2.png'),
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenIndicatorCardChart',
+        w: 300,
+        h: 114,
+        x: 0,
+        y: 0,
+        type
+      }
     case 'indexCard':     // 指标卡三
       return {
         name: '指标卡3',
@@ -380,6 +444,34 @@ export default function getComponentConfig (type) {
         className: 'com.gccloud.dataroom.core.module.chart.components.ScreenIndexCardChart',
         w: 300,
         h: 114,
+        x: 0,
+        y: 0,
+        type
+      }
+
+    // New MultiMetricCard case
+    case 'multiMetricCard':  // 多指标卡片
+      return {
+        name: '多指标卡片',
+        title: '多指标卡片',
+        icon: Icon.getNameList()[30], // Reuse an existing card icon for now
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenIndexCardChart', // Assuming a corresponding Java class name
+        w: 350, // Default width based on example
+        h: 250, // Default height based on example
+        x: 0,
+        y: 0,
+        type
+      }
+
+    // New WeatherIcon case
+    case 'weatherIcon':  // 天气图标
+      return {
+        name: '天气图标',
+        title: '天气图标',
+        icon: Icon.getNameList()[30], // Reuse an existing icon for now
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenTextChart', // Assuming a Java class name
+        w: 80, // Default size suitable for an icon
+        h: 80,
         x: 0,
         y: 0,
         type
@@ -472,6 +564,18 @@ export default function getComponentConfig (type) {
         className: 'com.gccloud.dataroom.core.module.chart.components.ThemeSwitcherChart',
         w: 200,
         h: 100,
+        x: 0,
+        y: 0,
+        type
+      }
+    case 'modalComponent':  // 弹窗组件
+      return {
+        name: '弹窗表格',
+        title: '弹窗表格',
+        icon: Icon.getNameList()[43],
+        className: 'com.gccloud.dataroom.core.module.chart.components.ScreenBorderChart',
+        w: 600,
+        h: 400,
         x: 0,
         y: 0,
         type

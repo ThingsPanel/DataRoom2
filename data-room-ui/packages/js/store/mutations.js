@@ -107,6 +107,7 @@ export default {
         if (chart.code === itemConfig.parentCode) {
           chart.customize.tabList.forEach((tabItem, i) => {
             if (tabItem.chartCode === itemConfig.code) {
+              // Tab内部逻辑保持 Vue.set 替换对象可能更安全，以防深层结构问题
               Vue.set(state.pageInfo.chartList[index].customize.tabList[i], 'chart', {
                 ...state.pageInfo.chartList[index].customize.tabList[i].chart,
                 ...itemConfig
@@ -117,24 +118,34 @@ export default {
       })
     } else {
       // 如果是一般的组件
-      let index = null
-      index = state.pageInfo.chartList.findIndex(
+      const index = state.pageInfo.chartList.findIndex(
         item => item.code === itemConfig.code
-      )
-      Vue.set(state.pageInfo.chartList, index, {
-        ...state.pageInfo.chartList[index],
-        ...itemConfig
-      })
-      // 对比之前的config和当前的itemConfig的xywh，如果有变化，就改变卡尺对齐线
-      const oldConfig = state.pageInfo.chartList[index]
-      if (
-        oldConfig.x !== itemConfig.x ||
-        oldConfig.y !== itemConfig.y ||
-        oldConfig.w !== itemConfig.w ||
-        oldConfig.h !== itemConfig.h
-      ) {
-        // 改变当前组件的卡尺对齐线
-        changePresetLine(state, itemConfig)
+      );
+      if (index !== -1) {
+        const targetChart = state.pageInfo.chartList[index];
+        const oldX = targetChart.x;
+        const oldY = targetChart.y;
+        const oldW = targetChart.w;
+        const oldH = targetChart.h;
+
+        // 直接修改现有对象的属性，而不是替换整个对象
+        for (const key in itemConfig) {
+          if (Object.prototype.hasOwnProperty.call(itemConfig, key)) {
+            // 使用 Vue.set 来确保新增的属性也是响应式的 (虽然大部分情况是修改现有属性)
+            Vue.set(targetChart, key, itemConfig[key]);
+          }
+        }
+
+        // 对比逻辑保持不变，但使用更新后的 targetChart 的属性
+        if (
+          targetChart.x !== oldX || // 比较更新后的值和之前的值
+          targetChart.y !== oldY ||
+          targetChart.w !== oldW ||
+          targetChart.h !== oldH
+        ) {
+          // 改变当前组件的卡尺对齐线
+          changePresetLine(state, targetChart); // 使用更新后的 targetChart
+        }
       }
     }
   },

@@ -413,13 +413,11 @@ export default {
         
         // 使用我们自己的定时器而不是events.js中的
         this.dragTimeoutId = setTimeout(() => {
-          console.log('重置拖拽状态');
           this.justFinishedDragging = false;
         }, 300);
       } else {
         // 如果没有返回timeoutId，也要设置一个定时器确保标志被重置
         this.dragTimeoutId = setTimeout(() => {
-          console.log('强制重置拖拽状态');
           this.justFinishedDragging = false;
         }, 300);
       }
@@ -464,12 +462,7 @@ export default {
       // 如果不是编辑状态或正在拖拽，不添加新点
       if (!this.isEditing || this.isDragging) return;
       
-      console.log('处理点击事件，当前状态:', {
-        lineType: this.lineType,
-        justFinishedDragging: this.justFinishedDragging,
-        pointsCount: this.points.length,
-        points: this.points.map(p => `(${p.x.toFixed(0)},${p.y.toFixed(0)})`)
-      });
+   
       
       // 手动强制重置justFinishedDragging标志，确保它不会阻止添加点
       this.justFinishedDragging = false;
@@ -478,15 +471,12 @@ export default {
 
       // 获取点击位置
       const point = this.svgDraw.point(event.clientX, event.clientY);
-      console.log('点击位置:', { x: point.x, y: point.y });
       
       // 查找被点击的线段
       let clickedSegmentIndex = this.findClickedLineSegment(point.x, point.y);
-      console.log('被点击的线段索引:', clickedSegmentIndex);
       
       // 如果没有找到线段，对于特殊线型使用更简单的距离计算再次尝试
       if (clickedSegmentIndex === -1 && (this.lineType === 'smooth' || this.lineType === 'step')) {
-        console.log('使用简化算法重新查找线段');
         // 寻找距离最近的线段
         let minDist = Number.MAX_VALUE;
         for (let i = 0; i < this.points.length - 1; i++) {
@@ -515,7 +505,6 @@ export default {
             }
           }
           
-          console.log(`线段 ${i} 距离:`, dist);
           if (dist < minDist) {
             minDist = dist;
             clickedSegmentIndex = i;
@@ -527,7 +516,6 @@ export default {
           clickedSegmentIndex = -1;
         }
         
-        console.log('重新计算后的索引:', clickedSegmentIndex, '距离:', minDist);
       }
 
       // 复制点数组并添加新点
@@ -558,13 +546,11 @@ export default {
           newPoint = this.getProjectionPoint(point.x, point.y, p1, p2);
         }
         
-        console.log('在线段上添加投影点:', { index: clickedSegmentIndex + 1, point: newPoint });
 
         // 在点击的线段后插入新点
         newPoints.splice(clickedSegmentIndex + 1, 0, newPoint);
       } else {
         // 在末尾添加新点
-        console.log('在末尾添加点:', { x: point.x, y: point.y });
         newPoints.push({ x: point.x, y: point.y });
       }
       
@@ -578,7 +564,6 @@ export default {
       this.checkAndAdjustSize();
       this.refreshAnimation();
       
-      console.log('点击处理完成，点数量:', this.points.length);
     },
 
     deletePoint(index) {
@@ -618,10 +603,8 @@ export default {
       let adjustedThreshold = threshold;
       if (this.lineType === 'smooth' || this.lineType === 'step') {
         adjustedThreshold = threshold * 1.5; // 增加50%的检测范围
-        console.log(`特殊线型 ${this.lineType}，调整阈值为:`, adjustedThreshold);
       }
       
-      console.log('查找线段，使用线型:', this.lineType, '阈值:', adjustedThreshold);
       return findClickedLineSegment(x, y, this.points, adjustedThreshold);
     },
 
@@ -807,7 +790,6 @@ export default {
 
     // 添加重置拖拽标志的方法
     resetDragFlag() {
-      console.log('手动重置拖拽标志');
       this.justFinishedDragging = false;
     },
   }

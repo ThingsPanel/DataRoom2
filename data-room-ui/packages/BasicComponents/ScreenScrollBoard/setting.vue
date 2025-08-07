@@ -118,6 +118,46 @@
               :inactive-value="false"
             />
           </el-form-item>
+          <el-form-item
+            label="表头文字大小"
+            label-width="100px"
+          >
+            <el-input-number
+              v-model="config.customize.headerFontSize"
+              :min="10"
+              class="bs-el-input-number"
+              placeholder="请输入表头文字大小"
+            />
+          </el-form-item>
+          <el-form-item
+            label="表头文字颜色"
+            label-width="100px"
+          >
+            <ColorPicker
+              v-model="config.customize.headerColor"
+              :predefine="predefineThemeColors"
+            />
+          </el-form-item>
+          <el-form-item
+            label="内容文字大小"
+            label-width="100px"
+          >
+            <el-input-number
+              v-model="config.customize.dataFontSize"
+              :min="10"
+              class="bs-el-input-number"
+              placeholder="请输入内容文字大小"
+            />
+          </el-form-item>
+          <el-form-item
+            label="内容文字颜色"
+            label-width="100px"
+          >
+            <ColorPicker
+              v-model="config.customize.dataColor"
+              :predefine="predefineThemeColors"
+            />
+          </el-form-item>
         </div>
       </el-form>
     </el-form>

@@ -8,125 +8,105 @@
         body { 
             margin: 0; 
             overflow: hidden; 
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Nicer font */
+            background-color: #333366; /* Match scene background */
         }
         canvas { 
             display: block; 
         }
-        #controls {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 15px;
-            border-radius: 10px;
-            z-index: 100;
-        }
-        input, button {
-            margin: 5px 0;
-            padding: 8px;
-            border-radius: 4px;
-            border: 1px solid #555;
-            width: 100%;
-        }
-        button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        button:hover {
-            background: #0b7dda;
-        }
         #status {
             position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 300px;
-            transition: opacity 0.5s;
-        }
-        .control-group {
-            margin-bottom: 10px;
-        }
-        .label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="range"] {
-            width: 100%;
+            bottom: 15px;
+            left: 15px;
+            background: rgba(0,0,0,0.75);
+            color: #eee;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            transition: opacity 0.5s ease-out;
+            z-index: 100; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         .data-tag {
             position: absolute;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px;
-            border-radius: 5px;
+            background: linear-gradient(145deg, rgba(40, 40, 70, 0.85), rgba(60, 60, 90, 0.9)); /* Gradient background */
+            color: #f0f0f0;
+            padding: 10px 15px;
+            border-radius: 8px;
             font-size: 14px;
             pointer-events: auto;
             cursor: pointer;
-            transition: all 0.3s;
-            border: 2px solid #22cc88;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); /* Smoother transition */
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Subtle border */
+            border-left-width: 5px; /* Status color indicator on the left */
             transform: translate(-50%, -50%);
             z-index: 10;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4); /* Deeper shadow */
+            min-width: 150px; /* Ensure minimum width */
+            text-align: left;
         }
         .data-tag .title {
-            font-weight: bold;
-            font-size: 14px;
-            margin-bottom: 3px;
+            font-weight: 600; /* Slightly bolder */
+            font-size: 13px; /* Smaller title */
+            margin-bottom: 5px;
+            color: #aaa; /* Dim title slightly */
+            display: block;
         }
         .data-tag .value {
-            font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 5px;
+            font-weight: 700; /* Bolder value */
+            font-size: 18px; /* Larger value */
+            margin-bottom: 3px;
+            display: block;
+            letter-spacing: 0.5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); /* Text shadow for pop */
         }
         .data-tag .description {
             display: none;
             font-size: 12px;
             line-height: 1.4;
-            margin-top: 5px;
+            margin-top: 8px;
             max-width: 200px;
+            color: #ccc;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
         }
         .data-tag:hover {
-            background: rgba(0,0,0,0.9);
-            transform: translate(-50%, -50%) scale(1.05);
+            background: linear-gradient(145deg, rgba(50, 50, 80, 0.9), rgba(70, 70, 100, 0.95));
+            transform: translate(-50%, -50%) scale(1.08); /* Slightly larger hover scale */
             z-index: 1000;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.5);
         }
         .data-tag:hover .description {
             display: block;
         }
+         /* Define status colors */
+        .data-tag.status-normal {
+            border-left-color: #00f2a1; /* Brighter Green */
+        }
+        .data-tag.status-warning {
+             border-left-color: #ffc107; /* Amber/Orange */
+        }
+        .data-tag.status-danger {
+             border-left-color: #f44336; /* Material Red */
+        }
+         .data-tag.status-normal .value {
+             color: #00f2a1;
+         }
+        .data-tag.status-warning .value {
+            color: #ffc107;
+        }
+        .data-tag.status-danger .value {
+            color: #f44336;
+        }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <h3>桥梁监测控制面板</h3>
-        <div class="control-group">
-            <span class="label">结构应力: <span id="stress-value">120 MPa</span></span>
-            <span class="label">位移: <span id="displacement-value">竖向: 5mm, 水平: 2mm</span></span>
-            <span class="label">振动频率: <span id="frequency-value">10.5 Hz</span></span>
-            <span class="label">索力: <span id="tension-value">800 kN</span></span>
-        </div>
-        <div class="control-group">
-            <button id="update-btn">随机更新数据</button>
-            <button id="auto-btn">开始自动更新</button>
-        </div>
-        <div class="control-group">
-            <span class="label">显示所有数据标签:</span>
-            <input type="checkbox" id="show-labels" checked>
-        </div>
-    </div>
-    
     <div id="status">加载桥梁模型中...</div>
 
     <!-- 这里使用CDN加载Three.js和相关库 -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="three_js/three.min.js"></script>
+    <script src="three_js/OrbitControls.js"></script>
+    <script src="three_js/GLTFLoader.js"></script>
 
     <script>
         // 初始化Three.js
@@ -166,54 +146,66 @@
         let autoUpdateInterval;
         let screenPositions = {};
         
-        // 监测数据状态对象
+        // Define status colors directly for JS usage if needed, 
+        // but primarily rely on CSS classes now
+        const statusColors = {
+            normal: '#00f2a1',
+            warning: '#ffc107',
+            danger: '#f44336'
+        };
+
+        // 监测数据状态对象 (Add properties for cached dimensions)
         const monitoringData = [
             {
                 name: "结构应力",
                 value: "120 MPa",
                 description: "当前该部位所承受的应力值，低于设计允许的最大应力值 150MPa，处于正常范围。", 
-                color: "#22cc88", // 绿色表示正常状态
-                position: null, // 将在模型加载后设置
+                position: null, 
                 normalRange: [100, 140],
                 warningRange: [140, 150],
                 dangerThreshold: 150,
                 currentValue: 120,
-                unit: "MPa"
+                unit: "MPa",
+                labelWidth: null, // Cached width
+                labelHeight: null // Cached height
             },
             {
                 name: "位移",
                 value: "竖向: 5mm, 水平: 2mm",
                 description: "跨中竖向位移在允许范围内，表明梁体变形正常；桥墩顶部水平位移较小，说明桥墩稳定性良好。",
-                color: "#22cc88",
                 position: null,
                 verticalValue: 5,
                 horizontalValue: 2,
                 verticalNormalRange: [0, 8],
                 horizontalNormalRange: [0, 5],
                 verticalUnit: "mm",
-                horizontalUnit: "mm"
+                horizontalUnit: "mm",
+                labelWidth: null,
+                labelHeight: null
             },
             {
                 name: "振动频率",
                 value: "10.5 Hz",
                 description: "与桥梁初始设计频率 10Hz 相比，略有变化但在合理波动范围内，结构未出现明显损伤迹象。",
-                color: "#22cc88",
                 position: null,
                 normalRange: [9.5, 10.5],
                 warningRange: [9.0, 11.0],
                 currentValue: 10.5,
-                unit: "Hz"
+                unit: "Hz",
+                labelWidth: null,
+                labelHeight: null
             },
             {
                 name: "索力",
                 value: "800 kN",
                 description: "该斜拉索的拉力值，与设计索力 750kN 相比，偏差在允许范围内，索力分布较为均匀。",
-                color: "#22cc88",
                 position: null,
                 normalRange: [700, 850],
                 warningRange: [650, 900],
                 currentValue: 800,
-                unit: "kN"
+                unit: "kN",
+                labelWidth: null,
+                labelHeight: null
             }
         ];
 
@@ -222,34 +214,34 @@
         const statusElement = document.getElementById('status');
         
         loader.load(
-            'bridge.glb',  // 模型路径
+            'bridge-minified.glb',  // 模型路径
             function(gltf) {
                 bridge = gltf.scene;
                 scene.add(bridge);
                 
-                console.log('模型加载成功:', bridge);
                 
-                // 自动调整相机位置查看模型
+                // Adjust camera for better initial view
                 fitCameraToObject(bridge);
                 
-                // 创建监测点位置
+                // Set label anchor points closer to center
                 setMonitoringPositions(bridge);
                 
-                // 创建HTML标签元素
+                // Create 3D positioned labels
                 createDataLabels();
                 
-                // 更新显示
+                // Initial data display
                 updateAllData(false);
                 
                 statusElement.textContent = "模型加载完成，数据已初始化";
                 
-                // 3秒后隐藏状态文本
                 setTimeout(() => {
                     statusElement.style.opacity = '0';
-                    setTimeout(() => {
-                        statusElement.style.display = 'none';
-                    }, 500);
+                    setTimeout(() => statusElement.style.display = 'none', 500);
                 }, 3000);
+
+                // Start auto-update by default
+                startAutoUpdate(); 
+
             },
             // 进度回调
             function(xhr) {
@@ -257,260 +249,246 @@
             },
             // 错误回调
             function(error) {
-                console.error('模型加载错误:', error);
                 statusElement.textContent = "模型加载错误! 显示备用模型...";
                 
-                // 创建一个简单的桥梁模型作为备用
                 createFallbackBridge();
+                // Start auto-update for fallback too
+                startAutoUpdate(); 
             }
         );
         
-        // 创建备用桥梁模型
-        function createFallbackBridge() {
-            // 创建一个简单的桥梁模型
-            const bridgeGroup = new THREE.Group();
-            
-            // 桥面
-            const deckGeometry = new THREE.BoxGeometry(20, 0.5, 4);
-            const deckMaterial = new THREE.MeshPhongMaterial({ color: 0x888888 });
-            const deck = new THREE.Mesh(deckGeometry, deckMaterial);
-            deck.position.y = 5;
-            deck.castShadow = true;
-            deck.receiveShadow = true;
-            bridgeGroup.add(deck);
-            
-            // 桥墩
-            const pillarGeometry1 = new THREE.BoxGeometry(1, 10, 4);
-            const pillarMaterial = new THREE.MeshPhongMaterial({ color: 0x666666 });
-            const pillar1 = new THREE.Mesh(pillarGeometry1, pillarMaterial);
-            pillar1.position.set(-8, 0, 0);
-            pillar1.castShadow = true;
-            pillar1.receiveShadow = true;
-            bridgeGroup.add(pillar1);
-            
-            const pillar2 = new THREE.Mesh(pillarGeometry1, pillarMaterial);
-            pillar2.position.set(8, 0, 0);
-            pillar2.castShadow = true;
-            pillar2.receiveShadow = true;
-            bridgeGroup.add(pillar2);
-            
-            // 斜拉索 (简化为圆柱体)
-            const cableGeometry = new THREE.CylinderGeometry(0.05, 0.05, 11, 8);
-            const cableMaterial = new THREE.MeshPhongMaterial({ color: 0xCCCCCC });
-            
-            // 左边的斜拉索
-            const cable1 = new THREE.Mesh(cableGeometry, cableMaterial);
-            cable1.position.set(-5, 5, 1.5);
-            cable1.rotation.z = Math.PI / 4;
-            cable1.castShadow = true;
-            bridgeGroup.add(cable1);
-            
-            const cable2 = new THREE.Mesh(cableGeometry, cableMaterial);
-            cable2.position.set(-5, 5, -1.5);
-            cable2.rotation.z = Math.PI / 4;
-            cable2.castShadow = true;
-            bridgeGroup.add(cable2);
-            
-            // 右边的斜拉索
-            const cable3 = new THREE.Mesh(cableGeometry, cableMaterial);
-            cable3.position.set(5, 5, 1.5);
-            cable3.rotation.z = -Math.PI / 4;
-            cable3.castShadow = true;
-            bridgeGroup.add(cable3);
-            
-            const cable4 = new THREE.Mesh(cableGeometry, cableMaterial);
-            cable4.position.set(5, 5, -1.5);
-            cable4.rotation.z = -Math.PI / 4;
-            cable4.castShadow = true;
-            bridgeGroup.add(cable4);
-            
-            // 添加到场景
-            scene.add(bridgeGroup);
-            bridge = bridgeGroup;
-            
-            // 地面
-            const groundGeometry = new THREE.PlaneGeometry(50, 30);
-            const groundMaterial = new THREE.MeshPhongMaterial({ color: 0x333333 });
-            const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-            ground.rotation.x = -Math.PI / 2;
-            ground.position.y = -5;
-            ground.receiveShadow = true;
-            scene.add(ground);
-            
-            // 调整相机位置
-            camera.position.set(0, 10, 20);
-            controls.target.set(0, 5, 0);
-            controls.update();
-            
-            // 设置监测点位置
-            setMonitoringPositions(bridge);
-            
-            // 创建数据标签
-            createDataLabels();
-            
-            // 更新数据显示
-            updateAllData(false);
-            
-            statusElement.textContent = "使用备用模型显示数据";
-            setTimeout(() => {
-                statusElement.style.opacity = '0';
-            }, 3000);
-        }
-        
-        // 自动调整相机位置以适应模型
+        // Revert to the original close-up camera view
         function fitCameraToObject(obj) {
             const box = new THREE.Box3().setFromObject(obj);
             const center = box.getCenter(new THREE.Vector3());
             const size = box.getSize(new THREE.Vector3());
             
-            // 计算适合的相机距离
             const maxDim = Math.max(size.x, size.y, size.z);
             const fov = camera.fov * (Math.PI / 180);
             let cameraDistance = maxDim / (2 * Math.tan(fov / 2));
             
-            // --- MODIFICATION START ---
-            // 使相机距离更近 (原距离的 1/5)
+            // --- Revert to original aggressive zoom ---
             cameraDistance /= 12; 
-            // --- MODIFICATION END ---
 
-            // 增加一个最小距离，防止相机太近或在模型内部
-            const minDistance = 1; // 可以根据模型大小调整
+            const minDistance = 1; // Revert to original min distance
             cameraDistance = Math.max(minDistance, cameraDistance);
             
-            // 设置相机位置 - 保持原来的相对偏移方向，但使用新的距离
-            // 使用一个稍微偏上的视角
+            // Revert to original offset calculation for the close view
             const offset = new THREE.Vector3(1, 0.5, 1).normalize().multiplyScalar(cameraDistance);
             camera.position.copy(center).add(offset);
 
-            // 设置控制中心
             controls.target.copy(center);
             controls.update();
         }
         
-        // 设置监测点位置
+        // Set anchor points moderately spread around the center (as a base for 2D avoidance)
         function setMonitoringPositions(model) {
-            // 获取模型边界
             const box = new THREE.Box3().setFromObject(model);
             const center = box.getCenter(new THREE.Vector3());
-            const size = box.getSize(new THREE.Vector3());
+            // Use moderate offsets 
+            const offsetX = 19.0; 
+            const offsetY = 15.5;  
+            const offsetZ = 3.0;  
             
-            // 设置监测点位置
+            const baseHeight = center.y + 1.0;
+
             monitoringData[0].position = new THREE.Vector3(
-                center.x + size.x * 0.3, 
-                center.y, 
-                center.z + size.z * 0.2
-            ); // 结构应力点
-            
+                center.x - offsetX,
+                baseHeight+ offsetY, 
+                center.z + offsetZ
+            ); // Front-Top-Right
             monitoringData[1].position = new THREE.Vector3(
-                center.x, 
-                center.y - size.y * 0.1, 
-                center.z
-            ); // 位移点
-            
+                center.x + offsetX*1.5, 
+                baseHeight -offsetY, 
+                center.z - offsetZ
+            ); // Back-Top-Left
             monitoringData[2].position = new THREE.Vector3(
-                center.x - size.x * 0.3, 
-                center.y + size.y * 0.3, 
-                center.z - size.z * 0.2
-            ); // 振动频率点
-            
+                center.x - offsetX, 
+                baseHeight + offsetY*0.8, 
+                center.z - offsetZ
+            ); // Back-Bottom-Right
             monitoringData[3].position = new THREE.Vector3(
-                center.x + size.x * 0.4, 
-                center.y + size.y * 0.4, 
-                center.z - size.z * 0.1
-            ); // 索力点
+                
+                center.x + offsetX, 
+                baseHeight + offsetY, 
+                center.z + offsetZ
+            ); // Front-Bottom-Left
         }
-        
-        // 创建HTML数据标签
+
+        // Create 3D positioned HTML labels and cache dimensions
         function createDataLabels() {
-            // 先清除现有标签
-            dataLabels.forEach(label => document.body.removeChild(label));
+            dataLabels.forEach(label => {
+                if (label.parentNode) document.body.removeChild(label);
+            });
             dataLabels = [];
             
-            // 为每个监测点创建标签
             monitoringData.forEach((data, index) => {
-                // 创建HTML元素
                 const labelDiv = document.createElement('div');
                 labelDiv.className = 'data-tag';
                 labelDiv.id = `data-tag-${index}`;
-                labelDiv.style.border = `2px solid ${data.color}`;
                 
-                // 标签标题
                 const titleElement = document.createElement('div');
                 titleElement.className = 'title';
                 titleElement.textContent = data.name;
                 labelDiv.appendChild(titleElement);
                 
-                // 数值
                 const valueElement = document.createElement('div');
                 valueElement.className = 'value';
                 valueElement.textContent = data.value;
-                valueElement.style.color = data.color;
                 labelDiv.appendChild(valueElement);
                 
-                // 描述
                 const descriptionElement = document.createElement('div');
                 descriptionElement.className = 'description';
                 descriptionElement.textContent = data.description;
                 labelDiv.appendChild(descriptionElement);
                 
-                // 添加到body
                 document.body.appendChild(labelDiv);
                 
-                // 保存引用
                 data.labelElement = labelDiv;
                 data.valueElement = valueElement;
                 data.descriptionElement = descriptionElement;
                 dataLabels.push(labelDiv);
+
+                // --- Cache dimensions after creation --- 
+                // Temporarily make it visible but off-screen to measure
+                labelDiv.style.position = 'absolute'; // Ensure it's positioned
+                labelDiv.style.visibility = 'hidden';
+                labelDiv.style.display = 'block';
+                data.labelWidth = labelDiv.offsetWidth;
+                data.labelHeight = labelDiv.offsetHeight;
+                labelDiv.style.display = 'none'; // Hide again immediately
+                labelDiv.style.visibility = 'visible';
+                // Reset position if needed, although it's set each frame in update
+                // ----------------------------------------
             });
-            
-            // 初始化标签位置（会在动画循环中更新）
-            updateLabelPositions();
+             updateLabelPositions(); // Initial position update using cached dimensions
         }
         
-        // 更新标签位置
+        // Update label screen positions using cached dimensions
         function updateLabelPositions() {
-            // 如果标签显示被禁用，不更新位置
-            const showLabels = document.getElementById('show-labels').checked;
-            
-            monitoringData.forEach((data, index) => {
-                if (!data.position || !data.labelElement) return;
-                
-                // 计算3D位置到屏幕坐标的投影
+            const placedLabelRects = []; 
+            const labelVerticalPadding = 5; 
+            const globalYShift = -30; 
+
+            const initialProjections = monitoringData.map(data => {
+                if (!data.position) return null;
                 const position = data.position.clone();
                 position.project(camera);
+                if (position.z > 1) return null; 
+                return {
+                    x: (position.x * 0.5 + 0.5) * window.innerWidth,
+                    y: (-position.y * 0.5 + 0.5) * window.innerHeight
+                };
+            });
+
+            let avgYBottom = null;
+            const bottomPairIndices = [0, 1]; 
+            const bottomYs = bottomPairIndices
+                .map(i => initialProjections[i]?.y)
+                .filter(y => y !== undefined && y !== null);
+            if (bottomYs.length > 0) {
+                 avgYBottom = bottomYs.reduce((sum, y) => sum + y, 0) / bottomYs.length;
+            }
+           
+            let avgYTop = null;
+            const topPairIndices = [2, 3]; 
+            const topYs = topPairIndices
+                .map(i => initialProjections[i]?.y)
+                .filter(y => y !== undefined && y !== null);
+            if (topYs.length > 0) {
+                avgYTop = topYs.reduce((sum, y) => sum + y, 0) / topYs.length;
+            }
+
+            monitoringData.forEach((data, index) => {
+                const labelElement = data.labelElement;
+                const initialProj = initialProjections[index];
+                const labelWidth = data.labelWidth;   // Use cached width
+                const labelHeight = data.labelHeight; // Use cached height
+
+                if (!initialProj || !labelElement || !labelWidth || !labelHeight) { // Check cache too
+                    if (labelElement) labelElement.style.display = 'none';
+                    return;
+                }
+
+                let targetX = initialProj.x;
+                let targetY = initialProj.y; 
+
+                if (bottomPairIndices.includes(index) && avgYBottom !== null) {
+                    targetY = avgYBottom; 
+                } else if (topPairIndices.includes(index) && avgYTop !== null) {
+                    targetY = avgYTop; 
+                }
                 
-                // 转换为屏幕坐标
-                const x = (position.x * 0.5 + 0.5) * window.innerWidth;
-                const y = (-position.y * 0.5 + 0.5) * window.innerHeight;
+                targetY += globalYShift;
+
+                // --- No need to calculate dimensions here anymore --- 
                 
-                // 检查是否在视野外
-                if (position.z > 1 || x < 0 || x > window.innerWidth || y < 0 || y > window.innerHeight) {
-                    data.labelElement.style.display = 'none';
-                } else {
-                    // 保存屏幕位置
-                    screenPositions[index] = { x, y };
-                    
-                    if (showLabels) {
-                        data.labelElement.style.display = 'block';
-                        data.labelElement.style.left = x + 'px';
-                        data.labelElement.style.top = y + 'px';
-                    } else {
-                        data.labelElement.style.display = 'none';
+                // Calculate initial bounding box using cached dimensions and target pos
+                let currentLeft = targetX - labelWidth / 2;
+                let currentTop = targetY - labelHeight / 2;
+                let currentRight = currentLeft + labelWidth;
+                let currentBottom = currentTop + labelHeight;
+
+                // --- Collision Detection and Avoidance (uses cached height) --- 
+                let collisionDetected = true;
+                let attempts = 0;
+                const maxAttempts = 15; 
+
+                while (collisionDetected && attempts < maxAttempts) {
+                    collisionDetected = false;
+                    for (const placedRect of placedLabelRects) {
+                        const overlaps = 
+                            currentLeft < placedRect.right &&
+                            currentRight > placedRect.left &&
+                            currentTop < placedRect.bottom &&
+                            currentBottom > placedRect.top;
+
+                        if (overlaps) {
+                            collisionDetected = true;
+                            currentTop = placedRect.bottom + labelVerticalPadding;
+                            currentBottom = currentTop + labelHeight; // Use cached height
+                            targetY = currentTop + labelHeight / 2;   // Use cached height
+                            currentLeft = targetX - labelWidth / 2;  // Use cached width
+                            currentRight = currentLeft + labelWidth; // Use cached width
+                            break; 
+                        }
                     }
+                    attempts++;
+                }
+
+              
+
+                // --- Final Placement (check bounds using cached dimensions) --- 
+                const finalTop = targetY - labelHeight / 2;    // Use cached height
+                const finalBottom = finalTop + labelHeight;  // Use cached height
+                const finalLeft = targetX - labelWidth / 2;   // Use cached width
+                const finalRight = finalLeft + labelWidth; // Use cached width
+                
+                if (finalLeft < 0 || finalRight > window.innerWidth || finalTop < 0 || finalBottom > window.innerHeight) {
+                    labelElement.style.display = 'none';
+                } else {
+                    labelElement.style.left = targetX + 'px'; 
+                    labelElement.style.top = targetY + 'px';  
+                    labelElement.style.display = 'block';
+
+                    placedLabelRects.push({
+                        left: finalLeft, 
+                        top: finalTop,   
+                        right: finalRight,
+                        bottom: finalBottom 
+                    });
                 }
             });
         }
         
-        // 随机更新所有数据
+        // Randomly update all data
         function updateAllData(isRandom = true) {
-            // 更新结构应力
             if (isRandom) {
-                updateStressData(110 + Math.random() * 45); // 110-155 MPa
-                updateDisplacementData(3 + Math.random() * 7, 1 + Math.random() * 5); // 3-10mm, 1-6mm
-                updateFrequencyData(9 + Math.random() * 2.5); // 9-11.5 Hz
-                updateTensionData(650 + Math.random() * 300); // 650-950 kN
+                updateStressData(110 + Math.random() * 45); 
+                updateDisplacementData(3 + Math.random() * 7, 1 + Math.random() * 5); 
+                updateFrequencyData(9 + Math.random() * 2.5); 
+                updateTensionData(650 + Math.random() * 300); 
             } else {
-                // 使用初始值
                 updateStressData(monitoringData[0].currentValue);
                 updateDisplacementData(monitoringData[1].verticalValue, monitoringData[1].horizontalValue);
                 updateFrequencyData(monitoringData[2].currentValue);
@@ -518,185 +496,140 @@
             }
         }
         
-        // 更新结构应力数据
+        // Helper function to set status class
+        function setStatusClass(element, status) {
+            element.classList.remove('status-normal', 'status-warning', 'status-danger');
+            element.classList.add(`status-${status}`);
+        }
+
+        // Update functions now set CSS class for color styling
         function updateStressData(value) {
             const data = monitoringData[0];
             data.currentValue = Number(value.toFixed(1));
             data.value = `${data.currentValue} ${data.unit}`;
             
-            // 更新UI显示
-            document.getElementById('stress-value').textContent = data.value;
-            
-            // 设置颜色基于值范围
+            let status = 'normal';
             if (data.currentValue > data.dangerThreshold) {
-                data.color = "#ff4444"; // 危险
+                status = 'danger';
                 data.description = `当前该部位所承受的应力值超过设计允许的最大应力值 ${data.dangerThreshold}MPa，处于危险范围!`;
-            } else if (data.currentValue > data.warningRange[0]) {
-                data.color = "#ffaa00"; // 警告
+            } else if (data.currentValue >= data.warningRange[0]) { 
+                status = 'warning';
                 data.description = `当前该部位所承受的应力值接近设计允许的最大应力值 ${data.dangerThreshold}MPa，需注意监测!`;
             } else {
-                data.color = "#22cc88"; // 正常
+                status = 'normal';
                 data.description = `当前该部位所承受的应力值，低于设计允许的最大应力值 ${data.dangerThreshold}MPa，处于正常范围。`;
             }
             
-            // 更新标签显示
             if (data.labelElement) {
                 data.valueElement.textContent = data.value;
-                data.valueElement.style.color = data.color;
-                data.labelElement.style.borderColor = data.color;
+                setStatusClass(data.labelElement, status); // Set class
                 data.descriptionElement.textContent = data.description;
             }
         }
         
-        // 更新位移数据
         function updateDisplacementData(verticalValue, horizontalValue) {
             const data = monitoringData[1];
             data.verticalValue = Number(verticalValue.toFixed(1));
             data.horizontalValue = Number(horizontalValue.toFixed(1));
             data.value = `竖向: ${data.verticalValue}${data.verticalUnit}, 水平: ${data.horizontalValue}${data.horizontalUnit}`;
             
-            // 更新UI显示
-            document.getElementById('displacement-value').textContent = data.value;
-            
-            // 设置颜色基于值范围
+            let status = 'normal';
             if (data.verticalValue > data.verticalNormalRange[1] || data.horizontalValue > data.horizontalNormalRange[1]) {
-                data.color = "#ffaa00"; // 警告
+                status = 'warning';
                 data.description = `位移值接近极限范围，需要密切监测桥梁结构变形情况。`;
             } else {
-                data.color = "#22cc88"; // 正常
+                status = 'normal';
                 data.description = `跨中竖向位移在允许范围内，表明梁体变形正常；桥墩顶部水平位移较小，说明桥墩稳定性良好。`;
             }
             
-            // 更新标签显示
             if (data.labelElement) {
                 data.valueElement.textContent = data.value;
-                data.valueElement.style.color = data.color;
-                data.labelElement.style.borderColor = data.color;
+                setStatusClass(data.labelElement, status); // Set class
                 data.descriptionElement.textContent = data.description;
             }
         }
         
-        // 更新振动频率数据
         function updateFrequencyData(value) {
             const data = monitoringData[2];
             data.currentValue = Number(value.toFixed(1));
             data.value = `${data.currentValue} ${data.unit}`;
             
-            // 更新UI显示
-            document.getElementById('frequency-value').textContent = data.value;
-            
-            // 设置颜色基于值范围
+            let status = 'normal';
             if (data.currentValue < data.normalRange[0] || data.currentValue > data.normalRange[1]) {
                 if (data.currentValue < data.warningRange[0] || data.currentValue > data.warningRange[1]) {
-                    data.color = "#ff4444"; // 危险
+                    status = 'danger';
                     data.description = `振动频率异常，可能表明结构出现严重损伤，需立即检查!`;
                 } else {
-                    data.color = "#ffaa00"; // 警告
+                    status = 'warning';
                     data.description = `振动频率出现波动，需监测结构是否出现细微损伤。`;
                 }
             } else {
-                data.color = "#22cc88"; // 正常
+                status = 'normal';
                 data.description = `与桥梁初始设计频率 10Hz 相比，略有变化但在合理波动范围内，结构未出现明显损伤迹象。`;
             }
             
-            // 更新标签显示
             if (data.labelElement) {
                 data.valueElement.textContent = data.value;
-                data.valueElement.style.color = data.color;
-                data.labelElement.style.borderColor = data.color;
+                setStatusClass(data.labelElement, status); // Set class
                 data.descriptionElement.textContent = data.description;
             }
         }
         
-        // 更新索力数据
         function updateTensionData(value) {
             const data = monitoringData[3];
             data.currentValue = Math.floor(value);
             data.value = `${data.currentValue} ${data.unit}`;
             
-            // 更新UI显示
-            document.getElementById('tension-value').textContent = data.value;
-            
-            // 设置颜色基于值范围
+            let status = 'normal';
             if (data.currentValue < data.normalRange[0] || data.currentValue > data.normalRange[1]) {
                 if (data.currentValue < data.warningRange[0] || data.currentValue > data.warningRange[1]) {
-                    data.color = "#ff4444"; // 危险
+                    status = 'danger';
                     data.description = `索力严重偏离设计值，可能造成桥梁结构不稳定，需立即检查!`;
                 } else {
-                    data.color = "#ffaa00"; // 警告
+                    status = 'warning';
                     data.description = `索力偏离设计值 750kN，但仍在允许波动范围内，需密切监测。`;
                 }
             } else {
-                data.color = "#22cc88"; // 正常
+                status = 'normal';
                 data.description = `该斜拉索的拉力值，与设计索力 750kN 相比，偏差在允许范围内，索力分布较为均匀。`;
             }
             
-            // 更新标签显示
             if (data.labelElement) {
                 data.valueElement.textContent = data.value;
-                data.valueElement.style.color = data.color;
-                data.labelElement.style.borderColor = data.color;
+                setStatusClass(data.labelElement, status); // Set class
                 data.descriptionElement.textContent = data.description;
             }
         }
         
-        // 添加事件监听器
-        document.getElementById('update-btn').addEventListener('click', function() {
-            updateAllData(true);
-            statusElement.style.display = 'block';
-            statusElement.style.opacity = '1';
-            statusElement.textContent = "数据已随机更新";
-            setTimeout(() => {
-                statusElement.style.opacity = '0';
-                setTimeout(() => {
-                    statusElement.style.display = 'none';
-                }, 500);
-            }, 2000);
-        });
-        
-        document.getElementById('show-labels').addEventListener('change', function() {
-            // 立即更新标签可见性
-            updateLabelPositions();
-        });
-        
-        document.getElementById('auto-btn').addEventListener('click', function() {
+        // Function to start auto update (default behavior)
+        function startAutoUpdate() {
             if (autoUpdateInterval) {
                 clearInterval(autoUpdateInterval);
-                autoUpdateInterval = null;
-                this.textContent = '开始自动更新';
-            } else {
-                // 每5秒自动更新一次
-                autoUpdateInterval = setInterval(() => {
-                    updateAllData(true);
-                }, 5000);
-                this.textContent = '停止自动更新';
-                // 立即执行一次
-                updateAllData(true);
             }
-        });
+                autoUpdateInterval = setInterval(() => {
+                updateAllData(true);
+            }, 5000); // Update every 5 seconds
+            updateAllData(true); // Initial random update right away
+            }
         
-        // 处理窗口大小变化
+        // Handle window resize
         window.addEventListener('resize', function() {
-            // Aspect ratio should still be based on the iframe's window dimensions
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
-            // Update renderer size to match the iframe's window dimensions
             renderer.setSize(window.innerWidth, window.innerHeight);
-            // Label positions update automatically in the animate loop based on projection
+            updateLabelPositions(); 
         });
         
-        // 动画循环
+        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
             controls.update();
-            
-            // 更新HTML标签位置
-            updateLabelPositions();
-            
+            updateLabelPositions(); // Update label positions each frame
             renderer.render(scene, camera);
         }
         
         animate();
+
     </script>
 </body>
 </html>

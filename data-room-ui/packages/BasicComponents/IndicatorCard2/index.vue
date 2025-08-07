@@ -23,7 +23,7 @@
           'margin-bottom':customize.lineDistance +'px'
         }"
       >
-        66{{ customize.secondLine }}
+        {{ customize.secondLine }}
       </div>
       <div
         :style="{
@@ -166,7 +166,6 @@ export default {
           this.setupPolling()
         }
       } catch (error) {
-        console.error('动态数据获取失败:', error)
       }
     },
     setupPolling () {

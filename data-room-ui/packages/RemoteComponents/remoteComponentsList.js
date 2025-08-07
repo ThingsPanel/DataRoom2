@@ -13,7 +13,6 @@ files.keys().forEach(key => {
   try {
     img = require(`./innerComponents/${title}/component.png`)
   } catch (error) {
-    console.log(error)
   }
   try {
     config = require(`./innerComponents/${title}/config.js`).default

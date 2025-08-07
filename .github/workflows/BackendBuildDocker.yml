@@ -1,0 +1,104 @@
+# ThingsPanel Docker 镜像推送到阿里云 (企业版)
+#
+# 功能说明:
+# 1. 构建 Docker 镜像
+# 2. 推送到阿里云容器镜像服务
+#
+# 触发方式:
+# - Release触发: 当创建或更新 Release 时自动触发（任意分支）
+# - 手动触发: 只允许在 2.1.0.RELEASE 分支执行，需要手动输入版本号
+#
+# 版本号处理:
+# - Release 触发: 使用 Release 的 tag 作为版本号
+# - 手动触发: 使用用户输入的版本号
+# - 不允许构建 latest 标签，所有镜像都必须有明确的版本号
+#
+# 分支限制:
+# - 手动触发仅允许在 2.1.0.RELEASE 分支执行
+# - Release 触发不受分支限制
+#
+# 必需的 Secrets:
+# - IMAGE_USER: 阿里云容器镜像服务用户名
+# - IMAGE_PASS: 阿里云容器镜像服务密码
+
+name: Docker Image Build
+
+on:
+  # 手动触发，只允许在 2.1.0.RELEASE 分支执行
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: v2.1.0)'
+        required: true
+        type: string
+
+  # 发布 Release 时（任意分支）依旧触发
+  release:
+    types: [ published ]
+
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
+
+      - name: 验证分支限制
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.ref_name }}" != "2.1.0.RELEASE" ]; then
+            echo "❌ 错误: 手动触发只允许在 2.1.0.RELEASE 分支执行"
+            echo "当前分支: ${{ github.ref_name }}"
+            echo "允许的分支: 2.1.0.RELEASE"
+            exit 1
+          fi
+          echo "✅ 分支验证通过: ${{ github.ref_name }}"
+
+      - name: 获取版本号
+        id: get_version
+        run: |
+          # 如果是release触发，使用release tag
+          if [ "${{ github.event_name }}" == "release" ]; then
+            VERSION="${{ github.event.release.tag_name }}"
+          else
+            # 手动触发时使用输入的版本号
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "🏷️ 使用版本号: $VERSION"
+
+      - name: 设置 JDK 1.8
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: 使用 Maven 打包后端 Jar
+        run: |
+          cd DataRoom
+          mvn clean package -Dmaven.test.skip=true -P package
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 登录到阿里云容器镜像服务
+        uses: docker/login-action@v2
+        with:
+          registry: registry.cn-hangzhou.aliyuncs.com
+          username: ${{ secrets.IMAGE_USER }}
+          password: ${{ secrets.IMAGE_PASS }}
+
+      - name: 构建并推送到阿里云
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64
+          tags: |
+            registry.cn-hangzhou.aliyuncs.com/thingspanel/dataroom-server:${{ env.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

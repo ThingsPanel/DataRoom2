@@ -1,0 +1,3687 @@
+[
+  {
+    "category": "actions",
+    "name": "check"
+  },
+  {
+    "category": "arrows",
+    "name": "arrow-left"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "交换机"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "任务"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "分隔符-垂直"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "分隔符"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "判定"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "加密装置"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "工作站"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "开始"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "开始事件"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "数据"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "数据存储"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "数据对象"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "数据库"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "服务器"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "泳道"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "流程"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "结束"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "结束_1"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "网关"
+  },
+  {
+    "category": "IT&互联网/流程图",
+    "name": "路由器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": " 显示器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "scu"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "WAN."
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "主机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "云"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "交换机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "交换机_1"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "以太网"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "传真"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "住宅"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "光驱"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "关系数据库"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "大型机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "屏幕"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "工作组交换机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "建筑物."
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "手机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "打印机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "扫描仪"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "投影仪"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "摄像机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "数据中心"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "数据库"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "数码-相机"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "显示器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "服务器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "机器人"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "用户"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "电话"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "硬盘"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "秘钥"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "笔记本电脑"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "虚拟服务器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "视频电话"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "视频电话_1"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "路由器"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "锁"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "防火墙_1"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "防火墙_2"
+  },
+  {
+    "category": "IT&互联网/网络图",
+    "name": "集线器"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "三角路锥"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "仓库"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "公路"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "压路机"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "压路机_1"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "售票处"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "地铁"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "城市公交"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "定位器"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "护栏"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "智能三角架"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "机场"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "民用航空"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "汽车"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "火车"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "灯塔"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "线路"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "航空器"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "航道"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "船舶"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "路桩"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "车位锁"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "车站"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "车轮锁"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "车辆"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "轨道"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "道闸"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "防撞桶"
+  },
+  {
+    "category": "工程/交通工程",
+    "name": "飞机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "ding"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "一级喷淋"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "一级旋风"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "仓"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "储气罐"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "光源"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "光谱仪"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "兜"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "再生成降槽"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "冰水箱"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "冷冻式干燥机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "冷却水塔"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "冷却水泵"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "分离器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "刻度"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "单转子"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "压力变送机-右"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "压力变送机-左"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "压力监测器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "原料场"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "原料磨机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "原水箱"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "反吹阀-右"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "反吹阀-左"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "反吹阀"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "发电机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "吸附式干燥机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "塔"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "小风扇"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "工具"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "布袋除尘器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "开关"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "引风机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "手动阀"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "换热器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "排水阀"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "数据处理"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "料仓"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "机器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "气罐"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "水泵"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "水泵2"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "水泵_1"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "沸腾床"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "泵"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "混合仓"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "温度变送器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "温式淬火"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "炼焦炉"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "烟筒"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "焦炭干式淬火"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "煤化学工厂"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "熔硫"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "熔硫釜"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "电加热器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "电表"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "矩形"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "破碎机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "空压机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "空调"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "筛选"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "箭头"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "篦冷机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "篦冷机2"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "篦冷机_1"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "篦冷机_2"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "篦冷机_3"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "粉尘"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "红外探检测器"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "罐"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "罐1"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "罐2"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "脱硫塔"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "船运"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "药剂罐"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "融合机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "转换"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "过滤机"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "进水阀"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "采样探头"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "锅炉"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "锅炉_1"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "闸"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "阀-上"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "阀-下"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "阀-右"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "阀-左"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "阀"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "隔膜泵"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "高温气体室"
+  },
+  {
+    "category": "工程/工厂",
+    "name": "高炉"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "test"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "切割机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "压力容器"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "压力管道"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "塔吊"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "手锯"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "拌和机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "提升机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "施工升降机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "检测仪器"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "水塔"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "水池"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "混凝土搅拌机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "电梯"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "电焊机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "电锯"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "脚手架"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "蓄能水塔"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "角磨机"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "起重吊装"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "起重机械"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "铁锹"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "锅炉"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "锤子"
+  },
+  {
+    "category": "工程/建筑工程",
+    "name": "龙门架"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "产品包装机台"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "仪表盘"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "化工机械"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "叉车"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "发电机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "变压器"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "收割机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "木工工程"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "机床1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "模具"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "泵"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "液压支架"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "混凝土机械"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "炼油"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "炼油厂区"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "电动机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "电机底座"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "电机底座_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "相机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "矿山机械"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "矿车"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "矿车_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "破碎机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "破碎机_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "紧固密封件"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "脱水机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "脱水机_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "货车"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "起重机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "起重机_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "起重机械"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "起重机械_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "转载机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "转载机_1"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "输送机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "运煤车"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "锻压机"
+  },
+  {
+    "category": "工程/机械工程",
+    "name": "风机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "万用表"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "中途加压站"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "主变压器"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "二次供水加压站"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "二次沉淀池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "企事业单位"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "冲击钻"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "分区测量点-上"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "分区测量点-右"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "分区测量点-左"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "切割机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "初次沉淀池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "励磁"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "卸车"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "压力表 "
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "压力表 _1"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "发电机 "
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "发电机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "取水栓"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "取水泵站"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "变送器"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "商场写字楼"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "圆柱卧蓄水罐"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "大型推土机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "大用户水表"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "射出成型机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "尖嘴钳"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "居民小区"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "工厂"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "总泵房"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "打磨机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "抛光机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "挖掘机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "排水泵"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "推土机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "搅拌机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "搅拌站"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "施工升降机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "曝气池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "曝气沉沙池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "格栅"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "水泵"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "水源井"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "水罐"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "水轮机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "水轮机_1"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "污泥消化池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "汽车吊"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "沉沙间"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "油缸"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "泵1"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "泵房2"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "泵房3"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "泵车"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "流量计"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "浓缩池"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "消防栓"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "液压钳子"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "混凝土搅拌机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "潜水泵"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "燃油泵"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "电烙铁"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "电焊机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "电锤-锤钻"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "电锤-锤钻_1"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "皮带机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "破碎机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "碾压机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "空压机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "管路"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "经纬仪"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "网管侧测压点-右"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "网管侧测压点-左"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "网管侧测压点"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "翻斗车"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "脱水机房"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "自来水厂"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "自然水域"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "螺丝刀"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "起重机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "车"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "配电箱"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "酒精喷灯"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "钢锯"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "钻孔机"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "锅炉"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "闸门"
+  },
+  {
+    "category": "工程/水利工程",
+    "name": "阀门"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "app-01"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "l冷却塔"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "万用表"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "主机编程键盘"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "主机编程键盘_1"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "催泪瓦斯"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "变频泵"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "增压泵"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "声光警报"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "微信端"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "总塔"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "报警阀"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "救护工具箱"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "无线烟感"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "无线玻璃震动传感器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "无线紧急按钮"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "无线门磁"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "智慧消防"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "有线紧急按钮"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "模拟末端试水装置"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "正压送风机"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "水压探测器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "水流指示器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "测温枪"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "消防水泵"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "消防水泵_1"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "消防泵房"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "液位探测器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "混流风机"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "温度传感器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "温感"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "温感_1"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "满电流互感器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "火灾主机"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "灭火装置"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "烟感"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "电流互感器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "电磁阀"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "电脑客户端"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "离心泵"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "箱式泵房"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "系统主机"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "红外对射探测器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "红外探测器"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "红外栅栏"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "网络摄像头"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "蝶阀"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "软梯"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "轴流管道泵"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "通风机"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "阀-上"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "阀-右"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "阀-左"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "防火卷帘"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "防火窗"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "防火门"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "风口"
+  },
+  {
+    "category": "工程/消防工程",
+    "name": "风速仪"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "内燃机泵"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "冷凝器"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "凝汽器"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "分气阀"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "加热器."
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "压缩机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "反应釜"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "发动机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "四通阀"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "大门"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "引风机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "循环泵"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "房子"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "换热器"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "水压表"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "水泵"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "水箱"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "水罐"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "水阀"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "汽轮机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "油分"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "燃气分管"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "燃油系统"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "电机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "电磁阀"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "磨煤机"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "空调"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "空预器"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "给水泵"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "自流井"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "蒸发器"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "补水泵"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "闸"
+  },
+  {
+    "category": "工程/热能与动力工程",
+    "name": "除氧器."
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "一次暖风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "一次风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "二次暖风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "二沉池刮吸泥机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "保护器"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "保护器_1"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "割草机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "卷扬机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "压力"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "参数"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "引风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "报警"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "断电器."
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "方闸门"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "方闸门2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "格栅"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "格栅2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "水表"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "污水泵"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "污泥泵"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "流箭头-上"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "流箭头-下"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "流箭头-右"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "流箭头-左"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "流量计"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "液位"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "液位计"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "清污机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "潜水泵"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "潜水泵2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "热交换器"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "电动葫芦"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "电动闸阀"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "电池恒温箱"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "电磁流量计"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "离心机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "空气压缩机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "空气压缩机_1"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "箭头-上"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "箭头-下"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "箭头-右"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "箭头-左"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "粉碎格栅"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "粉碎格栅2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "绿化喷洒车"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "罗茨鼓风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "蝶阀"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "蝶阀2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "路灯"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "路灯2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "输出带2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "输送带"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "过力矩"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "过力矩2"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "过力矩3"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "运输车辆"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "送风机"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "阀"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "隔离开关"
+  },
+  {
+    "category": "工程/环境工程",
+    "name": "鼓风机"
+  },
+  {
+    "category": "常用",
+    "name": "aaa"
+  },
+  {
+    "category": "常用",
+    "name": "bbb"
+  },
+  {
+    "category": "常用",
+    "name": "bbb_1"
+  },
+  {
+    "category": "常用",
+    "name": "test"
+  },
+  {
+    "category": "常用",
+    "name": "仪表盘"
+  },
+  {
+    "category": "常用",
+    "name": "冷却塔"
+  },
+  {
+    "category": "常用",
+    "name": "原料磨"
+  },
+  {
+    "category": "常用",
+    "name": "右跑"
+  },
+  {
+    "category": "常用",
+    "name": "图标"
+  },
+  {
+    "category": "常用",
+    "name": "均化库"
+  },
+  {
+    "category": "常用",
+    "name": "安全通道"
+  },
+  {
+    "category": "常用",
+    "name": "定位"
+  },
+  {
+    "category": "常用",
+    "name": "定位_1"
+  },
+  {
+    "category": "常用",
+    "name": "左跑"
+  },
+  {
+    "category": "常用",
+    "name": "微型消防站"
+  },
+  {
+    "category": "常用",
+    "name": "微型消防站_1"
+  },
+  {
+    "category": "常用",
+    "name": "搅碎机"
+  },
+  {
+    "category": "常用",
+    "name": "摄像头"
+  },
+  {
+    "category": "常用",
+    "name": "机器"
+  },
+  {
+    "category": "常用",
+    "name": "检测器"
+  },
+  {
+    "category": "常用",
+    "name": "水表"
+  },
+  {
+    "category": "常用",
+    "name": "消防栓"
+  },
+  {
+    "category": "常用",
+    "name": "灭火器01"
+  },
+  {
+    "category": "常用",
+    "name": "生料库"
+  },
+  {
+    "category": "常用",
+    "name": "疏散通道 1"
+  },
+  {
+    "category": "常用",
+    "name": "疏散通道 2"
+  },
+  {
+    "category": "常用",
+    "name": "禁止吸烟"
+  },
+  {
+    "category": "常用",
+    "name": "紧急出口L"
+  },
+  {
+    "category": "常用",
+    "name": "紧急出口R"
+  },
+  {
+    "category": "常用",
+    "name": "自定义组件1"
+  },
+  {
+    "category": "常用",
+    "name": "集成器"
+  },
+  {
+    "category": "常用",
+    "name": "风扇"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "临时车主"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "云"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "交换机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "储能变流"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "储能箱"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "充电桩"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "充电桩2"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "光伏组件"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "光伏逆变"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "入口出票机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "入口闸机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "公共用电"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "出口扫码机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "出口闸机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "刷卡充电"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "办公用电"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "变流配电箱"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "合作单位"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "商户"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "小车"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "小车2"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "户外照明"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "扫码用电"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "摄像头"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "收费处"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "显示屏"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "服务器"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "查询机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "箭头-右"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "箭头-左"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "网络"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "自动缴费机"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "路由器"
+  },
+  {
+    "category": "智慧城市/智慧交通",
+    "name": "车位引导牌"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "test"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "test_1"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "储气罐"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "冷干机"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "哈哈"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "流量计"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "空压机2"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "过滤器"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "阀"
+  },
+  {
+    "category": "智慧城市/智慧园区",
+    "name": "露点仪"
+  },
+  {
+    "category": "电力/其他",
+    "name": "11"
+  },
+  {
+    "category": "电力/其他",
+    "name": "开关接地"
+  },
+  {
+    "category": "电力/其他",
+    "name": "开关接地2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "三圈互感器"
+  },
+  {
+    "category": "电力/其他",
+    "name": "三圈互感器_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "三圈互感器_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "图"
+  },
+  {
+    "category": "电力/其他",
+    "name": "图_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "图_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "外边框"
+  },
+  {
+    "category": "电力/其他",
+    "name": "外边框_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流01"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流01_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流02"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流02_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流02_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流03"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流03_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流03_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流04"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流04_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流04_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流5"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电流5_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "电脑"
+  },
+  {
+    "category": "电力/其他",
+    "name": "线框"
+  },
+  {
+    "category": "电力/其他",
+    "name": "线框_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "线框_2"
+  },
+  {
+    "category": "电力/其他",
+    "name": "选项框001"
+  },
+  {
+    "category": "电力/其他",
+    "name": "选项框001_1"
+  },
+  {
+    "category": "电力/其他",
+    "name": "选项框001_2"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "PCS"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "充电桩"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "升压站"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "四角"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "地刀"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "太阳能"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "太阳能电池"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "手车分"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "把手1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "文字框1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "文字框3"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "断路器1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "断路器1_1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "氢能"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "水能."
+  },
+  {
+    "category": "电力/新能源",
+    "name": "流能图"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "生物质能源"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "电加热"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "电池堆"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "隔刀"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "隔刀1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "隔刀_1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "风力在电机"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "风机"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "风机_1"
+  },
+  {
+    "category": "电力/新能源",
+    "name": "风能"
+  },
+  {
+    "category": "电力/水电",
+    "name": " 电杆"
+  },
+  {
+    "category": "电力/水电",
+    "name": "Test1"
+  },
+  {
+    "category": "电力/水电",
+    "name": "开关_3"
+  },
+ 
+  {
+    "category": "电力/水电",
+    "name": "开关组合2"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电力"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电压"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电度"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电池-满电"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电表"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电表_1"
+  },
+  {
+    "category": "电力/水电",
+    "name": "电表_2"
+  },
+  {
+    "category": "电力/水电",
+    "name": "组件_1"
+  },
+  {
+    "category": "电力/水电",
+    "name": "组件_1_1"
+  },
+  {
+    "category": "电力/火电",
+    "name": "aa"
+  },
+  {
+    "category": "电力/火电",
+    "name": "ups电源"
+  },
+  {
+    "category": "电力/火电",
+    "name": "发电机"
+  },
+  {
+    "category": "电力/火电",
+    "name": "热电厂"
+  },
+  {
+    "category": "电力/火电",
+    "name": "采矿车"
+  },
+  {
+    "category": "电力/电气",
+    "name": "11"
+  },
+  {
+    "category": "电力/电气",
+    "name": "1112"
+  },
+  {
+    "category": "电力/电气",
+    "name": "123"
+  },
+  {
+    "category": "电力/电气",
+    "name": "123_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "2221"
+  },
+  {
+    "category": "电力/电气",
+    "name": "3333"
+  },
+  {
+    "category": "电力/电气",
+    "name": "S1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "S2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关_3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "三绕组变压器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "三绕组变压器_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "三角形"
+  },
+  {
+    "category": "电力/电气",
+    "name": "二极管"
+  },
+  {
+    "category": "电力/电气",
+    "name": "二极管2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "互感器2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "互感器3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "互感器3_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "充电器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "充电头"
+  },
+  {
+    "category": "电力/电气",
+    "name": "变压器-三圈压变"
+  },
+  {
+    "category": "电力/电气",
+    "name": "变压器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "四绕组变压器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "四绕组电压互感器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "圆箭头-上"
+  },
+  {
+    "category": "电力/电气",
+    "name": "圆箭头-下"
+  },
+  {
+    "category": "电力/电气",
+    "name": "天线"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关 334"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "箭头"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关2l"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关2_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关2_2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关3_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "开关_2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "接地变压器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "接地符号1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "断电"
+  },
+  {
+    "category": "电力/电气",
+    "name": "断路"
+  },
+  {
+    "category": "电力/电气",
+    "name": "横电阻"
+  },
+  {
+    "category": "电力/电气",
+    "name": "测试啊"
+  },
+  {
+    "category": "电力/电气",
+    "name": "热力发电厂"
+  },
+  {
+    "category": "电力/电气",
+    "name": "熔断器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压4"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压5"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压6"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电压_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电容器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电感"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电抗器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电架"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气4"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气5"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气6"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气支路"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电气转"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流2_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流4"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流5"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流6"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流7"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电流8"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电阻12"
+  },
+  {
+    "category": "电力/电气",
+    "name": "电阻2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "箭头_3"
+  },
+  {
+    "category": "电力/电气",
+    "name": "箭头_1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "组合1"
+  },
+  {
+    "category": "电力/电气",
+    "name": "组合开关"
+  },
+  {
+    "category": "电力/电气",
+    "name": "边框"
+  },
+  {
+    "category": "电力/电气",
+    "name": "避雷器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "避雷器2"
+  },
+  {
+    "category": "电力/电气",
+    "name": "配电_接地刀开关"
+  },
+  {
+    "category": "电力/电气",
+    "name": "配电_熔断器"
+  },
+  {
+    "category": "电力/电气",
+    "name": "错误"
+  },
+  {
+    "category": "电力/电网",
+    "name": "低压配电箱"
+  },
+  {
+    "category": "电力/电网",
+    "name": "光伏"
+  },
+  {
+    "category": "电力/电网",
+    "name": "变电"
+  },
+  {
+    "category": "电力/电网",
+    "name": "变电所"
+  },
+  {
+    "category": "电力/电网",
+    "name": "变电站"
+  },
+  {
+    "category": "电力/电网",
+    "name": "变电设备"
+  },
+  {
+    "category": "电力/电网",
+    "name": "变配电管理系统"
+  },
+  {
+    "category": "电力/电网",
+    "name": "土"
+  },
+  {
+    "category": "电力/电网",
+    "name": "大工业用电"
+  },
+  {
+    "category": "电力/电网",
+    "name": "大工业直购电"
+  },
+  {
+    "category": "电力/电网",
+    "name": "小交流电"
+  },
+  {
+    "category": "电力/电网",
+    "name": "带电危险"
+  },
+  {
+    "category": "电力/电网",
+    "name": "抄电表记录"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力01"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力01_1"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力02"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力02_1"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03_1"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03_2"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03_3"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03_4"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力03_5"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电力线勘测"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电器火灾控制"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电导率"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电工电气"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电摩"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电池"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电池包"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电池房"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电流"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电流_1"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电流_2"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电站"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电网"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电耗分析"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电表管理"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电表箱"
+  },
+  {
+    "category": "电力/电网",
+    "name": "电路故障"
+  },
+  {
+    "category": "电力/电网",
+    "name": "采购电量"
+  },
+  {
+    "category": "电力/电网",
+    "name": "锂电池"
+  },
+  {
+    "category": "电力/电网",
+    "name": "闭路电视"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "CNG加气站"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "储气罐"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "储气罐_1"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "储气罐_2"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "储气罐_3"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "减压阀"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "加臭器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "加臭机"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "压力器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "压力表"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "压力阀"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "压缩机"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "叠片过滤器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "可燃气体报警仪"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "智能阀门"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "机器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "油罐"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "油罐箱"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "流量计"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "流量计_1"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "流量计_2"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "测试"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "消防灭火器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "清管站"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "温度计"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "热处理器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "热处理设备"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "热气锅炉"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "燃气储罐站"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "燃气罐车"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "燃气阀门"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "燃烧器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "调压"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "调压器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "调压器_1"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "调压箱"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "过滤器"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "过滤器_1"
+  },
+  {
+    "category": "能源/天然气",
+    "name": "阀-3"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "1"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "11"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "111"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "AAS"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "三角形"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "上仓皮带"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "仪表盘"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "变频器"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "安全帽"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "小箭头-上"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "小箭头-下"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "工厂"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "挖煤"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "接头"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "摇臂车"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "机器"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "标题箭头"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "水泵"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "测试组件02"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "测试组件02_1"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "煤球"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "球阀"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "电机"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "电机2"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "电机3"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "矿业"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "矿工"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "秤"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "箭头"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "给煤机"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "自定义组件"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "自定义组件_1"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "装满煤的手推车"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "负压计"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿(5)"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿(6)"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿_3"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿车(1)"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "采矿车"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "铲子"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "铲子_1"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "闸阀"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "防毒面具"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "顺槽皮带"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "风机"
+  },
+  {
+    "category": "能源/煤炭",
+    "name": "齿轮"
+  },
+  {
+    "category": "能源/石油",
+    "name": "test"
+  },
+  {
+    "category": "能源/石油",
+    "name": "仪表"
+  },
+  {
+    "category": "能源/石油",
+    "name": "供油泵"
+  },
+  {
+    "category": "能源/石油",
+    "name": "卧罐"
+  },
+  {
+    "category": "能源/石油",
+    "name": "卸油泵"
+  },
+  {
+    "category": "能源/石油",
+    "name": "压力表"
+  },
+  {
+    "category": "能源/石油",
+    "name": "压力计"
+  },
+  {
+    "category": "能源/石油",
+    "name": "吸收塔"
+  },
+  {
+    "category": "能源/石油",
+    "name": "吸收塔_1"
+  },
+  {
+    "category": "能源/石油",
+    "name": "吸附塔"
+  },
+  {
+    "category": "能源/石油",
+    "name": "吸附塔_1"
+  },
+  {
+    "category": "能源/石油",
+    "name": "弯管道"
+  },
+  {
+    "category": "能源/石油",
+    "name": "排放"
+  },
+  {
+    "category": "能源/石油",
+    "name": "机器"
+  },
+  {
+    "category": "能源/石油",
+    "name": "水泵"
+  },
+  {
+    "category": "能源/石油",
+    "name": "汽车-01"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油塔"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油库"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油田"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油田_1"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油罐"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油罐车"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油罐阀"
+  },
+  {
+    "category": "能源/石油",
+    "name": "油阀"
+  },
+  {
+    "category": "能源/石油",
+    "name": "泵"
+  },
+  {
+    "category": "能源/石油",
+    "name": "流量计"
+  },
+  {
+    "category": "能源/石油",
+    "name": "测试"
+  },
+  {
+    "category": "能源/石油",
+    "name": "消防泡沫塔"
+  },
+  {
+    "category": "能源/石油",
+    "name": "直管道"
+  },
+  {
+    "category": "能源/石油",
+    "name": "真空阀门"
+  },
+  {
+    "category": "能源/石油",
+    "name": "空气阀门"
+  },
+  {
+    "category": "能源/石油",
+    "name": "管道头"
+  },
+  {
+    "category": "能源/石油",
+    "name": "管道疏通"
+  },
+  {
+    "category": "能源/石油",
+    "name": "罐区"
+  },
+  {
+    "category": "能源/石油",
+    "name": "输油变压"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀1"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀2"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀开关"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀门"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀门_1"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀门_2"
+  },
+  {
+    "category": "能源/石油",
+    "name": "阀门_3"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "挖掘机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "排水机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "排水阀门"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "掘进机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "机械手"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "柴油机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "泥浆泵"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "电动机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "皮带输送机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "皮带输送机_1"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "矿产企业"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "矿产拉车"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "破碎机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "破碎机_1"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "磨煤机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "离心通风机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "绞车"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "绞车运行监控系统"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "脱水机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "脱水机_1"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "起重工具车"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "起重机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "采掘"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "采煤机"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "采煤机_1"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "钻石"
+  },
+  {
+    "category": "能源/矿产",
+    "name": "颚式破碎机"
+  }
+]

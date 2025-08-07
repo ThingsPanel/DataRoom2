@@ -9,6 +9,17 @@ export const settingConfig = {
     }
   }
 }
+
+// 箭头样式选项
+export const ArrowStyleOptions = [
+  { label: '无', value: 'none' },
+  { label: '标准箭头', value: 'arrow' },
+  { label: '三角形', value: 'triangle' },
+  { label: '圆形', value: 'circle' },
+  { label: '方形', value: 'square' },
+  { label: '菱形', value: 'diamond' }
+]
+
 const customConfig = {
   type: 'verticalLine',
   root: {
@@ -25,23 +36,38 @@ const customConfig = {
     skewY: 0
   },
   customize: {
-    // 边框线颜色
-    borderColor: 'rgba(131, 191, 246, 0)',
-    // 边框线宽度
-    borderWidth: 1,
-    // 边框背景颜色
-    backgroundColor: '#007aff',
-    colorType: 'single',
-    // 渐变色0值
-    gradientColor0: '#83bff6',
-    // 渐变色1值
-    gradientColor1: '#188df0',
-    // 渐变色色值改变方向
-    gradientDirection: 'to right',
+    // 线条颜色
+    lineColor: '#188df0',
+    // 线条宽度
+    lineWidth: 4,
     // 透明度
-    opacity: 100,
-    // 宽度
-    width: 4
+    opacity: 1,
+
+    // 虚线属性
+    enableLineDash: false,
+    lineDashValue: 5,
+    lineGapValue: 5,
+    
+    // 箭头样式设置 - 新增
+    startArrowStyle: 'none', // 起点箭头样式：none, arrow, triangle, circle, square, diamond
+    startArrowSize: 6,       // 起点箭头大小
+    startArrowColor: '',     // 起点箭头颜色，为空时继承线条颜色
+    
+    endArrowStyle: 'none',   // 终点箭头样式：none, arrow, triangle, circle, square, diamond
+    endArrowSize: 6,         // 终点箭头大小
+    endArrowColor: '',       // 终点箭头颜色，为空时继承线条颜色
+
+    // 动画属性
+    animationActive: false,
+    animationType: 'none', // 'none', 'droplet', 'flow'
+    animationDirection: 'forward', // 'forward', 'backward'
+    animationSpeed: 1,           // 相对速度
+    animationLoop: true,         // 循环动画
+    dropletColor: '#40a9ff',     // 水滴颜色
+    dropletSize: 3,              // 水滴半径
+    flowColor: '#40a9ff',        // 流水动画颜色
+    flowThickness: 4,          // 流水动画线条粗细
+    flowDensity: 10            // 流水动画密度
   }
 }
 export const dataConfig = {

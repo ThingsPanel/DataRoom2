@@ -5,6 +5,7 @@
       element-loading-background="#151A26"
       class="bs-preview-wrap"
       :style="previewWrapStyle"
+      @fullscreenchange="handleFullscreenChange"
     >
       <div
         class="bs-render-wrap render-theme-wrap"
@@ -27,6 +28,16 @@
             />
           </Configuration>
         </div>
+      </div>
+      <!-- Fullscreen Button -->
+      <div
+        class="fullscreen-btn"
+        title="切换全屏"
+        @click="toggleFullscreen"
+      >
+        <!-- SVG Icon for fullscreen enter/exit -->
+        <svg v-if="!isFullscreen" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path fill="currentColor" d="M160 96a64 64 0 0 1 64-64h192a64 64 0 1 1 0 128H224v192a64 64 0 1 1-128 0V160Zm640 0a64 64 0 1 1 0-128h192a64 64 0 0 1 64 64v192a64 64 0 1 1-128 0V224H800Zm192 640a64 64 0 1 1 128 0v192a64 64 0 0 1-64 64H800a64 64 0 1 1 0-128h192V800ZM160 800a64 64 0 1 1 128 0v192H224a64 64 0 1 1 0-128h192V800Z"/></svg>
+        <svg v-else viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" width="20" height="20"><path fill="currentColor" d="M320 320a64 64 0 1 1 0-128h192a64 64 0 0 1 64 64v192a64 64 0 1 1-128 0V256H256a64 64 0 0 1-64-64Zm384 0a64 64 0 1 1-128 0V256H512a64 64 0 1 1 0-128h192a64 64 0 0 1 64 64v192ZM320 704a64 64 0 1 1-128 0v-192a64 64 0 0 1 64-64h192a64 64 0 1 1 0 128H256v192Zm384 0a64 64 0 1 1 0 128H512a64 64 0 1 1 0-128h192V768a64 64 0 1 1 128 0v192a64 64 0 0 1-64 64Z"/></svg>
       </div>
     </div>
     <data-view-dialog
@@ -69,6 +80,7 @@ export default {
       timer: null,
       hasPermission: true,
       initChartList: [],
+      isFullscreen: false // Track fullscreen state
     }
   },
   computed: {
@@ -163,11 +175,11 @@ export default {
     next()
   },
   created () {
-    console.log('页面查询参数:', this.$route.query)
+  
     // 如果URL中有ticket参数，将其保存到sessionStorage中
     if (this.$route.query.ticket) {
       sessionStorage.setItem('ticket', this.$route.query.ticket)
-      console.log('已将ticket保存到sessionStorage:', this.$route.query.ticket)
+     
     }
     this.permission()
     this.getParentWH()
@@ -186,6 +198,11 @@ export default {
     // 清空缓存的数据库的内容
     this.emptyDataset()
     this.emptyComputedDatas()
+    // Remove fullscreen listeners
+    document.removeEventListener('fullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('webkitfullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('mozfullscreenchange', this.handleFullscreenChange);
+    document.removeEventListener('MSFullscreenChange', this.handleFullscreenChange);
   },
   methods: {
     ...mapActions('bigScreen', [
@@ -413,7 +430,50 @@ export default {
      */
     getCoverPicture (url) {
       return getFileUrl(url)
-    }
+    },
+    // Add fullscreen methods
+    toggleFullscreen() {
+      const element = this.$el.querySelector('.bs-preview-wrap'); // Target element
+      if (!element) return;
+
+      if (!document.fullscreenElement &&
+          !document.mozFullScreenElement &&
+          !document.webkitFullscreenElement &&
+          !document.msFullscreenElement) {
+        // Enter fullscreen
+        if (element.requestFullscreen) {
+          element.requestFullscreen();
+        } else if (element.mozRequestFullScreen) { /* Firefox */
+          element.mozRequestFullScreen();
+        } else if (element.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+          element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) { /* IE/Edge */
+          element.msRequestFullscreen();
+        }
+      } else {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) { /* Firefox */
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) { /* Chrome, Safari and Opera */
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { /* IE/Edge */
+          document.msExitFullscreen();
+        }
+      }
+    },
+    handleFullscreenChange() {
+      // Update the isFullscreen state based on the document's fullscreen status
+      this.isFullscreen = !!(document.fullscreenElement ||
+                             document.webkitFullscreenElement ||
+                             document.mozFullScreenElement ||
+                             document.msFullscreenElement);
+      // Recalculate dimensions after fullscreen change
+      this.$nextTick(() => {
+          this.getParentWH(); 
+      });
+    },
   }
 }
 </script>
@@ -424,10 +484,39 @@ export default {
     width: 100%;
     height: 100%;
     overflow: auto;
+    position: relative; // Needed for absolute positioning of the button
 
     .bs-render-wrap {
       position: relative;
       background-size: cover;
+    }
+    
+    .fullscreen-btn {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000; 
+      background-color: rgba(0, 0, 0, 0.5);
+      color: white;
+      border: none;
+      border-radius: 50%; 
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      opacity: 0; // Hidden by default
+      transition: opacity 0.3s ease, background-color 0.3s ease;
+
+      &:hover {
+        background-color: rgba(0, 0, 0, 0.8);
+        opacity: 1; // Show only when hovering the button itself
+      }
+
+      svg {
+        display: block; 
+      }
     }
   }
 </style>

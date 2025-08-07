@@ -1,5 +1,6 @@
 package com.gccloud.dataroom.core.filter;
 
+import com.gccloud.dataroom.core.config.ThingsPanelApiProperties;
 import com.gccloud.dataroom.core.utils.TenantContext;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -28,6 +29,9 @@ public class ApiKeyTenantFilter implements Filter {
 
     @Resource
     private RestTemplate restTemplate;
+
+    @Resource
+    private ThingsPanelApiProperties thingsPanelApiProperties;
 
     private static final String DEFAULT_API_KEY = "sk_ebde6efe6f240172f689d458df466f22542901f200e16cb3c0ede44c6e677d3f";
 
@@ -77,7 +81,7 @@ public class ApiKeyTenantFilter implements Filter {
             HttpEntity<?> entity = new HttpEntity<>(headers);
             
             ResponseEntity<String> response = restTemplate.exchange(
-                "http://cloud.thingspanel.cn/api/v1/user/tenant/id",
+                thingsPanelApiProperties.getTenantIdUrl(),
                 HttpMethod.GET,
                 entity,
                 String.class

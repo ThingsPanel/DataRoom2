@@ -60,7 +60,9 @@ const customConfig = {
     fontFamily: '', // 字体类型
     color: 'left,#ffffff,#ffffff',
     align: 'center', // 文字对齐方式
-    letterSpacing: 1// 文字间距
+    letterSpacing: 1, // 文字间距
+    visible: true, // 文字显示/隐藏
+    isBackgroundColorChange: false // 是否背景变色
   }
 
 }

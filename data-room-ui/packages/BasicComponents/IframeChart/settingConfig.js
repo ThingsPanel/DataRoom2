@@ -19,7 +19,7 @@ const customConfig = {
   type: 'iframeChart',
   root: {
     version: '2023071001',
-    url: 'http://ThingsPanel.cn',
+    url: 'https://www.thingspanel.cn/',
     // 绕x轴旋转角度
     rotateX: 0,
     // 绕y轴旋转角度

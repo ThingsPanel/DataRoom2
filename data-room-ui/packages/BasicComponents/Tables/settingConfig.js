@@ -56,20 +56,24 @@ const customConfig = {
     headerFontColor: '#fff',
     // 表格头部字体大小
     headerFontSize: 14,
+    headerRowHeight: 48, // 新增：表头行高
     // 表格主体背景颜色
     bodyBackgroundColor: '',
     // 表格主体字体颜色
     bodyFontColor: 'rgb(155 159 172)',
     // 表格主体字体大小
     bodyFontSize: 14,
+    bodyRowVerticalPadding: 10, // 新增：单元格垂直内边距
     // 表格是否需要斑马纹
     stripe: false,
     // 表格奇数行背景颜色
     oddRowBackgroundColor: '',
     // 表格偶数行背景颜色‘
-    evenRowBackgroundColor: ''
+    evenRowBackgroundColor: '',
     // 表格是否需要边框
-    // border: false,
+    border: false,
+    borderColor: '#EBEEF5', // 新增：表格边框颜色
+    columnSettings: [] // 新增：列配置数组 { key: string, name: string, width: number, align: string }
   }
 }
 export const dataConfig = {

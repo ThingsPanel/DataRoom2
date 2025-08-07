@@ -150,6 +150,7 @@ import cloneDeep from 'lodash/cloneDeep'
 import basicComponents from 'data-room-ui/js/config/basicComponentsConfig'
 import g2PlotComponents, { getCustomPlots } from '../G2Plots/plotList'
 import echartsComponents from '../Echarts/echartList'
+import vchartComponents from '../Vcharts/vchartList'
 import threeComponents from '../ThreeComponents/threeList'
 import borderComponents from 'data-room-ui/js/config/borderComponentsConfig'
 import decorationComponents from 'data-room-ui/js/config/decorationComponentsConfig'
@@ -178,6 +179,7 @@ export default {
       echartsComponents,
       g2PlotComponents,
       threeComponents,
+      vchartComponents,
       activeName: 'chart', // 设置左侧tab栏的默认值
       fold: false, // 控制左侧菜单栏伸缩
       currentTab: 'basic',
@@ -192,24 +194,32 @@ export default {
         {
           id: 2,
           name: 'g2PlotComponents',
-          title: '图表',
+          title: 'g2Plot',
           icon: 'icon-jichushuju',
           components: this.g2PlotComponents
         },
         {
-          id: 7,
-          name: 'echart',
-          title: '3D图表',
+          id: 10,
+          name: 'vchart',
+          title: 'VChart',
           icon: 'icon-jichushuju',
-          components: this.echartsComponents
+          components: this.vchartComponents
         },
+        // {
+        //   id: 7,
+        //   name: 'echart',
+        //   title: '3D图表',
+        //   icon: 'icon-jichushuju',
+        //   components: this.echartsComponents
+        // },
         {
           id: 9,
           name: 'three',
           title: '3D模型',
-          icon: 'icon-kongjian',
+          icon: 'icon-jichushuju',
           components: this.threeComponents
         },
+           
         {
           id: 3,
           name: 'dataV',
@@ -269,25 +279,9 @@ export default {
     this.initList()
     this.g2PlotComponents = [...this.g2PlotComponents, ...getCustomPlots()]
     this.menuList[1].components = this.g2PlotComponents
-    this.menuList[2].components = this.echartsComponents
-    
-    // 确保所有3D模型组件的类型都是customComponent
-    if (this.threeComponents && this.threeComponents.length > 0) {
-      // 打印3D模型组件列表，查看详细信息
-      console.log('3D模型组件原始数据:', JSON.parse(JSON.stringify(this.threeComponents)))
-      
-      this.threeComponents = this.threeComponents.map(item => {
-        if (item.type === 'threeComponent') {
-          return { ...item, type: 'customComponent' }
-        }
-        return item
-      })
-      
-      // 打印修改后的3D模型组件列表
-      console.log('3D模型组件修改后数据:', JSON.parse(JSON.stringify(this.threeComponents)))
-    }
-    
+    // this.menuList[2].components = this.echartsComponents
     this.menuList[3].components = this.threeComponents
+    this.menuList[2].components = this.vchartComponents
   },
   mounted () {
     this.nodeDrag()
@@ -302,27 +296,15 @@ export default {
             const type = node.getAttribute('data-type')
             const name = node.getAttribute('data-name')
             
-            console.log('开始拖拽组件:', {type, name})
             
             // 从menuList中获取当前拖拽的组件
             const menuItem = this.menuList.find((item) => item.name === this.activeName)
-            console.log('当前活动菜单:', this.activeName, menuItem ? menuItem.title : '未找到')
             
             const element = menuItem?.components.find(
               (item) => item.type === type && item.name === name
             )
             
-            if (element) {
-              console.log('找到拖拽组件详情:', {
-                type: element.type,
-                name: element.name,
-                category: element.category,
-                className: element.className,
-                title: element.title
-              })
-            } else {
-              console.warn('未找到拖拽组件详情')
-            }
+       
             
             /* 设置拖拽传输数据 */
             const dragData = {
@@ -336,7 +318,6 @@ export default {
               customSerialize(dragData)
             )
             
-            console.log('拖拽数据已设置:', dragData)
           })
         })
         // 阻止默认动作

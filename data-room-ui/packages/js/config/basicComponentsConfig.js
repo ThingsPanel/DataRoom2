@@ -14,7 +14,9 @@ import { setModules, dataModules } from 'data-room-ui/js/utils/configImport'
 const typeList = [
   // 1. 基础文本类 - 数据展示类
   'texts', // 文本组件
+  'texts10', // 文本组件10
   'numbers', // 数字组件
+  'timestamp', // 时间戳组件
   'marquee', // 跑马灯/文字滚动
   'currentTime', // 当前时间
   'timeCountDown', // 倒计时
@@ -34,15 +36,16 @@ const typeList = [
   'horizontalLine', // 水平线
   'verticalLine', // 垂直线
   'rectangle', // 矩形
+  'fabricLine',
   'svgLine', // SVG线条
-  'canvasLine', // Canvas线条
-
+  'svgIcon', // SVG图标
+ 
   // 4. 媒体展示类 - 媒体和嵌入元素
   'picture', // 图片
   'video', // 视频
   'iframeChart', // Iframe嵌入图表
   'customHtml', // 自定义HTML
-
+  'weatherIcon', 
   // 5. 数据展示类 - 表格和滚动列表
   'tables', // 表格
   'screenScrollBoard', // 滚动面板
@@ -51,8 +54,10 @@ const typeList = [
   // 6. 指标卡片类 - 数据展示类
   'indicatorCard', // 指标卡
   'indicatorCard2', // 指标卡2
+  'indicatorCard5', // 指标卡5
   'indexCard', // 指数卡
   'indexCard2', // 指数卡2
+  'multiMetricCard', // 添加多指标卡片
 
   // 7. 图表类
   'candlestick', // K线图
@@ -64,7 +69,10 @@ const typeList = [
 
   // 9. 主题控制
   'themeSelect', // 主题选择器
-  'themeSwitcher' // 主题切换器
+  'themeSwitcher', // 主题切换器
+  
+  // 10. 自定义组件
+  'modalComponent' // 弹窗组件
 ]
 let basicConfigList = []
 basicConfigList = typeList.map((type) => {

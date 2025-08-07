@@ -2,6 +2,8 @@ name: Deploy DataRoom UI to Demo
 on:
   push:
     branches: [ 2.1.0.RELEASE ]
+    paths:
+      - 'data-room-ui/**'
   workflow_dispatch:
 
 jobs:
@@ -24,6 +26,15 @@ jobs:
         ls -lrt
         cd bigScreen && tar -czf ../../deploy.tar.gz ./*
         
+    - name: Clean target directory
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.DEMO_HOST }}
+        username: ${{ secrets.DEMO_USER }}
+        password: ${{ secrets.DEMO_PASS }}
+        script: |
+          rm -rf /opt/dataroom/frontend/*
+          
     - name: Upload to server
       uses: appleboy/scp-action@master
       with:
@@ -33,7 +44,7 @@ jobs:
         source: "deploy.tar.gz"
         target: "/opt/dataroom/frontend"
         
-    - name: Extract on server
+    - name: Extract and cleanup
       uses: appleboy/ssh-action@master
       with:
         host: ${{ secrets.DEMO_HOST }}

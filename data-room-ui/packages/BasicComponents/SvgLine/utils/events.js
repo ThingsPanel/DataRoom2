@@ -109,7 +109,6 @@ export function handleMouseMove(e, isDragging, draggedPointIndex, dragStartPos, 
  * @returns {Object} 更新后的状态
  */
 export function handleMouseUp(isDragging, points, config, adjustContainerSizeFn, savePointsFn, updatePathFn, updateControlPointsFn) {
-  console.log('handleMouseUp 被调用，isDragging:', isDragging);
   
   if (!isDragging) return {
     isDragging: false,
@@ -119,17 +118,14 @@ export function handleMouseUp(isDragging, points, config, adjustContainerSizeFn,
 
   // 调用实时调整大小的函数
   if (adjustContainerSizeFn) {
-    console.log('调用 adjustContainerSizeFn');
     adjustContainerSizeFn();
   }
 
   // 保存点的位置
   if (savePointsFn) {
-    console.log('调用 savePointsFn');
     savePointsFn();
   }
 
-  console.log('拖拽完成，设置 justFinishedDragging = true, 50ms后将重置为false');
   
   // 标记刚刚完成拖拽，但只持续很短时间（50ms）
   const result = {
@@ -140,7 +136,6 @@ export function handleMouseUp(isDragging, points, config, adjustContainerSizeFn,
   
   // 设置一个非常短的定时器，以便快速重置justFinishedDragging标志
   const timeoutId = setTimeout(() => {
-    console.log('50ms超时结束，重置 justFinishedDragging = false');
     result.justFinishedDragging = false;
   }, 50); // 只等待50毫秒而不是300毫秒
   
@@ -171,85 +166,66 @@ export function handleSvgClick(event, isEditing, isDragging, justFinishedDraggin
                              findClickedLineSegmentFn, getProjectionPointFn, 
                              updatePathFn, updateControlPointsFn, savePointsFn, 
                              checkAndAdjustSizeFn, refreshAnimationFn) {
-  console.log('handleSvgClick 被调用，参数：', {
-    isEditing,
-    isDragging,
-    justFinishedDragging,
-    points: points ? points.length : 0
-  });
+ 
   
   // 如果是右键点击，不添加新点
   if (event.button === 2) {
-    console.log('右键点击，不添加点');
     return points;
   }
 
   // 如果不是编辑状态或正在拖拽，不添加新点
   if (!isEditing || isDragging || justFinishedDragging) {
-    console.log('不满足添加点条件', { isEditing, isDragging, justFinishedDragging });
     return points;
   }
 
-  console.log('条件满足，开始添加点');
   event.stopPropagation();
 
   // 获取点击位置
   const point = svgDraw.point(event.clientX, event.clientY);
-  console.log('点击位置', point);
   
   // 复制点数组
   const newPoints = [...points];
   
   // 查找被点击的线段
   const clickedSegmentIndex = findClickedLineSegmentFn(point.x, point.y, points);
-  console.log('被点击的线段索引', clickedSegmentIndex);
 
   if (clickedSegmentIndex !== -1) {
-    console.log('在线段上添加点');
     const p1 = points[clickedSegmentIndex];
     const p2 = points[clickedSegmentIndex + 1];
 
     // 获取投影点
     const newPoint = getProjectionPointFn(point.x, point.y, p1, p2);
-    console.log('投影点', newPoint);
 
     // 在点击的线段后插入新点
     newPoints.splice(clickedSegmentIndex + 1, 0, newPoint);
   } else {
-    console.log('在末尾添加点');
     // 在末尾添加新点
     newPoints.push({ x: point.x, y: point.y });
   }
 
-  console.log('添加点后的数组', newPoints);
   
   // 更新路径
   if (updatePathFn) {
-    console.log('调用 updatePath');
     updatePathFn();
   }
   
   // 更新控制点
   if (updateControlPointsFn) {
-    console.log('调用 updateControlPoints');
     updateControlPointsFn();
   }
   
   // 保存点位置
   if (savePointsFn) {
-    console.log('调用 savePoints');
     savePointsFn();
   }
   
   // 调整大小
   if (checkAndAdjustSizeFn) {
-    console.log('调用 checkAndAdjustSize');
     checkAndAdjustSizeFn();
   }
   
   // 刷新动画
   if (refreshAnimationFn) {
-    console.log('调用 refreshAnimation');
     refreshAnimationFn();
   }
 
